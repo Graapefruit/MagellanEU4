@@ -1,0 +1,5 @@
+MagellanEU4 includes a set of tools to aid EU4 modders in creating and updating their maps.
+
+- MagellanEU4 is the primary tool and namesake of the project. It is planned to be able to load and display the map across various map modes (terrain, trade nodes, cores, etc), and allow the user to modify them.
+- Province Generator initializes many necessary data files from a provinces.bmp file, outputs potential issues with the map (Very Small provinces, the same colour being used for two different provinces). Requires a mod with the /history/provinces and /map directories exists, along with provinces.bmp inside of the /map directory. Also requires a copy of the game's base files. for reference.
+- Coastalizer is a planned tool which would modify a terrain.bmp file to turn all pixels adjacent to a lake/coast into coast.
