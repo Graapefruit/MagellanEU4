@@ -1,12 +1,18 @@
 class Province:
-	def __init__(self, name, color, id):
+	def __init__(self, id, name, color):
+		self.id = id
 		self.name = name
 		self.color = color
-		self.id = id
 		self.pixels = []
 		self.xSum = 0
 		self.ySum = 0
 		self.count = 0
+
+		self.parentGrouping = None
+		self.continent = None
+		self.terrain = None
+		self.climate = None
+		self.winter = None
 
 	def addPixel(self, pixel):
 		self.pixels.append(pixel)
@@ -19,3 +25,6 @@ class Province:
 
 	def calculateAverageY(self):
 		return round(self.ySum / self.count, 3)
+
+	def __str__(self):
+		return "Province {}".format(self.key)
