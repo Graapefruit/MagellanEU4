@@ -2,8 +2,7 @@ import random
 import sys
 from shutil import rmtree
 from os.path import exists
-from os import mkdir, listdir, remove
-from PIL import Image
+from os import mkdir, listdir
 from nltk.corpus import words
 from Utils.Province import Province
 from Utils.RGB import RGB
@@ -31,7 +30,7 @@ def populateProvinces(width, height, provinceMap):
 			rgb = RGB(r, g, b)
 			if not rgb in colorToProvinces:
 				provinceName = allWords[random.randrange(wordsCount)]
-				colorToProvinces[rgb] = Province(provinceName, rgb, provinceId)
+				colorToProvinces[rgb] = Province(provinceId, provinceName, rgb)
 				provinces.append(colorToProvinces[rgb])
 				provinceId += 1
 			colorToProvinces[rgb].addPixel(Pixel(x, y))
@@ -125,5 +124,3 @@ if __name__ == "__main__":
 	createDefinitionsCsv(modPath, provinces)
 	createProvinceHistoryFiles(baseGamePath, modPath, provinces)
 	createProvinceLocalizationFiles(modPath, provinces)
-
-	# Overwrite 
