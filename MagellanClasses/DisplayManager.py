@@ -7,17 +7,24 @@ class DisplayManager():
     def __init__(self, windowName):
         self.window = tkinter.Tk()
         self.window.geometry("1024x776")
+        self.provinceNameText = tkinter.StringVar()
+        self.provinceNameText.set("No Province Selected")
+        #self.provinceColorText = tkinter.StringVar()
+        #self.provinceColorText.set("Red: -- Green: -- Blue: --")
         self.window.title = windowName
 
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.config(width=200)
         self.rootPanel.pack(fill=tkinter.BOTH, expand=1)
 
-        self.infoPanel = tkinter.PanedWindow(self.rootPanel, orient=tkinter.VERTICAL)
+        self.infoPanel = tkinter.PanedWindow(self.rootPanel, width=250)
+        provinceNameLabel = tkinter.Label(self.infoPanel, textvariable=self.provinceNameText)
+        # provinceColorLabel = tkinter.Label(self.infoPanel, textvariable=self.provinceColorText)
+        provinceNameLabel.pack(side=tkinter.LEFT)
+        # provinceColorLabel.pack(side=tkinter.LEFT)
+        self.infoPanel.add(provinceNameLabel)
+        # self.infoPanel.add(provinceColorLabel)
         self.rootPanel.add(self.infoPanel)
-
-        self.provinceNameLabel = tkinter.Label(self.infoPanel, text="Hello World!")
-        self.infoPanel.add(self.provinceNameLabel)
 
         self.mapDisplay = ScrollableImage(self.rootPanel, width=200, height=200)
         self.mapDisplay.pack()
@@ -25,6 +32,10 @@ class DisplayManager():
 
     def updateMapFromFile(self, file):
         self.mapDisplay.updateImage(ImageTk.PhotoImage(Image.open(file)))
+
+    def updateProvinceInfo(self, province):
+        self.provinceNameText.set("Province: {}".format(province.name))
+        self.provinceColorText.set("Red: {} Green: {} Blue: {}".format(province.color.red, province.color.green, province.color.blue))
 
     def startMainLoop(self):
 	    self.window.mainloop()

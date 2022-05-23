@@ -13,4 +13,5 @@ class InputController:
                 self.view.updateMapFromFile(self.model.getProvinceMapLocation())
 
     def onPixelClicked(self, x, y):
-        print("{} {}".format(x, y))
+        province = self.model.getProvinceAtIndex(x, y)
+        self.view.updateProvinceInfo(province)

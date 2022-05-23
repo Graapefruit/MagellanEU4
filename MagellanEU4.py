@@ -1,10 +1,8 @@
 import os.path
 from enum import Enum
-import csv
 import re
 import sys
 from MagellanClasses.MapMode import MapMode
-from Utils.Province import Province
 from Utils.RGB import RGB
 from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
@@ -83,30 +81,6 @@ class Region(Grouping):
 #			provinces.append(province)
 #	return provinces
 
-def populateProvinces(path, maxProvinces):
-	print("Parsing " + path + "... ")
-	sys.stdout.flush()
-	provinces = []
-	colorsToProvinces = dict()
-	idsToProvinces = [-1] * maxProvinces
-	provincesInfo = open(path)
-	reader = csv.reader(provincesInfo, delimiter=';')
-	for provinceInfo in reader:
-		if (provinceInfo[0] == "province"):
-			continue
-		rgb = RGB(int(provinceInfo[1]), int(provinceInfo[2]), int(provinceInfo[3]))
-		# Skip RNW Provinces (some even share the same colors; yuck wtf)
-		if (provinceInfo[4] == RNW_PROVINCE_KEY):
-			continue
-		if (rgb in colorsToProvinces):
-			print("ERROR: Two provinces share the same colour! IDs: {} {}".format(colorsToProvinces[rgb].id, provinceInfo[0]))
-			quit()
-		province = Province(int(provinceInfo[0]), rgb, provinceInfo[4])
-		provinces.append(province)
-		colorsToProvinces[rgb] = province
-		idsToProvinces[int(provinceInfo[0])] = province
-	return provinces, colorsToProvinces, idsToProvinces
-
 def populateArea(path):
 	print("Parsing " + path + "... ")
 	f = getFileStringWithoutComments(open(path, "r"))
@@ -167,15 +141,13 @@ if __name__ == "__main__":
 		quit()
 	baseGamePath = sys.argv[1]
 	modPath = sys.argv[2]
-	max_provinces = 5000 # TODO: Grab this from Default.map
 	fileFormat = modPath + "/{}/{}"
-	provinces, colorsToProvinces, idsToProvinces = populateProvinces(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME), max_provinces)
 	# areas, keysToAreas = populateArea(fileFormat.format(MAP_FOLDER_NAME, AREAS_FILE_NAME), idsToProvinces)
 	#regions = Region.populate(fileFormat.format(MAP_FOLDER_NAME, REGIONS_FILE_NAME), idsToProvinces)
 	#superRegions = Grouping.populate(fileFormat.format(MAP_FOLDER_NAME, SUPERREGIONS_FILE_NAME))
 	#continents = populateGrouping(fileFormat.format(MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), GROUPING_PATTERN)
-	model = MapInfoManager(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
-	view = DisplayManager(windowName=modPath.split("/")[-1])#, imageName=fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
+	model = MapInfoManager(fileFormat)# fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
+	view = DisplayManager(windowName=modPath.split("/")[-1])
 	controller = InputController(model=model, view=view)
 
 	view.mapDisplay.mapClickCallback = controller.onPixelClicked
