@@ -9,8 +9,8 @@ class DisplayManager():
         self.window.geometry("1024x776")
         self.provinceNameText = tkinter.StringVar()
         self.provinceNameText.set("No Province Selected")
-        #self.provinceColorText = tkinter.StringVar()
-        #self.provinceColorText.set("Red: -- Green: -- Blue: --")
+        self.provinceColorText = tkinter.StringVar()
+        self.provinceColorText.set("Red: -- Green: -- Blue: --")
         self.window.title = windowName
 
         self.rootPanel = tkinter.PanedWindow()
@@ -30,12 +30,12 @@ class DisplayManager():
         self.mapDisplay.pack()
         self.rootPanel.add(self.mapDisplay)
 
-    def updateMapFromFile(self, file):
-        self.mapDisplay.updateImage(ImageTk.PhotoImage(Image.open(file)))
+    def updateMap(self, image):
+        self.mapDisplay.updateImage(ImageTk.PhotoImage(image))
 
     def updateProvinceInfo(self, province):
         self.provinceNameText.set("Province: {}".format(province.name))
-        self.provinceColorText.set("Red: {} Green: {} Blue: {}".format(province.color.red, province.color.green, province.color.blue))
+        self.provinceColorText.set("Red: {} Green: {} Blue: {}".format(province.color[0], province.color[1], province.color[2]))
 
     def startMainLoop(self):
 	    self.window.mainloop()

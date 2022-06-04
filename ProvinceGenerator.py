@@ -7,6 +7,7 @@ from nltk.corpus import words
 from Utils.Province import Province
 from Utils.RGB import RGB
 from Utils.Pixel import Pixel
+from PIL import Image
 
 DUPLICATES_FILE_NAME = "PotentialDuplicates.txt"
 PROVINCE_BMP_FILE_PATH = "map/provinces.bmp"

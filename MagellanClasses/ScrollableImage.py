@@ -11,8 +11,8 @@ class ScrollableImage(tkinter.Frame):
         self.cnvs = tkinter.Canvas(self, highlightthickness=0, **kw)
         # self.cnvs.create_image(0, 0, anchor='nw', image=self.image)
         self.mapClickCallback = self.doNothing
-        self.cnvs.bind_class(self.cnvs, "<MouseWheel>", self.mouse_scroll)
-        self.cnvs.bind_class(self.cnvs, "<Button-1>", self.print_location)
+        self.cnvs.bind_class(self.cnvs, "<MouseWheel>", self.mouseScroll)
+        self.cnvs.bind_class(self.cnvs, "<Button-1>", self.getPixelCoordinatesAndInvokeCallback)
 
     def updateImage(self, newImage):
         self.image = newImage
@@ -34,7 +34,7 @@ class ScrollableImage(tkinter.Frame):
         # Assign the region to be scrolled 
         self.cnvs.config(scrollregion=self.cnvs.bbox('all'))
 
-    def print_location(self, event):
+    def getPixelCoordinatesAndInvokeCallback(self, event):
         scrollBarLeft = self.h_scroll.get()[0]
         scrollBarRight = self.h_scroll.get()[1]
         maxOffsetX = self.image.width() - self.cnvs.winfo_width()
@@ -47,10 +47,10 @@ class ScrollableImage(tkinter.Frame):
         offsetScalarY = scrollBarTop / (1 - (scrollBarBottom - scrollBarTop))
         y = event.y + (maxOffsetY * offsetScalarY)
 
-        self.mapClickCallback(x, y)
+        self.mapClickCallback(int(x), int(y))
 
     def doNothing(*args):
         print("Function doNothing invoked with args: {}".format(args))
 
-    def mouse_scroll(self, evt):
+    def mouseScroll(self, evt):
         self.cnvs.yview_scroll(-1*(evt.delta) // 65, 'units')

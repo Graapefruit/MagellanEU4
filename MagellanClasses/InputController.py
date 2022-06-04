@@ -1,4 +1,5 @@
 from .MapMode import MapMode
+import sys
 
 class InputController:
     def __init__(self, model, view):
@@ -8,10 +9,8 @@ class InputController:
 
     def changeMapMode(self, newMapMode):
         self.mapMode = newMapMode
-        match self.mapMode:
-            case MapMode.PROVINCES:
-                self.view.updateMapFromFile(self.model.getProvinceMapLocation())
-
+        self.view.updateMap(self.mapMode.getOrLoadImage())
+                
     def onPixelClicked(self, x, y):
         province = self.model.getProvinceAtIndex(x, y)
         self.view.updateProvinceInfo(province)

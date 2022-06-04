@@ -8,6 +8,7 @@ from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
 from MagellanClasses.Constants import *
 from MagellanClasses.InputController import InputController
+from PIL import Image
 
 class Climate(Enum):
 	TEMPERATE = 1
@@ -151,5 +152,6 @@ if __name__ == "__main__":
 	controller = InputController(model=model, view=view)
 
 	view.mapDisplay.mapClickCallback = controller.onPixelClicked
-	controller.changeMapMode(MapMode.PROVINCES)
+	provinceMapMode = MapMode("Provinces", lambda : Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
+	controller.changeMapMode(provinceMapMode)
 	view.startMainLoop()
