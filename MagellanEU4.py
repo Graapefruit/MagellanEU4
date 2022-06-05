@@ -7,7 +7,6 @@ from Utils.RGB import RGB
 from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
 from MagellanClasses.Constants import *
-from MagellanClasses.InputController import InputController
 from PIL import Image
 
 class Climate(Enum):
@@ -136,22 +135,30 @@ def onMouseMapClick(x, y):
 	print("x = {}, y = {}".format(x, y))
 	sys.stdout.flush()
 
+class MagellanEU4():
+	def __init__(self):
+		self.view = DisplayManager()
+		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
+		self.view.onMenuFileOpen = self.onNewModOpen
+		self.model = None
+
+	def changeMapMode(self, newMapMode):
+		self.mapMode = newMapMode
+		self.view.updateMap(self.mapMode.getOrLoadImage())
+                
+	def onPixelClicked(self, x, y):
+		province = self.model.getProvinceAtIndex(x, y)
+		self.view.updateProvinceInfo(province)
+
+	def onNewModOpen(self, path):
+		fileFormat = path + "/{}/{}"
+		self.model = MapInfoManager(fileFormat)
+
 if __name__ == "__main__":
-	if len(sys.argv) < 3:
-		print("Usage: ({}) (Base Game Folder) (Mod Folder)".format(sys.argv[0]))
-		quit()
-	baseGamePath = sys.argv[1]
-	modPath = sys.argv[2]
-	fileFormat = modPath + "/{}/{}"
+	controller = MagellanEU4()
+	controller.view.startMainLoop()
 	# areas, keysToAreas = populateArea(fileFormat.format(MAP_FOLDER_NAME, AREAS_FILE_NAME), idsToProvinces)
 	#regions = Region.populate(fileFormat.format(MAP_FOLDER_NAME, REGIONS_FILE_NAME), idsToProvinces)
 	#superRegions = Grouping.populate(fileFormat.format(MAP_FOLDER_NAME, SUPERREGIONS_FILE_NAME))
 	#continents = populateGrouping(fileFormat.format(MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), GROUPING_PATTERN)
-	model = MapInfoManager(fileFormat)# fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
-	view = DisplayManager(windowName=modPath.split("/")[-1])
-	controller = InputController(model=model, view=view)
-
-	view.mapDisplay.mapClickCallback = controller.onPixelClicked
-	provinceMapMode = MapMode("Provinces", lambda : Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
-	controller.changeMapMode(provinceMapMode)
-	view.startMainLoop()
+	# provinceMapMode = MapMode("Provinces", lambda : Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))

@@ -1,17 +1,34 @@
+from logging import root
 import sys
 import tkinter
+from tkinter import filedialog
 from .ScrollableImage import ScrollableImage
 from PIL import Image, ImageTk
 
+def doNothing(*argv):
+    pass # Why are you looking here? What do you expect?
+
 class DisplayManager():
-    def __init__(self, windowName):
+    def __init__(self):
+        
         self.window = tkinter.Tk()
         self.window.geometry("1024x776")
+        self.window.title("Magellan EU4") # TODO: Change title with mod folder name?
+
         self.provinceNameText = tkinter.StringVar()
         self.provinceNameText.set("No Province Selected")
         self.provinceColorText = tkinter.StringVar()
         self.provinceColorText.set("Red: -- Green: -- Blue: --")
-        self.window.title = windowName
+
+        # The following must be populated
+        self.onMenuFileOpen = doNothing
+
+        menubar = tkinter.Menu(self.window)
+
+        fileMenu = tkinter.Menu(menubar, tearoff=0)
+        fileMenu.add_command(label="Open", command=(lambda : self.onMenuFileOpen(filedialog.askdirectory())))
+        fileMenu.add_command(label="Save", command=doNothing)
+        menubar.add_cascade(label="File", menu=fileMenu)
 
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.config(width=200)
@@ -28,6 +45,8 @@ class DisplayManager():
 
         self.mapDisplay = ScrollableImage(self.rootPanel, width=200, height=200)
         self.mapDisplay.pack()
+
+        self.window.config(menu=menubar)
         self.rootPanel.add(self.mapDisplay)
 
     def updateMap(self, image):
@@ -38,4 +57,4 @@ class DisplayManager():
         self.provinceColorText.set("Red: {} Green: {} Blue: {}".format(province.color[0], province.color[1], province.color[2]))
 
     def startMainLoop(self):
-	    self.window.mainloop()
+        self.window.mainloop()
