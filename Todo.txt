@@ -1,0 +1,1 @@
+- When loading an Image smaller than the current one in Magellan, the scrollbars do not shrink, and province selection is skewed and thus no longer functional

@@ -11,15 +11,15 @@ class ScrollableImage(tkinter.Frame):
         self.cnvs = tkinter.Canvas(self, highlightthickness=0, **kw)
         # self.cnvs.create_image(0, 0, anchor='nw', image=self.image)
         self.mapClickCallback = self.doNothing
+        # Vertical and Horizontal scrollbars
+        self.v_scroll = tkinter.Scrollbar(self, width=SCROLL_WHEEL_WIDTH, orient='vertical')
+        self.h_scroll = tkinter.Scrollbar(self, width=SCROLL_WHEEL_WIDTH, orient='horizontal')
         self.cnvs.bind_class(self.cnvs, "<MouseWheel>", self.mouseScroll)
         self.cnvs.bind_class(self.cnvs, "<Button-1>", self.getPixelCoordinatesAndInvokeCallback)
 
     def updateImage(self, newImage):
         self.image = newImage
         self.cnvs.create_image(0, 0, anchor='nw', image=self.image)
-        # Vertical and Horizontal scrollbars
-        self.v_scroll = tkinter.Scrollbar(self, width=SCROLL_WHEEL_WIDTH, orient='vertical')
-        self.h_scroll = tkinter.Scrollbar(self, width=SCROLL_WHEEL_WIDTH, orient='horizontal')
         # Grid and configure weight.
         self.cnvs.grid(row=0, column=0,  sticky='nsew')
         self.h_scroll.grid(row=1, column=0, sticky='ew')

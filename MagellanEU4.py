@@ -153,6 +153,7 @@ class MagellanEU4():
 	def onNewModOpen(self, path):
 		fileFormat = path + "/{}/{}"
 		self.model = MapInfoManager(fileFormat)
+		self.view.updateMap(Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
 
 if __name__ == "__main__":
 	controller = MagellanEU4()
