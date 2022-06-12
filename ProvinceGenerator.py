@@ -1,5 +1,6 @@
 import random
 import sys
+import re
 from shutil import rmtree
 from os.path import exists
 from os import mkdir, listdir
@@ -8,20 +9,54 @@ from Utils.Province import Province
 from Utils.RGB import RGB
 from Utils.Pixel import Pixel
 from PIL import Image
+from MagellanClasses.Constants import LOCALIZATION_PATTERN
 
 DUPLICATES_FILE_NAME = "PotentialDuplicates.txt"
 PROVINCE_BMP_FILE_PATH = "map/provinces.bmp"
 DEFINITIONS_FILE_PATH = "map/definition.csv"
 POSITIONS_FILE_PATH = "map/positions.txt"
+HISTORY_PATH = "history"
 PROVINCE_HISTORY_PATH = "history/provinces"
-PROVINCE_LOCATLIZATION_PATH = "localization/prov_names_l_english.yml"
+LOCALIZATION_PATH = "localisation"
+PROVINCE_LOCATLIZATION_PATH = "localisation/prov_names_l_english.yml"
+PROVINCE_LOCATLIZATION_ADJ_PATH = "localisation/prov_names_adj_l_english.yml"
 
-def populateProvinces(width, height, provinceMap):
-	print("Populating Provinces...")
+def populateExistingDefinitions(modPath):
+	print("Populating Existing Provinces...")
 	sys.stdout.flush()
 	provinces = []
-	colorToProvinces = dict()
-	provinceId = 1
+	colorToProvinceMap = dict()
+	definitionFileLocation = "{}/{}".format(modPath, DEFINITIONS_FILE_PATH)
+	localisationFileLocation = "{}/{}".format(modPath, PROVINCE_LOCATLIZATION_PATH)
+	if (exists(definitionFileLocation)):
+		f = open(definitionFileLocation, mode='r', encoding="utf-8")
+		for line in f:
+			lineData = line.split(';')
+			# Ignore first line
+			if lineData[0] == "province":
+				continue
+			rgb = RGB(int(lineData[1]), int(lineData[2]), int(lineData[3]))
+			newProvince = Province(int(lineData[0]), lineData[4], rgb)
+			newProvince.isNew = False
+			provinces.append(newProvince)
+			colorToProvinceMap[rgb] = newProvince
+		f.close()
+
+		if (exists(localisationFileLocation)):
+			f = open(localisationFileLocation, mode='r', encoding="utf-8")
+			matches = LOCALIZATION_PATTERN.findall(line)
+			for match in matches:
+				provinceId = match[0]
+				provinceName = match[1]
+				provinces[provinceId].name = provinceName
+				
+	return provinces, colorToProvinceMap
+
+def populateNewProvinces(provinces, colorToProvinceMap, provinceMap):
+	print("Populating New Provinces...")
+	sys.stdout.flush()
+	width, height = provinceMap.size
+	nextProvinceId = len(provinces) + 1
 	allWords = words.words()
 	wordsCount = len(allWords)
 
@@ -29,31 +64,33 @@ def populateProvinces(width, height, provinceMap):
 		for x in range(0, width):
 			r, g, b = provinceMap.getpixel((x, y))
 			rgb = RGB(r, g, b)
-			if not rgb in colorToProvinces:
+			if not rgb in colorToProvinceMap:
 				provinceName = allWords[random.randrange(wordsCount)]
-				colorToProvinces[rgb] = Province(provinceId, provinceName, rgb)
-				provinces.append(colorToProvinces[rgb])
-				provinceId += 1
-			colorToProvinces[rgb].addPixel(Pixel(x, y))
-	return provinces, colorToProvinces
+				newProvince = Province(nextProvinceId, provinceName, rgb)
+				newProvince.isNew = True
+				colorToProvinceMap[rgb] = newProvince
+				provinces.append(newProvince)
+				nextProvinceId += 1
+			colorToProvinceMap[rgb].addPixel(Pixel(x, y))
+	return provinces
 
-def overrideOrCreateFile(path):
-	if (exists(path)):
-		return open(path, mode='w', encoding="utf-8")
-	else:
-		return open(path, mode='x', encoding="utf-8")
-
-def createPotentialDuplicatesFile(provinces, provinceMap):
-	print("Creating Potential Duplicates File...")
+def createExceptionsFile(provinces, provinceMap):
+	print("Creating Exceptions File...")
 	sys.stdout.flush()
 	potentialDuplicatesFile = overrideOrCreateFile(DUPLICATES_FILE_NAME)
 	for province in provinces:
-		r, g, b = provinceMap.getpixel((province.calculateAverageX(), province.calculateAverageY()))
-		if RGB(r, g, b) != province.color:
-			potentialDuplicatesFile.write("Province: {}\nAverage: {}, {}\nColor: {}\n\t".format(province.name, province.calculateAverageX(), province.calculateAverageY(), province.color))
-			for pixel in province.pixels:
-				potentialDuplicatesFile.write("{}, {} |".format(pixel.x, pixel.y))
-			potentialDuplicatesFile.write("\n\n")
+		# provinces not having any pixels
+		if province.count == 0:
+			potentialDuplicatesFile.write("Province {}:{} has no pixels!".format(province.id, province.name))
+
+		# provinces not containing their own center pixel (tests for two provinces using the same color: many false positives)
+		else:
+			r, g, b = provinceMap.getpixel((province.calculateAverageX(), province.calculateAverageY()))
+			if RGB(r, g, b) != province.color:
+				potentialDuplicatesFile.write("Province: {}\nAverage: {}, {}\nColor: {}\n\t".format(province.name, province.calculateAverageX(), province.calculateAverageY(), province.color))
+				for pixel in province.pixels:
+					potentialDuplicatesFile.write("{}, {} |".format(pixel.x, pixel.y))
+				potentialDuplicatesFile.write("\n\n")
 	potentialDuplicatesFile.close()
 
 def createPositionsFile(modPath, provinces):
@@ -78,10 +115,8 @@ def createProvinceHistoryFiles(baseGamePath, modPath, provinces):
 	print("Creating Province History Files...")
 	sys.stdout.flush()
 	provinceCount = len(provinces)
-	newProvinceHistoryPath = "{}/{}".format(modPath, PROVINCE_HISTORY_PATH)
-	if exists(newProvinceHistoryPath):
-		rmtree(newProvinceHistoryPath)
-	mkdir(newProvinceHistoryPath)
+	createFolderIfNotExisting("{}/{}".format(modPath, HISTORY_PATH))
+	createFolderIfNotExisting("{}/{}".format(modPath, PROVINCE_HISTORY_PATH))
 
 	oldProvinceHistoryNamesList = listdir("{}/{}".format(baseGamePath, PROVINCE_HISTORY_PATH))
 	oldProvinceHistoryNamesDict = dict()
@@ -91,24 +126,40 @@ def createProvinceHistoryFiles(baseGamePath, modPath, provinces):
 		oldProvinceHistoryNamesDict[int(id)] = provinceName
 
 	for i in range(0, provinceCount):
-		newProvinceFileName = "{}-{}.txt".format(provinces[i].id, provinces[i].name)
-		newProvinceFile = overrideOrCreateFile("{}/{}/{}".format(modPath, PROVINCE_HISTORY_PATH, newProvinceFileName))
-		newProvinceFile.write("culture = atlantean\nreligion = animism\ntrade_good = livestock\nbase_tax = 1\nbase_production = 1\nbase_manpower = 1\nis_city = no")
-		newProvinceFile.close()
-
-		if (i+1) in oldProvinceHistoryNamesDict:
-			oldProvinceFile = overrideOrCreateFile("{}/{}/{}".format(modPath, PROVINCE_HISTORY_PATH, oldProvinceHistoryNamesDict[i+1]))
-			oldProvinceFile.write("replace_path = \"{}/{}\"".format(PROVINCE_HISTORY_PATH, newProvinceFileName))
-			oldProvinceFile.close()
+		if provinces[i].isNew:
+			provinceFileName = ""
+			if (i+1) in oldProvinceHistoryNamesDict:
+				provinceFileName = oldProvinceHistoryNamesDict[i+1]
+			else:
+				provinceFileName = "{}-{}.txt".format(provinces[i].id, "Antarctica{}".format(provinces[i+1].id))
+			provinceFile = overrideOrCreateFile("{}/{}/{}".format(modPath, PROVINCE_HISTORY_PATH, provinceFileName))
+			provinceFile.write("culture = atlantean\nreligion = animism\ntrade_good = livestock\nbase_tax = 1\nbase_production = 1\nbase_manpower = 1\nis_city = no")
+			provinceFile.close()
 
 def createProvinceLocalizationFiles(modPath, provinces):
 	print("Creating Province Localization Files...")
 	sys.stdout.flush()
-	provinceLocatlizationYml = overrideOrCreateFile("{}/{}".format(modPath, PROVINCE_LOCATLIZATION_PATH))
-	provinceLocatlizationYml.write("l_english:")
+	createFolderIfNotExisting("{}/{}".format(modPath, LOCALIZATION_PATH))
+	provinceLocalizationFile = overrideOrCreateFile("{}/{}".format(modPath, PROVINCE_LOCATLIZATION_PATH))
+	provinceLocalizationFile.write("l_english:")
+	provinceLocalizationAdjFile = overrideOrCreateFile("{}/{}".format(modPath, PROVINCE_LOCATLIZATION_ADJ_PATH))
+	provinceLocalizationAdjFile.write("l_english:")
 	for province in provinces:
-		provinceLocatlizationYml.write("\n PROV{}:0 \"{}\"".format(province.id, province.name))
-	provinceLocatlizationYml.close()
+		provinceLocalizationFile.write("\n PROV{}:0 \"{}\"".format(province.id, province.name))
+		provinceLocalizationAdjFile.write("\n _ADJ{}:0 \"{}\"".format(province.id, province.name + "r"))
+	provinceLocalizationFile.close()
+
+	# --- Helpers --- #
+
+def overrideOrCreateFile(path):
+	if (exists(path)):
+		return open(path, mode='w', encoding="utf-8")
+	else:
+		return open(path, mode='x', encoding="utf-8")
+
+def createFolderIfNotExisting(path):
+	if not exists(path):
+		mkdir(path)
 
 if __name__ == "__main__":
 	if len(sys.argv) < 3:
@@ -117,10 +168,10 @@ if __name__ == "__main__":
 	baseGamePath = sys.argv[1]
 	modPath = sys.argv[2]
 	provinceMap = Image.open("{}/{}".format(modPath, PROVINCE_BMP_FILE_PATH))
-	width, height = provinceMap.size
 
-	provinces, colorToProvinces = populateProvinces(width, height, provinceMap)
-	createPotentialDuplicatesFile(provinces, provinceMap)
+	provinces, colorToProvinceMap = populateExistingDefinitions(modPath)
+	provinces = populateNewProvinces(provinces, colorToProvinceMap, provinceMap)
+	createExceptionsFile(provinces, provinceMap)
 	createPositionsFile(modPath, provinces)
 	createDefinitionsCsv(modPath, provinces)
 	createProvinceHistoryFiles(baseGamePath, modPath, provinces)
