@@ -2,7 +2,7 @@ import os.path
 from enum import Enum
 import re
 import sys
-from MagellanClasses.MapMode import MapMode
+from MagellanClasses.MapModes.ProvinceMapMode import ProvinceMapMode
 from Utils.RGB import RGB
 from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
@@ -131,20 +131,23 @@ def getFileStringWithoutComments(f):
 			s += line
 	return s
 
-def onMouseMapClick(x, y):
-	print("x = {}, y = {}".format(x, y))
-	sys.stdout.flush()
-
 class MagellanEU4():
 	def __init__(self):
-		self.view = DisplayManager()
-		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
+		self.populateMapModes()
+		self.view = DisplayManager(self.mapModes)
 		self.view.onMenuFileOpen = self.onNewModOpen
+		self.view.onNewMapMode = self.changeMapMode
+		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
 		self.model = None
 
+	def populateMapModes(self):
+		self.currentMapMode = None
+		self.mapModes = []
+		self.mapModes.append(ProvinceMapMode())
+
 	def changeMapMode(self, newMapMode):
-		self.mapMode = newMapMode
-		self.view.updateMap(self.mapMode.getOrLoadImage())
+		self.currentMapMode = newMapMode
+		self.view.updateMap(self.currentMapMode.getOrLoadImage())
                 
 	def onPixelClicked(self, x, y):
 		province = self.model.getProvinceAtIndex(x, y)
@@ -153,13 +156,10 @@ class MagellanEU4():
 	def onNewModOpen(self, path):
 		fileFormat = path + "/{}/{}"
 		self.model = MapInfoManager(fileFormat)
+		for mapMode in self.mapModes:
+			mapMode.setNewModel(self.model)
 		self.view.updateMap(Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
 
 if __name__ == "__main__":
 	controller = MagellanEU4()
 	controller.view.startMainLoop()
-	# areas, keysToAreas = populateArea(fileFormat.format(MAP_FOLDER_NAME, AREAS_FILE_NAME), idsToProvinces)
-	#regions = Region.populate(fileFormat.format(MAP_FOLDER_NAME, REGIONS_FILE_NAME), idsToProvinces)
-	#superRegions = Grouping.populate(fileFormat.format(MAP_FOLDER_NAME, SUPERREGIONS_FILE_NAME))
-	#continents = populateGrouping(fileFormat.format(MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), GROUPING_PATTERN)
-	# provinceMapMode = MapMode("Provinces", lambda : Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))

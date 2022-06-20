@@ -9,7 +9,7 @@ def doNothing(*argv):
     pass # Why are you looking here? What do you expect?
 
 class DisplayManager():
-    def __init__(self):
+    def __init__(self, mapModes):
         
         self.window = tkinter.Tk()
         self.window.geometry("1024x776")
@@ -22,6 +22,7 @@ class DisplayManager():
 
         # The following must be populated
         self.onMenuFileOpen = doNothing
+        self.onNewMapMode = doNothing
 
         menubar = tkinter.Menu(self.window)
 
@@ -29,6 +30,11 @@ class DisplayManager():
         fileMenu.add_command(label="Open", command=(lambda : self.onMenuFileOpen(filedialog.askdirectory())))
         fileMenu.add_command(label="Save", command=doNothing)
         menubar.add_cascade(label="File", menu=fileMenu)
+
+        mapModeMenu = tkinter.Menu(menubar, tearoff=0)
+        for mapMode in mapModes:
+            mapModeMenu.add_command(label=mapMode.getName(), command=(lambda : self.onNewMapMode(mapMode)))
+        menubar.add_cascade(label="Mapmode", menu=mapModeMenu)
 
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.config(width=200)
