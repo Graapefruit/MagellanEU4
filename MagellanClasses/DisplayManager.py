@@ -11,7 +11,7 @@ def doNothing(*argv):
     pass # Why are you looking here? What do you expect?
 
 class DisplayManager():
-    def __init__(self, mapModes):
+    def __init__(self):
         self.window = tkinter.Tk()
         self.window.geometry("1024x776")
         self.window.title("Magellan EU4") # TODO: Change title with mod folder name?
@@ -24,12 +24,7 @@ class DisplayManager():
         menubar = tkinter.Menu(self.window)
         fileMenu = tkinter.Menu(menubar, tearoff=0)
         fileMenu.add_command(label="Open", command=(lambda : self.onMenuFileOpen(filedialog.askdirectory())))
-        fileMenu.add_command(label="Save", command=doNothing)
         menubar.add_cascade(label="File", menu=fileMenu)
-        mapModeMenu = tkinter.Menu(menubar, tearoff=0)
-        for mapMode in mapModes:
-            mapModeMenu.add_command(label=mapMode.getName(), command=(lambda : self.onNewMapMode(mapMode)))
-        menubar.add_cascade(label="Mapmode", menu=mapModeMenu)
         self.window.config(menu=menubar)
 
         # --- Panels --- #

@@ -133,21 +133,10 @@ def getFileStringWithoutComments(f):
 
 class MagellanEU4():
 	def __init__(self):
-		self.populateMapModes()
-		self.view = DisplayManager(self.mapModes)
+		self.view = DisplayManager()
 		self.view.onMenuFileOpen = self.onNewModOpen
-		self.view.onNewMapMode = self.changeMapMode
 		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
 		self.model = None
-
-	def populateMapModes(self):
-		self.currentMapMode = None
-		self.mapModes = []
-		self.mapModes.append(ProvinceMapMode())
-
-	def changeMapMode(self, newMapMode):
-		self.currentMapMode = newMapMode
-		self.view.updateMap(self.currentMapMode.getOrLoadImage())
                 
 	def onPixelClicked(self, x, y):
 		province = self.model.getProvinceAtIndex(x, y)
@@ -156,8 +145,6 @@ class MagellanEU4():
 	def onNewModOpen(self, path):
 		fileFormat = path + "/{}/{}"
 		self.model = MapInfoManager(fileFormat)
-		for mapMode in self.mapModes:
-			mapMode.setNewModel(self.model)
 		self.view.updateMap(Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
 
 if __name__ == "__main__":
