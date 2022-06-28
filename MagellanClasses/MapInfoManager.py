@@ -1,9 +1,9 @@
 import sys
 import csv
-from ProvinceGenerator import PROVINCE_HISTORY_PATH
 from Utils.Province import Province
 from MagellanClasses.Constants import *
 from PIL import Image
+from os import listdir
 import numpy
 
 # TODO:
@@ -12,22 +12,22 @@ import numpy
 # 3. Areas, Regions, Subcontinents, Continents
 # 4. Tags
 class MapInfoManager():
-    def __init__(self, fileFormat):
+    def __init__(self, path):
         max_provinces = 5000 # TODO: Grab this from Default.map
         self.provinces = []
         self.colorsToProvinces = dict()
         self.idsToProvinces = [None] * max_provinces
-        self.populateFromDefinitionFile(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
-        # self.loadFromHistory(fileFormat.format(MAP_FOLDER_NAME, PROVINCES_HISTORY_PATH))
-        self.provinceMapImage = Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
+        self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
+        self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
+        self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         # self.populatePixels()
-        self.provinceMapLocation = fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)
+        self.provinceMapLocation = "{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)
 
     # --- Setup --- #
 
     def populateFromDefinitionFile(self, path):
-        print("Parsing " + path + "... ")
+        print("Parsing Definition File... ")
         sys.stdout.flush()
         provincesInfo = open(path)
         reader = csv.reader(provincesInfo, delimiter=';')
@@ -46,11 +46,43 @@ class MapInfoManager():
             self.colorsToProvinces[rgb] = province
             self.idsToProvinces[int(provinceInfo[0])] = province
 
-    #def loadFromHistory(self, path):
-    #    for province in path:
-            
-        
+    def populateProvinceHistoryFiles(self, path):
+        print("Parsing History Files...")
+        sys.stdout.flush()
+        provinceHistoryFiles = listdir(path)
+        for fileName in provinceHistoryFiles:
+            fileId = fileName.split("-")[0].split()[0]
+            if fileId.isdigit():
+                province = self.idsToProvinces[int(fileId)]
+                provinceHistoryFile = open("{}/{}".format(path, fileName), 'r')
+                for line in provinceHistoryFile:
+                    splitLine = line.split("=")
+                    if len(splitLine) == 2:
+                        lineKey = splitLine[0].lower().strip()
+                        lineVal = splitLine[1].lower().strip()
+                        match lineKey:
+                            case "add_core":
+                                province.cores.append(lineVal)
+                            case "owner":
+                                province.owner = lineVal
+                            case "culture":
+                                province.culture = lineVal
+                            case "religion":
+                                province.religion = lineVal
+                            case "hre":
+                                province.hre = True if "yes" else False
+                            case "base_tax":
+                                province.tax = lineVal
+                            case "base_production":
+                                province.production = lineVal
+                            case "base_manpower":
+                                province.manpower = lineVal
+                            case "trade_goods":
+                                province.tradeGood = lineVal
+                            case "discovered_by":
+                                province.discovered.append(lineVal)
 
+            
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
         print("Populating Pixels... This may take a while")
@@ -65,6 +97,6 @@ class MapInfoManager():
     # --- Public --- #
 
     def getProvinceAtIndex(self, x, y):
-        return self.colorsToProvinces.get((self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]))
-
+        province = self.colorsToProvinces.get((self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]))
+        return province
     #def generateReligionMap(self):

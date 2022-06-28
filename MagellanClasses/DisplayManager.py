@@ -31,7 +31,7 @@ class DisplayManager():
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.pack(fill=tkinter.BOTH)
 
-        self.provinceInfoPanel = tkinter.PanedWindow(self.rootPanel, bd=4, relief=RAISED, orient=VERTICAL, width=250)
+        self.provinceInfoPanel = tkinter.PanedWindow(self.rootPanel, bd=4, relief=RAISED, orient=VERTICAL, width=300)
         self.provinceInfoPanel.pack(fill=tkinter.Y)
 
         # --- Header --- #
@@ -72,7 +72,7 @@ class DisplayManager():
         self.cultureField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=self.cultures)
         self.cultureField.pack(side=tkinter.TOP)
 
-        self.devText = tkinter.Label(self.provinceBodyLeft, text="Admin | Diplo | Mnpwr")
+        self.devText = tkinter.Label(self.provinceBodyLeft, text="Adm | Dip | Mil")
         self.devText.pack(side=tkinter.TOP)
         self.devPanel = tkinter.PanedWindow(self.provinceBodyLeft, orient=HORIZONTAL)
         self.devPanel.pack(side=tkinter.TOP)
@@ -88,6 +88,9 @@ class DisplayManager():
         self.tradeGoodText.pack(side=tkinter.TOP)
         self.tradeGoodField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=self.tradeGoods)
         self.tradeGoodField.pack(side=tkinter.TOP)
+
+        self.hreBox = tkinter.Checkbutton(self.provinceBodyLeft, text="HRE")
+        self.hreBox.pack(side=tkinter.TOP)
 
         # --- Body-Right --- #
         self.provinceBodyRight = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
@@ -106,6 +109,17 @@ class DisplayManager():
         self.climateField = AutocompleteCombobox(self.provinceBodyRight, completevalues=self.climates)
         self.climateField.pack(side=tkinter.TOP)
 
+        self.areaText = tkinter.Label(self.provinceBodyRight, text="Area")
+        self.areaText.pack(side=tkinter.TOP)
+        self.areaField = tkinter.Text(self.provinceBodyRight, height=1, width=16)
+        self.areaField.pack(side=tkinter.TOP)
+
+        self.continents = ["Asia", "Europe", "Atlantis"]
+        self.continentText = tkinter.Label(self.provinceBodyRight, text="Continent")
+        self.continentText.pack(side=tkinter.TOP)
+        self.continentField = AutocompleteCombobox(self.provinceBodyRight, completevalues=self.continents)
+        self.continentField.pack(side=tkinter.TOP)
+
         self.tagText = tkinter.Label(self.provinceBodyRight, text="Owner")
         self.tagText.pack(side=tkinter.TOP)
         self.tagField = tkinter.Text(self.provinceBodyRight, height=1, width=3)
@@ -115,11 +129,6 @@ class DisplayManager():
         self.coresText.pack(side=tkinter.TOP)
         self.coresField = tkinter.Text(self.provinceBodyRight, height=1, width=9)
         self.coresField.pack(side=tkinter.TOP)
-
-        self.areaText = tkinter.Label(self.provinceBodyRight, text="Area")
-        self.areaText.pack(side=tkinter.TOP)
-        self.areaField = tkinter.Text(self.provinceBodyRight, height=1, width=16)
-        self.areaField.pack(side=tkinter.TOP)
 
         # --- Discovered By --- #
         # Tech groups exist in the technology.txt file in common. Create these dynamically
@@ -143,8 +152,32 @@ class DisplayManager():
         self.mapDisplay.updateImage(ImageTk.PhotoImage(image))
 
     def updateProvinceInfo(self, province):
-        self.provinceNameText.set("Province: {}".format(province.name))
+        self.provinceIdText.set("Id: {}".format(province.id))
+        self.provinceNameText.set("{}".format(province.name))
         self.provinceColorText.set("Red: {} Green: {} Blue: {}".format(province.color[0], province.color[1], province.color[2]))
+        self.religionField.set(province.religion)
+        self.cultureField.set(province.culture)
+        self.taxText.delete(1.0, tkinter.END)
+        self.taxText.insert(tkinter.END, province.tax)
+        self.productionText.delete(1.0, tkinter.END)
+        self.productionText.insert(tkinter.END, province.tax)
+        self.manpowerText.delete(1.0, tkinter.END)
+        self.manpowerText.insert(tkinter.END, province.tax)
+        self.tradeGoodField.set(province.tradeGood)
+        self.hreBox.select if province.hre else self.hreBox.deselect
+        # self.terrainField.set()
+        # self.climateField.set()
+        # self.areaField.set()
+        # self.continentField.set()
+        self.tagField.delete(1.0, tkinter.END)
+        self.tagField.insert(tkinter.END, province.owner)
+        coresText = ""
+        for i in range(0, len(province.cores)):
+            coresText += province.cores(i)
+            if i+1 < len(province.cores):
+                coresText += ", "
+        self.coresField.delete(1.0, tkinter.END)
+        self.coresField.insert(tkinter.END, coresText)
 
     def startMainLoop(self):
         self.window.mainloop()

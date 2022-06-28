@@ -8,7 +8,18 @@ class Province:
 		self.ySum = 0
 		self.count = 0
 
-		self.parentGrouping = None
+		self.cores = []
+		self.owner = ""
+		self.culture = ""
+		self.religion = ""
+		self.hre = ""
+		self.tax = 1
+		self.production = 1
+		self.manpower = 1
+		self.tradeGood = ""
+		self.discovered = []
+
+		self.area = None
 		self.continent = None
 		self.terrain = None
 		self.climate = None
