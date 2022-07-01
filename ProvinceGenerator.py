@@ -11,7 +11,7 @@ from Utils.Pixel import Pixel
 from PIL import Image
 from MagellanClasses.Constants import LOCALIZATION_PATTERN
 
-DUPLICATES_FILE_NAME = "PotentialDuplicates.txt"
+ISSUES_FILE_NAME = "PotentialIssues.txt"
 PROVINCE_BMP_FILE_PATH = "map/provinces.bmp"
 DEFINITIONS_FILE_PATH = "map/definition.csv"
 POSITIONS_FILE_PATH = "map/positions.txt"
@@ -77,11 +77,11 @@ def populateNewProvinces(provinces, colorToProvinceMap, provinceMap):
 def createExceptionsFile(provinces, provinceMap):
 	print("Creating Exceptions File...")
 	sys.stdout.flush()
-	potentialDuplicatesFile = overrideOrCreateFile(DUPLICATES_FILE_NAME)
+	potentialDuplicatesFile = overrideOrCreateFile(ISSUES_FILE_NAME)
 	for province in provinces:
 		# provinces not having any pixels
 		if province.count == 0:
-			potentialDuplicatesFile.write("Province {}:{} has no pixels!".format(province.id, province.name))
+			potentialDuplicatesFile.write("Province {}/{} has no pixels!\n\n".format(province.id, province.name))
 
 		# provinces not containing their own center pixel (tests for two provinces using the same color: many false positives)
 		else:
@@ -98,9 +98,10 @@ def createPositionsFile(modPath, provinces):
 	sys.stdout.flush()
 	positionsFile = overrideOrCreateFile("{}/{}".format(modPath, POSITIONS_FILE_PATH))
 	for province in provinces:
-		x = province.calculateAverageX()
-		y = province.calculateAverageY()
-		positionsFile.write("{}={{\n\tpositions={{\n\t\t{} {} {} {} {} {} {} {} {} {} {} {} {} {}\n\t}}\n\trotation={{\n\t\t0.000 0.000 0.000 0.000 0.000 0.000 0.000\n\t}}\n\theight={{\n\t\t0.000 0.000 1.000 0.000 0.000 0.000 0.000\n\t}}\n}}\n".format(province.id, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y))
+		if province.count > 0:
+			x = province.calculateAverageX()
+			y = province.calculateAverageY()
+			positionsFile.write("{}={{\n\tpositions={{\n\t\t{} {} {} {} {} {} {} {} {} {} {} {} {} {}\n\t}}\n\trotation={{\n\t\t0.000 0.000 0.000 0.000 0.000 0.000 0.000\n\t}}\n\theight={{\n\t\t0.000 0.000 1.000 0.000 0.000 0.000 0.000\n\t}}\n}}\n".format(province.id, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y, x, y))
 
 def createDefinitionsCsv(modPath, provinces):
 	print("Creating definitions.csv...")

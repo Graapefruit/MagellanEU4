@@ -15,6 +15,13 @@ class MagellanEU4():
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
 		self.view.updateProvinceInfo(self.currentProvince)
 
+	def onChangedField(self):
+		if self.currentProvince:
+			cores = self.view.coresField
+			# self.currentProvince.cores = 
+		else:
+			print("Warning: onChangeField called, but no province is currently selected")
+
 	def onNewModOpen(self, path):
 		fileFormat = path + "/{}/{}"
 		self.model = MapInfoManager(path)
