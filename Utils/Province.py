@@ -21,7 +21,7 @@ class Province:
 
 		self.area = None
 		self.continent = None
-		self.terrain = None
+		self.terrain = ""
 		self.climate = None
 		self.winter = None
 

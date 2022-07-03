@@ -20,22 +20,24 @@ class DisplayManager():
 
         # The following must be populated
         self.onMenuFileOpen = doNothing
+        self.onMenuFileSave = doNothing
         self.onNewMapMode = doNothing
 
-        # --- Menu --- #
-        menubar = tkinter.Menu(self.window)
-        fileMenu = tkinter.Menu(menubar, tearoff=0)
-        fileMenu.add_command(label="Open", command=(lambda : self.onMenuFileOpen(filedialog.askdirectory())))
-        menubar.add_cascade(label="File", menu=fileMenu)
-        self.window.config(menu=menubar)
-
-        # --- Panels --- #
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.pack(fill=tkinter.BOTH)
+        self.createMenubar()
         self.createProvinceInfoPanel()
         self.createScrollableImage()
         self.rootPanel.add(self.provinceInfoPanel)
         self.rootPanel.add(self.mapDisplay)
+
+    def createMenubar(self):
+        menubar = tkinter.Menu(self.window)
+        fileMenu = tkinter.Menu(menubar, tearoff=0)
+        fileMenu.add_command(label="Open", command=(lambda : self.onMenuFileOpen(filedialog.askdirectory())))
+        fileMenu.add_command(label="Save", command=self.onMenuFileSave())
+        menubar.add_cascade(label="File", menu=fileMenu)
+        self.window.config(menu=menubar)
 
     def createProvinceInfoPanel(self):
         self.provinceInfoPanel = tkinter.PanedWindow(self.rootPanel, bd=4, relief=RAISED, orient=VERTICAL, width=300)
@@ -167,7 +169,7 @@ class DisplayManager():
         self.manpowerText.insert(tkinter.END, province.tax)
         self.tradeGoodField.set(province.tradeGood)
         self.hreBox.select if province.hre else self.hreBox.deselect
-        # self.terrainField.set()
+        self.terrainField.set(province.terrain)
         # self.climateField.set()
         # self.areaField.set()
         # self.continentField.set()

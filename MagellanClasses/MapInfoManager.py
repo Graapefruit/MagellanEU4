@@ -1,9 +1,12 @@
 import sys
 import csv
 from Utils.Province import Province
+from Utils.Terrain import Terrain
+from Utils.RGB import RGB
 from MagellanClasses.Constants import *
 from PIL import Image
 from os import listdir
+import re
 import numpy
 
 # TODO:
@@ -13,12 +16,13 @@ import numpy
 # 4. Tags
 class MapInfoManager():
     def __init__(self, path):
-        max_provinces = 5000 # TODO: Grab this from Default.map
+        self.max_provinces = 5000 # TODO: Grab this from Default.map
         self.provinces = []
         self.colorsToProvinces = dict()
-        self.idsToProvinces = [None] * max_provinces
+        self.idsToProvinces = [None] * self.max_provinces
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
         self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
+        self.populateProvinceTerrain("{}/{}/{}".format(path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         # self.populatePixels()
@@ -82,6 +86,44 @@ class MapInfoManager():
                             case "discovered_by":
                                 province.discovered.append(lineVal)
 
+    def populateProvinceTerrain(self, path):
+        print("Parsing the Terrain.txt")
+        sys.stdout.flush()
+        self.terrains = []
+        terrainFile = open(path, 'r')
+        matches = re.findall(TERRAIN_FILE_GROUPING_PATTERN, terrainFile.read())
+        for match in matches:
+            terrainName = match[0]
+            startText = match[1]
+            color = RGB.newFromTuple(match[2].split())
+            middleText = match[3]
+            provinceIds = []
+            if len(match[4]) > 0:
+                provinceIds = self.getProvincesFromTerrainText(terrainName, match[4])
+            endText = match[5]
+            newTerrain = Terrain(terrainName, color, provinceIds, startText, middleText, endText)
+            self.terrains.append(newTerrain)
+
+
+    def getProvincesFromTerrainText(self, terrainName, text):
+        provinceIds = []
+        lines = text.split('\n')
+        # On the first line, read any potential entries after the curly brace
+        lines[0] = lines[0].split('{')[1]
+        for line in lines:
+            # Remove Comments
+            line = line.split('#')[0]
+            potentialIds = line.split(' ')
+            for potentialId in potentialIds:
+                if potentialId.isdigit():
+                    provinceId = int(potentialId)
+                    if provinceId <= self.max_provinces and self.idsToProvinces[provinceId]:
+                        self.idsToProvinces[provinceId].terrain = terrainName
+                        provinceIds.append(provinceId)
+                    else:
+                        pass
+                        # print("Warning: Terrain {} overrides provinceId {}, which is unused or out of bounds!".format(terrainName, potentialId))
+        return provinceIds
             
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
@@ -91,6 +133,7 @@ class MapInfoManager():
             sys.stdout.flush()
             for x in range(0, len(self.provinceMapArray[y])):
                 self.getProvinceAtIndex(x, y).pixels.append((x, y))
+
 
     # --- Utility --- #
 
