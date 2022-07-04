@@ -26,6 +26,7 @@ class MagellanEU4():
 		fileFormat = path + "/{}/{}"
 		self.model = MapInfoManager(path)
 		self.view.updateMap(Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
+		self.view.terrainField['values'] = list(map(lambda n: n.name, self.model.terrains))
 
 if __name__ == "__main__":
 	controller = MagellanEU4()

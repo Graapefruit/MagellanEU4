@@ -6,6 +6,27 @@ from tkinter import HORIZONTAL, RAISED, VERTICAL, StringVar, filedialog, ttk
 from .ScrollableImage import ScrollableImage
 from PIL import ImageTk
 
+DEFAULT_RELIGIONS = ["catholic", "anglican", "hussite", "protestant", "reformed", "orthodox", "coptic", 
+    "sunni", "shiite", "ibadi", 
+    "buddhism", "vajrayana", "mahayana", "confucianism", "shinto", 
+    "hinduism", "sikhism", "jewish", "zoroastrian"
+    "animism", "shamanism", "totemism", "inti", "nahuatl", 
+    "mesoamerican_religion", "norse_pagan_reformed", "tengri_pagan_reformed", "dreamtime"]
+
+DEFAULT_CULTURES = ["sapmi", "atlantean", "armenian"]
+
+DEFAULT_TRADE_GOODS = ["grain", "wine", "wool", "cloth", "fish", "fur", "salt", "naval_supplies", "copper", "gold", 
+    "iron", "slaves", "ivory", "tea", "chinaware", "spices", "coffee", "cotton", "sugar", "tobacco", "cocoa", 
+    "silk", "dyes", "tropical_wood", "livestock", "incense", "glass", "paper", "gems", "coal", "cloves", "unknown"]
+
+DEFAULT_TERRAINS = ["ocean", "inland_ocean", "glacier", "farmlands", "forest", "hills", "woods", "mountain", 
+    "impassable_mountains", "grasslands", "jungle", "marsh", "desert", "coastal_desert", "coastline", 
+    "drylands", "highlands", "savannah", "steppe"]
+
+DEFAULT_CLIMATES = ["Temperate", "Arctic", "Tropical", "Arid"]
+
+DEFAULT_CONTINENTS = ["europe", "asia", "africa", "north_america", "south_america", "oceania"]
+
 def doNothing(*argv):
     pass
 
@@ -75,16 +96,14 @@ class DisplayManager():
         self.provinceBodyLeft = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyLeft.pack(side=tkinter.LEFT)
 
-        self.religions = ["catholicism", "hinduism", "inti"]
         self.religionText = tkinter.Label(self.provinceBodyLeft, text="Religion")
         self.religionText.pack(side=tkinter.TOP)
-        self.religionField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=self.religions)
+        self.religionField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=DEFAULT_RELIGIONS)
         self.religionField.pack(side=tkinter.TOP)
 
-        self.cultures = ["outremer", "coomian", "fraszi"]
         self.cultureText = tkinter.Label(self.provinceBodyLeft, text="Culture")
         self.cultureText.pack(side=tkinter.TOP)
-        self.cultureField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=self.cultures)
+        self.cultureField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=DEFAULT_CULTURES)
         self.cultureField.pack(side=tkinter.TOP)
 
         self.devText = tkinter.Label(self.provinceBodyLeft, text="Adm | Dip | Mil")
@@ -98,10 +117,9 @@ class DisplayManager():
         self.productionText.pack(side=tkinter.LEFT, padx=(5, 5))
         self.manpowerText.pack(side=tkinter.LEFT, padx=(5, 5))
 
-        self.tradeGoods = ["Grain", "Gold", "Cum"]
         self.tradeGoodText = tkinter.Label(self.provinceBodyLeft, text="Trade Good")
         self.tradeGoodText.pack(side=tkinter.TOP)
-        self.tradeGoodField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=self.tradeGoods)
+        self.tradeGoodField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=DEFAULT_TRADE_GOODS)
         self.tradeGoodField.pack(side=tkinter.TOP)
 
         self.hreBox = tkinter.Checkbutton(self.provinceBodyLeft, text="HRE")
@@ -111,16 +129,14 @@ class DisplayManager():
         self.provinceBodyRight = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyRight.pack(side=tkinter.LEFT)
 
-        self.terrains = ["Farmland" , "Mountains", "Woodlands", "Ocean"]
         self.terrainText = tkinter.Label(self.provinceBodyRight, text="Terrain")
         self.terrainText.pack(side=tkinter.TOP)
-        self.terrainField = AutocompleteCombobox(self.provinceBodyRight, completevalues=self.terrains)
+        self.terrainField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_TERRAINS)
         self.terrainField.pack(side=tkinter.TOP)
 
-        self.climates = ["Temperate", "Arctic", "Tropical", "Arid"]
         self.climateText = tkinter.Label(self.provinceBodyRight, text="Climate")
         self.climateText.pack(side=tkinter.TOP)
-        self.climateField = AutocompleteCombobox(self.provinceBodyRight, completevalues=self.climates)
+        self.climateField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_CLIMATES)
         self.climateField.pack(side=tkinter.TOP)
 
         self.areaText = tkinter.Label(self.provinceBodyRight, text="Area")
@@ -128,10 +144,9 @@ class DisplayManager():
         self.areaField = tkinter.Entry(self.provinceBodyRight, justify="center")
         self.areaField.pack(side=tkinter.TOP)
 
-        self.continents = ["Asia", "Europe", "Atlantis"]
         self.continentText = tkinter.Label(self.provinceBodyRight, text="Continent")
         self.continentText.pack(side=tkinter.TOP)
-        self.continentField = AutocompleteCombobox(self.provinceBodyRight, completevalues=self.continents)
+        self.continentField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_CONTINENTS)
         self.continentField.pack(side=tkinter.TOP)
 
         self.tagText = tkinter.Label(self.provinceBodyRight, text="Owner")

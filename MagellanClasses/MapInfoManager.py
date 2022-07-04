@@ -9,6 +9,7 @@ from os import listdir
 import re
 import numpy
 
+
 # TODO:
 # 1. History File
 # 2. Localization
