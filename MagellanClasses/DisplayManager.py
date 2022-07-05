@@ -122,7 +122,8 @@ class DisplayManager():
         self.tradeGoodField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=DEFAULT_TRADE_GOODS)
         self.tradeGoodField.pack(side=tkinter.TOP)
 
-        self.hreBox = tkinter.Checkbutton(self.provinceBodyLeft, text="HRE")
+        self.hreState = tkinter.IntVar()
+        self.hreBox = tkinter.Checkbutton(self.provinceBodyLeft, variable=self.hreState, text="HRE")
         self.hreBox.pack(side=tkinter.TOP)
 
     def createRightProvinceBodyPanel(self):

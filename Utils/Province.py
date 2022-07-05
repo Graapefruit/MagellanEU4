@@ -7,6 +7,7 @@ class Province:
 		self.xSum = 0
 		self.ySum = 0
 		self.count = 0
+		self.historyFile = ""
 
 		self.cores = []
 		self.owner = ""

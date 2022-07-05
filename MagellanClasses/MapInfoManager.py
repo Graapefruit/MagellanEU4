@@ -20,6 +20,7 @@ class MapInfoManager():
         self.max_provinces = 5000 # TODO: Grab this from Default.map
         self.provinces = []
         self.colorsToProvinces = dict()
+        self.namesToTerrains = dict()
         self.idsToProvinces = [None] * self.max_provinces
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
         self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
@@ -59,6 +60,7 @@ class MapInfoManager():
             fileId = fileName.split("-")[0].split()[0]
             if fileId.isdigit():
                 province = self.idsToProvinces[int(fileId)]
+                province.historyFile = fileName
                 provinceHistoryFile = open("{}/{}".format(path, fileName), 'r')
                 for line in provinceHistoryFile:
                     splitLine = line.split("=")
@@ -90,7 +92,6 @@ class MapInfoManager():
     def populateProvinceTerrain(self, path):
         print("Parsing the Terrain.txt")
         sys.stdout.flush()
-        self.terrains = []
         terrainFile = open(path, 'r')
         matches = re.findall(TERRAIN_FILE_GROUPING_PATTERN, terrainFile.read())
         for match in matches:
@@ -103,8 +104,7 @@ class MapInfoManager():
                 provinceIds = self.getProvincesFromTerrainText(terrainName, match[4])
             endText = match[5]
             newTerrain = Terrain(terrainName, color, provinceIds, startText, middleText, endText)
-            self.terrains.append(newTerrain)
-
+            self.namesToTerrains[terrainName] = newTerrain
 
     def getProvincesFromTerrainText(self, terrainName, text):
         provinceIds = []
