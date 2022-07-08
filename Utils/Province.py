@@ -20,11 +20,13 @@ class Province:
 		self.tradeGood = ""
 		self.discovered = []
 
-		self.area = None
-		self.continent = None
+		self.area = ""
+		self.continent = ""
 		self.terrain = ""
-		self.climate = None
-		self.winter = None
+		self.climate = ""
+		self.winter = ""
+
+		self.extraText = ""
 
 	def addPixel(self, pixel):
 		self.pixels.append(pixel)

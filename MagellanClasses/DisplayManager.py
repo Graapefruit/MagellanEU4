@@ -38,6 +38,7 @@ class DisplayManager():
         self.window = tkinter.Tk()
         self.window.geometry("1024x776")
         self.window.title("Magellan EU4") # TODO: Change title with mod folder name?
+        self.window.protocol('WM_DELETE_WINDOW', self.onClose)
 
         # The following must be populated
         self.onMenuFileOpen = doNothing
@@ -56,7 +57,7 @@ class DisplayManager():
         menubar = tkinter.Menu(self.window)
         fileMenu = tkinter.Menu(menubar, tearoff=0)
         fileMenu.add_command(label="Open", command=(lambda : self.onMenuFileOpen(filedialog.askdirectory())))
-        fileMenu.add_command(label="Save", command=self.onMenuFileSave())
+        fileMenu.add_command(label="Save", command=(lambda : self.onMenuFileSave()))
         menubar.add_cascade(label="File", menu=fileMenu)
         self.window.config(menu=menubar)
 
@@ -164,6 +165,15 @@ class DisplayManager():
         self.mapDisplay = ScrollableImage(self.rootPanel, width=1024, height=1024)
         self.mapDisplay.pack()
 
+    # --- Private Methods --- #
+
+    def onClose(self):
+        response = tkinter.messagebox.askyesno('Exit', 'Save your data before you exit?')
+        if response:
+            self.onMenuFileSave()
+        self.window.destroy()
+
+    # --- Public Methods --- #
 
     def updateMap(self, image):
         self.mapDisplay.updateImage(ImageTk.PhotoImage(image))
@@ -181,18 +191,19 @@ class DisplayManager():
         self.tagField.delete('0', tkinter.END)
         self.coresField.delete('0', tkinter.END)
         self.taxText.insert(tkinter.END, province.tax)
-        self.productionText.insert(tkinter.END, province.tax)
-        self.manpowerText.insert(tkinter.END, province.tax)
+        self.productionText.insert(tkinter.END, province.production)
+        self.manpowerText.insert(tkinter.END, province.manpower)
         self.tradeGoodField.set(province.tradeGood)
         self.hreBox.select if province.hre else self.hreBox.deselect
         self.terrainField.set(province.terrain)
-        # self.climateField.set()
-        # self.areaField.set()
-        # self.continentField.set()
+        self.climateField.set(province.climate)
+        self.areaField.delete('0', tkinter.END)
+        self.areaField.insert(tkinter.END, province.area)
+        self.continentField.set(province.continent)
         self.tagField.insert(tkinter.END, province.owner)
         coresText = ""
         for i in range(0, len(province.cores)):
-            coresText += province.cores(i)
+            coresText += province.cores[i]
             if i+1 < len(province.cores):
                 coresText += ", "
         self.coresField.insert(tkinter.END, coresText)

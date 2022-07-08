@@ -17,6 +17,7 @@ import numpy
 # 4. Tags
 class MapInfoManager():
     def __init__(self, path):
+        self.path = path
         self.max_provinces = 5000 # TODO: Grab this from Default.map
         self.provinces = []
         self.colorsToProvinces = dict()
@@ -88,6 +89,8 @@ class MapInfoManager():
                                 province.tradeGood = lineVal
                             case "discovered_by":
                                 province.discovered.append(lineVal)
+                            case _:
+                                province.extraText += line + "\n"
 
     def populateProvinceTerrain(self, path):
         print("Parsing the Terrain.txt")
@@ -144,3 +147,25 @@ class MapInfoManager():
         province = self.colorsToProvinces.get((self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]))
         return province
     #def generateReligionMap(self):
+
+    def save(self, provinces):
+        print("Saving...")
+        sys.stdout.flush()
+        for province in provinces:
+            f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
+            for core in province.cores:
+                f.write("add_core = {}\n".format(core))
+            f.write("controller = {}\n".format(province.owner))
+            f.write("culture = {}\n".format(province.culture))
+            f.write("religion = {}\n".format(province.religion))
+            f.write("hre = {}\n".format("yes" if province.hre else "no"))
+            f.write("base_tax = {}\n".format(province.tax))
+            f.write("base_production = {}\n".format(province.production))
+            f.write("base_manpower = {}\n".format(province.manpower))
+            f.write("trade_good = {}\n".format(province.tradeGood))
+            for discoverer in province.discovered:
+                f.write("discovered_by = {}\n".format(discoverer))
+            f.write("\n" + province.extraText)
+            f.close()
+        print("Done.")
+        sys.stdout.flush()

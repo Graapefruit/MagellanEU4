@@ -7,6 +7,7 @@ from PIL import Image
 class MagellanEU4():
 	def __init__(self):
 		self.currentProvince = None
+		self.selectedProvinces = set()
 		self.view = DisplayManager()
 		self.view.onMenuFileOpen = self.onNewModOpen
 		self.view.onMenuFileSave = self.onSave
@@ -17,6 +18,7 @@ class MagellanEU4():
 		self.updateProvinceInfoModel()
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
 		self.view.updateProvinceInfo(self.currentProvince)
+		self.selectedProvinces.add(self.currentProvince)
 
 	def updateProvinceInfoModel(self):
 		if not self.currentProvince:
@@ -25,6 +27,7 @@ class MagellanEU4():
 			print("ERROR: At least one of tax, production, or manpower is not an integer. Please fix this before selecting another province")
 			sys.stdout.flush()
 		else:
+			sys.stdout.flush()
 			self.currentProvince.name = self.view.provinceNameLabel.get()
 			self.currentProvince.cores = list(map(lambda n: n.strip(), self.view.coresField.get().split(',')))
 			self.currentProvince.owner = self.view.tagField.get()
@@ -40,15 +43,19 @@ class MagellanEU4():
 			self.currentProvince.terrain = self.view.terrainField.get()
 			self.currentProvince.climate = self.view.climateField.get()
 
-	def onSave(self):
-		self.updateProvinceInfoModel()
-
 	def onNewModOpen(self, path):
 		fileFormat = path + "/{}/{}"
 		self.model = MapInfoManager(path)
 		self.view.updateMap(Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
 		self.view.terrainField['values'] = list(map(lambda n: n, self.model.namesToTerrains.keys()))
 
+	def onSave(self):
+		self.updateProvinceInfoModel()
+		self.model.save(self.selectedProvinces)
+		self.selectedProvinces = set()
+
 if __name__ == "__main__":
 	controller = MagellanEU4()
 	controller.view.startMainLoop()
+	#if controller.selectedProvinces > 0:
+		
