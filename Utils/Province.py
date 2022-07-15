@@ -11,6 +11,7 @@ class Province:
 
 		self.cores = []
 		self.owner = ""
+		self.controller = ""
 		self.culture = ""
 		self.religion = ""
 		self.hre = ""

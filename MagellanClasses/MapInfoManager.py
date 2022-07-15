@@ -75,6 +75,8 @@ class MapInfoManager():
                                 province.cores.append(lineVal)
                             case "owner":
                                 province.owner = lineVal
+                            case "controller":
+                                province.controller = lineVal
                             case "culture":
                                 province.culture = lineVal
                             case "religion":
@@ -107,7 +109,6 @@ class MapInfoManager():
             color = None
             if match[1]:
                 rgbComponents = re.findall(AREA_COLOR_GROUPING_PATTERN, match[1])[0]
-                print(rgbComponents)
                 color = RGB(rgbComponents[0], rgbComponents[1], rgbComponents[2])
             for province in match[2].split():
                 if province.isnumeric():
@@ -180,19 +181,21 @@ class MapInfoManager():
         sys.stdout.flush()
         for province in updatedProvinces:
             f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
+            writeFieldIfExists(f, "owner", province.owner)
+            writeFieldIfExists(f, "controller", province.controller)
             for core in province.cores:
                 f.write("add_core = {}\n".format(core))
-            f.write("controller = {}\n".format(province.owner))
-            f.write("culture = {}\n".format(province.culture))
-            f.write("religion = {}\n".format(province.religion))
+            writeFieldIfExists(f, "culture", province.culture)
+            writeFieldIfExists(f, "religion", province.religion)
             f.write("hre = {}\n".format("yes" if province.hre else "no"))
             f.write("base_tax = {}\n".format(province.tax))
             f.write("base_production = {}\n".format(province.production))
             f.write("base_manpower = {}\n".format(province.manpower))
-            f.write("trade_good = {}\n".format(province.tradeGood))
+            writeFieldIfExists(f, "trade_good", province.tradeGood)
+
             for discoverer in province.discovered:
                 f.write("discovered_by = {}\n".format(discoverer))
-            f.write("\n" + province.extraText)
+            f.write(province.extraText)
             f.close()
 
         for province in self.provinces:
@@ -218,3 +221,9 @@ class MapInfoManager():
 
         print("Done.")
         sys.stdout.flush()
+
+
+
+def writeFieldIfExists(file, text, field):
+    if field != "":
+        file.write("{} = {}".format(text, field))

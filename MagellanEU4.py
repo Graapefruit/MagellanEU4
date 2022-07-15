@@ -34,6 +34,7 @@ class MagellanEU4():
 			self.currentProvince.name = self.view.provinceNameLabel.get()
 			self.currentProvince.cores = list(map(lambda n: n.strip(), self.view.coresField.get().split(',')))
 			self.currentProvince.owner = self.view.tagField.get()
+			self.currentProvince.controller = self.view.controllerField.get()
 			self.currentProvince.culture = self.view.cultureField.get()
 			self.currentProvince.religion = self.view.religionField.get()
 			self.currentProvince.hre = self.view.hreState.get() == 1

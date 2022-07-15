@@ -1,8 +1,6 @@
-from logging import root
-import sys
 import tkinter
 from ttkwidgets.autocomplete import AutocompleteCombobox
-from tkinter import HORIZONTAL, RAISED, VERTICAL, StringVar, filedialog, ttk
+from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
 from .ScrollableImage import ScrollableImage
 from PIL import ImageTk
 
@@ -156,6 +154,11 @@ class DisplayManager():
         self.tagField = tkinter.Entry(self.provinceBodyRight, justify="center")
         self.tagField.pack(side=tkinter.TOP)
 
+        self.controllerText = tkinter.Label(self.provinceBodyRight, text="Controller")
+        self.controllerText.pack(side=tkinter.TOP)
+        self.controllerField = tkinter.Entry(self.provinceBodyRight, justify="center")
+        self.controllerField.pack(side=tkinter.TOP)
+
         self.coresText = tkinter.Label(self.provinceBodyRight, text="Cores")
         self.coresText.pack(side=tkinter.TOP)
         self.coresField = tkinter.Entry(self.provinceBodyRight, justify="center")
@@ -184,20 +187,21 @@ class DisplayManager():
         self.provinceColorSv.set("Red: {} Green: {} Blue: {}".format(province.color[0], province.color[1], province.color[2]))
         self.religionField.set(province.religion)
         self.cultureField.set(province.culture)
-        #if len(self.taxText.get()) > 0:
         self.taxText.delete('0', tkinter.END)
         self.productionText.delete('0', tkinter.END)
         self.manpowerText.delete('0', tkinter.END)
         self.tagField.delete('0', tkinter.END)
+        self.controllerField.delete('0', tkinter.END)
         self.coresField.delete('0', tkinter.END)
+        self.areaField.delete('0', tkinter.END)
         self.taxText.insert(tkinter.END, province.tax)
         self.productionText.insert(tkinter.END, province.production)
         self.manpowerText.insert(tkinter.END, province.manpower)
         self.tradeGoodField.set(province.tradeGood)
         self.hreBox.select if province.hre else self.hreBox.deselect
         self.terrainField.set(province.terrain)
+        self.controllerField.insert(tkinter.END, province.controller)
         self.climateField.set(province.climate)
-        self.areaField.delete('0', tkinter.END)
         self.areaField.insert(tkinter.END, province.area)
         self.continentField.set(province.continent)
         self.tagField.insert(tkinter.END, province.owner)
