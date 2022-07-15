@@ -123,21 +123,19 @@ class MapInfoManager():
             matches = re.findall(TERRAIN_FILE_GROUPING_PATTERN, terrainFile.read())
             for match in matches:
                 terrainName = match[0]
-                startText = match[1]
+                startText = match[1].strip()
                 color = RGB.newFromTuple(match[2].split())
-                middleText = match[3]
-                provinceIds = []
+                middleText = match[3].strip()
                 if len(match[4]) > 0:
-                    provinceIds = self.getProvincesFromTerrainText(terrainName, match[4])
-                endText = match[5]
-                newTerrain = Terrain(terrainName, color, provinceIds, startText, middleText, endText)
+                    self.populateProvinceTerrainData(terrainName, match[4])
+                endText = match[5].strip()
+                newTerrain = Terrain(terrainName, color, startText, middleText, endText)
                 self.namesToTerrains[terrainName] = newTerrain
         else:
             print("No Terrain.txt File Found")
             sys.stdout.flush()
 
-    def getProvincesFromTerrainText(self, terrainName, text):
-        provinceIds = []
+    def populateProvinceTerrainData(self, terrainName, text):
         lines = text.split('\n')
         # On the first line, read any potential entries after the curly brace
         lines[0] = lines[0].split('{')[1]
@@ -150,11 +148,9 @@ class MapInfoManager():
                     provinceId = int(potentialId)
                     if provinceId <= self.max_provinces and self.idsToProvinces[provinceId]:
                         self.idsToProvinces[provinceId].terrain = terrainName
-                        provinceIds.append(provinceId)
                     else:
                         pass
                         # print("Warning: Terrain {} overrides provinceId {}, which is unused or out of bounds!".format(terrainName, potentialId))
-        return provinceIds
             
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
@@ -177,6 +173,7 @@ class MapInfoManager():
 
     def save(self, updatedProvinces):
         areasToProvinces = dict()
+        terrainsToProvinces = dict()
         print("Saving History Files...")
         sys.stdout.flush()
         for province in updatedProvinces:
@@ -200,11 +197,16 @@ class MapInfoManager():
 
         for province in self.provinces:
             if province.area != "":
-                sys.stdout.flush()
                 if province.area in areasToProvinces:
                     areasToProvinces[province.area].append(province.id)
                 else:
                     areasToProvinces[province.area] = [province.id]
+            
+            if province.terrain != "":
+                if province.terrain in terrainsToProvinces:
+                    terrainsToProvinces[province.terrain].append(province.id)
+                else:
+                    terrainsToProvinces[province.terrain] = [province.id]
         
         print("Saving Area File...")
         sys.stdout.flush()
@@ -218,6 +220,34 @@ class MapInfoManager():
             for provinceId in areasToProvinces.get(area):
                 f.write("{} ".format(provinceId))
             f.write("\n}\n\n")
+        f.close()
+
+        print("Saving Terrain File...")
+        sys.stdout.flush()
+        f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), 'w')
+        f.write("categories = {\n")
+        f.write("\tpti = {\n\t\ttype = pti\n\t}\n\n") # PTI is not matched by our regex but must still be included
+        for terrainName in terrainsToProvinces:
+            terrain = None
+            if terrainName in self.namesToTerrains:
+                terrain = self.namesToTerrains[terrainName]
+            else:
+                terrain = Terrain(terrainName, RGB(0, 0, 0), "", "", "")
+            f.write("\t{} = {{\n".format(terrainName))
+            if terrain.startText != "":
+                f.write("\t\t{}\n".format(terrain.startText))
+            f.write("\t\tcolor = {{ {} {} {} }}\n".format(terrain.color.red, terrain.color.green, terrain.color.blue))
+            if terrain.middleText != "":
+                f.write("\t\t{}\n".format(terrain.middleText))
+            if len(terrainsToProvinces[terrainName]) > 0:
+                f.write("\t\tterrain_override = {\n\t\t\t")
+                for province in terrainsToProvinces[terrainName]:
+                    f.write("{} ".format(province))
+                f.write("\n\t\t}")
+            f.write("\n\t}\n")
+            if terrain.endText != "":
+                f.write("\t\t{}\n".format(terrain.endText))
+        f.close()
 
         print("Done.")
         sys.stdout.flush()
