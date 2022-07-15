@@ -6,9 +6,9 @@ from Utils.RGB import RGB
 from MagellanClasses.Constants import *
 from PIL import Image
 from os import listdir
+from os.path import exists
 import re
 import numpy
-
 
 # TODO:
 # 1. History File
@@ -20,11 +20,13 @@ class MapInfoManager():
         self.path = path
         self.max_provinces = 5000 # TODO: Grab this from Default.map
         self.provinces = []
-        self.colorsToProvinces = dict()
+        self.areasToColors = dict()
         self.namesToTerrains = dict()
+        self.colorsToProvinces = dict()
         self.idsToProvinces = [None] * self.max_provinces
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
         self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
+        self.populateAreaData("{}/{}/{}".format(path, MAP_FOLDER_NAME, AREAS_FILE_NAME))
         self.populateProvinceTerrain("{}/{}/{}".format(path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
@@ -85,29 +87,53 @@ class MapInfoManager():
                                 province.production = lineVal
                             case "base_manpower":
                                 province.manpower = lineVal
-                            case "trade_goods":
+                            case "trade_good":
                                 province.tradeGood = lineVal
                             case "discovered_by":
                                 province.discovered.append(lineVal)
                             case _:
-                                province.extraText += line + "\n"
+                                province.extraText += line
+
+    def populateAreaData(self, path):
+        print("Populating Areas...")
+        sys.stdout.flush()
+        areaFile = open(path, 'r')
+        fileWithoutComments = ""
+        for line in areaFile:
+            fileWithoutComments += line.split('#')[0] + '\n'
+        matches = re.findall(AREA_GROUPING_PATTERN, fileWithoutComments)
+        for match in matches:
+            name = match[0]
+            color = None
+            if match[1]:
+                rgbComponents = re.findall(AREA_COLOR_GROUPING_PATTERN, match[1])[0]
+                print(rgbComponents)
+                color = RGB(rgbComponents[0], rgbComponents[1], rgbComponents[2])
+            for province in match[2].split():
+                if province.isnumeric():
+                    self.idsToProvinces[int(province)].area = name
+            self.areasToColors[name] = color
 
     def populateProvinceTerrain(self, path):
-        print("Parsing the Terrain.txt")
-        sys.stdout.flush()
-        terrainFile = open(path, 'r')
-        matches = re.findall(TERRAIN_FILE_GROUPING_PATTERN, terrainFile.read())
-        for match in matches:
-            terrainName = match[0]
-            startText = match[1]
-            color = RGB.newFromTuple(match[2].split())
-            middleText = match[3]
-            provinceIds = []
-            if len(match[4]) > 0:
-                provinceIds = self.getProvincesFromTerrainText(terrainName, match[4])
-            endText = match[5]
-            newTerrain = Terrain(terrainName, color, provinceIds, startText, middleText, endText)
-            self.namesToTerrains[terrainName] = newTerrain
+        if exists(path):
+            print("Parsing the Terrain.txt")
+            sys.stdout.flush()
+            terrainFile = open(path, 'r')
+            matches = re.findall(TERRAIN_FILE_GROUPING_PATTERN, terrainFile.read())
+            for match in matches:
+                terrainName = match[0]
+                startText = match[1]
+                color = RGB.newFromTuple(match[2].split())
+                middleText = match[3]
+                provinceIds = []
+                if len(match[4]) > 0:
+                    provinceIds = self.getProvincesFromTerrainText(terrainName, match[4])
+                endText = match[5]
+                newTerrain = Terrain(terrainName, color, provinceIds, startText, middleText, endText)
+                self.namesToTerrains[terrainName] = newTerrain
+        else:
+            print("No Terrain.txt File Found")
+            sys.stdout.flush()
 
     def getProvincesFromTerrainText(self, terrainName, text):
         provinceIds = []
@@ -148,10 +174,11 @@ class MapInfoManager():
         return province
     #def generateReligionMap(self):
 
-    def save(self, provinces):
-        print("Saving...")
+    def save(self, updatedProvinces):
+        areasToProvinces = dict()
+        print("Saving History Files...")
         sys.stdout.flush()
-        for province in provinces:
+        for province in updatedProvinces:
             f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
             for core in province.cores:
                 f.write("add_core = {}\n".format(core))
@@ -167,5 +194,27 @@ class MapInfoManager():
                 f.write("discovered_by = {}\n".format(discoverer))
             f.write("\n" + province.extraText)
             f.close()
+
+        for province in self.provinces:
+            if province.area != "":
+                sys.stdout.flush()
+                if province.area in areasToProvinces:
+                    areasToProvinces[province.area].append(province.id)
+                else:
+                    areasToProvinces[province.area] = [province.id]
+        
+        print("Saving Area File...")
+        sys.stdout.flush()
+        f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, AREAS_FILE_NAME), 'w')
+        for area in areasToProvinces:
+            f.write("{} = {{\n".format(area))
+            if area in self.areasToColors and self.areasToColors[area]:
+                color = self.areasToColors[area]
+                f.write("\tcolor = {{ {} {} {} }}\n".format(color.red, color.green, color.blue))
+            f.write("\t")
+            for provinceId in areasToProvinces.get(area):
+                f.write("{} ".format(provinceId))
+            f.write("\n}\n\n")
+
         print("Done.")
         sys.stdout.flush()

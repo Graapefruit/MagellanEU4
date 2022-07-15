@@ -3,6 +3,9 @@ from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
 from MagellanClasses.Constants import *
 from PIL import Image
+from random import randint
+
+FAREWELLS = ["hug your loved ones", "stay hydrated", "clean your room", "sleep on time", "stretch", "embargo your rivals"]
 
 class MagellanEU4():
 	def __init__(self):
@@ -57,5 +60,4 @@ class MagellanEU4():
 if __name__ == "__main__":
 	controller = MagellanEU4()
 	controller.view.startMainLoop()
-	#if controller.selectedProvinces > 0:
-		
+	print("Don't forget to {}!".format(FAREWELLS[randint(0, len(FAREWELLS)-1)]))
