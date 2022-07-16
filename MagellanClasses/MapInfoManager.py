@@ -28,6 +28,7 @@ class MapInfoManager():
         self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
         self.populateAreaData("{}/{}/{}".format(path, MAP_FOLDER_NAME, AREAS_FILE_NAME))
         self.populateProvinceTerrain("{}/{}/{}".format(path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME))
+        self.populateContinentData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         # self.populatePixels()
@@ -152,6 +153,19 @@ class MapInfoManager():
                         pass
                         # print("Warning: Terrain {} overrides provinceId {}, which is unused or out of bounds!".format(terrainName, potentialId))
             
+    def populateContinentData(self, path):
+        print("Parsing Continents.txt...")
+        sys.stdout.flush()
+        continentsFile = open(path, 'r')
+        matches = re.findall(CONTINENT_FILE_GROUPING_PATTERN, continentsFile.read())
+        for match in matches:
+            continentName = match[0]
+            for line in match[1].split("\n"):
+                provinceIds = line.split('#')[0].split()
+                for provinceId in provinceIds:
+                    if provinceId.isdigit() and self.idsToProvinces[int(provinceId)]:
+                        self.idsToProvinces[int(provinceId)].continent = continentName
+
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
         print("Populating Pixels... This may take a while")
@@ -174,6 +188,7 @@ class MapInfoManager():
     def save(self, updatedProvinces):
         areasToProvinces = dict()
         terrainsToProvinces = dict()
+        continentsToProvinces = dict()
         print("Saving History Files...")
         sys.stdout.flush()
         for province in updatedProvinces:
@@ -207,6 +222,12 @@ class MapInfoManager():
                     terrainsToProvinces[province.terrain].append(province.id)
                 else:
                     terrainsToProvinces[province.terrain] = [province.id]
+
+            if province.continent != "":
+                if province.continent in continentsToProvinces:
+                    continentsToProvinces[province.continent].append(province.id)
+                else:
+                    continentsToProvinces[province.continent] = [province.id]
         
         print("Saving Area File...")
         sys.stdout.flush()
@@ -247,6 +268,21 @@ class MapInfoManager():
             f.write("\n\t}\n")
             if terrain.endText != "":
                 f.write("\t\t{}\n".format(terrain.endText))
+        f.close()
+
+        print("Saving Continent File...")
+        sys.stdout.flush()
+        f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), 'w')
+        for continentName in continentsToProvinces:
+            f.write("{} = {{\n\t".format(continentName))
+            charactersOnLine = 0
+            for province in continentsToProvinces[continentName]:
+                f.write("{} ".format(province))
+                charactersOnLine += len(str(province)) + 1
+                if charactersOnLine >= CHARACTERS_PER_LINE_CONTINENT:
+                    f.write("\n\t")
+                    charactersOnLine = 0
+            f.write("\n}\n\n")
         f.close()
 
         print("Done.")
