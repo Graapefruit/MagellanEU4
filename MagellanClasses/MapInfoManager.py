@@ -292,4 +292,4 @@ class MapInfoManager():
 
 def writeFieldIfExists(file, text, field):
     if field != "":
-        file.write("{} = {}".format(text, field))
+        file.write("{} = {}\n".format(text, field))
