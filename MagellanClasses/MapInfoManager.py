@@ -4,6 +4,7 @@ from Utils.Province import Province
 from Utils.Terrain import Terrain
 from Utils.RGB import RGB
 from MagellanClasses.Constants import *
+from .Defaults import *
 from PIL import Image
 from os import listdir
 from os.path import exists
@@ -29,6 +30,7 @@ class MapInfoManager():
         self.populateAreaData("{}/{}/{}".format(path, MAP_FOLDER_NAME, AREAS_FILE_NAME))
         self.populateProvinceTerrain("{}/{}/{}".format(path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME))
         self.populateContinentData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME))
+        self.populateClimateData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         # self.populatePixels()
@@ -166,6 +168,27 @@ class MapInfoManager():
                     if provinceId.isdigit() and self.idsToProvinces[int(provinceId)]:
                         self.idsToProvinces[int(provinceId)].continent = continentName
 
+    def populateClimateData(self, path):
+        print("Parsing {}...".format(CLIMATE_FILE_NAME))
+        sys.stdout.flush()
+        climateFileText = self.getFileTextWithoutComments(path)
+        matches = re.findall(CLIMATE_FILE_GROUPING_PATTERN, climateFileText)
+        for match in matches:
+            key = match[0]
+            values = match[1].split()
+            if key in DEFAULT_CLIMATES:
+                for value in values:
+                    if value.isdigit():
+                        self.idsToProvinces[int(value)].climate = key
+            elif key in DEFAULT_WEATHERS:
+                for value in values:
+                    if value.isdigit():
+                        self.idsToProvinces[int(value)].weather = key
+            elif key == "impassable":
+                for value in values:
+                    if value.isdigit():
+                        self.idsToProvinces[int(value)].impassable = True
+
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
         print("Populating Pixels... This may take a while")
@@ -178,6 +201,13 @@ class MapInfoManager():
 
     # --- Utility --- #
 
+    def getFileTextWithoutComments(self, path):
+        f = open(path, 'r')
+        fileText = ""
+        for line in f:
+            fileText += line.split('#')[0]
+        return fileText
+
     # --- Public --- #
 
     def getProvinceAtIndex(self, x, y):
@@ -189,6 +219,12 @@ class MapInfoManager():
         areasToProvinces = dict()
         terrainsToProvinces = dict()
         continentsToProvinces = dict()
+        climateEntryToProvinces = dict()
+        for climate in DEFAULT_CLIMATES:
+            climateEntryToProvinces[climate] = []
+        for weather in DEFAULT_WEATHERS:
+            climateEntryToProvinces[weather] = []
+        climateEntryToProvinces["impassable"] = []
         print("Saving History Files...")
         sys.stdout.flush()
         for province in updatedProvinces:
@@ -228,6 +264,15 @@ class MapInfoManager():
                     continentsToProvinces[province.continent].append(province.id)
                 else:
                     continentsToProvinces[province.continent] = [province.id]
+
+            if province.climate != "":
+                climateEntryToProvinces[province.climate].append(province.id)
+
+            if province.weather != "":
+                climateEntryToProvinces[province.weather].append(province.id)
+
+            if province.impassable:
+                climateEntryToProvinces["impassable"].append(province.id)
         
         print("Saving Area File...")
         sys.stdout.flush()
@@ -276,19 +321,33 @@ class MapInfoManager():
         for continentName in continentsToProvinces:
             f.write("{} = {{\n\t".format(continentName))
             charactersOnLine = 0
-            for province in continentsToProvinces[continentName]:
-                f.write("{} ".format(province))
-                charactersOnLine += len(str(province)) + 1
-                if charactersOnLine >= CHARACTERS_PER_LINE_CONTINENT:
+            for provinceId in continentsToProvinces[continentName]:
+                f.write("{} ".format(provinceId))
+                charactersOnLine += len(str(provinceId)) + 1
+                if charactersOnLine >= PROVINCE_CHARACTERS_PER_LINE:
                     f.write("\n\t")
                     charactersOnLine = 0
             f.write("\n}\n\n")
         f.close()
 
-        print("Done.")
+        print("Saving Climate File...")
         sys.stdout.flush()
+        f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME), 'w')
+        for climateKey in climateEntryToProvinces:
+            f.write("{} = {{\n\t".format(climateKey))
+            charactersOnLine = 0
+            for provinceId in climateEntryToProvinces[climateKey]:
+                f.write("{} ".format(provinceId))
+                charactersOnLine += len(str(provinceId)) + 1
+                if charactersOnLine >= PROVINCE_CHARACTERS_PER_LINE:
+                    f.write("\n\t")
+                    charactersOnLine = 0
+            f.write("\n}\n\n")
+        f.write("equator_y_on_province_image = 656") # I have no Fucking clue what this does, but its at the end of the climate.txt file so...
+        f.close()
 
-
+        print("Saving Success")
+        sys.stdout.flush()
 
 def writeFieldIfExists(file, text, field):
     if field != "":

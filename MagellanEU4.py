@@ -5,7 +5,7 @@ from MagellanClasses.Constants import *
 from PIL import Image
 from random import randint
 
-FAREWELLS = ["hug your loved ones", "stay hydrated", "clean your room", "sleep on time", "stretch", "embargo your rivals"]
+FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries"]
 
 class MagellanEU4():
 	def __init__(self):
@@ -38,6 +38,7 @@ class MagellanEU4():
 			self.currentProvince.culture = self.view.cultureField.get()
 			self.currentProvince.religion = self.view.religionField.get()
 			self.currentProvince.hre = self.view.hreState.get() == 1
+			self.currentProvince.impassable = self.view.impassableState.get() == 1
 			self.currentProvince.tax = int(self.view.taxText.get())
 			self.currentProvince.production = int(self.view.productionText.get())
 			self.currentProvince.manpower = int(self.view.manpowerText.get())

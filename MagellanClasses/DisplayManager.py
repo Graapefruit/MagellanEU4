@@ -2,28 +2,8 @@ import tkinter
 from ttkwidgets.autocomplete import AutocompleteCombobox
 from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
 from .ScrollableImage import ScrollableImage
+from .Defaults import *
 from PIL import ImageTk
-
-DEFAULT_RELIGIONS = ["catholic", "anglican", "hussite", "protestant", "reformed", "orthodox", "coptic", 
-    "sunni", "shiite", "ibadi", 
-    "buddhism", "vajrayana", "mahayana", "confucianism", "shinto", 
-    "hinduism", "sikhism", "jewish", "zoroastrian"
-    "animism", "shamanism", "totemism", "inti", "nahuatl", 
-    "mesoamerican_religion", "norse_pagan_reformed", "tengri_pagan_reformed", "dreamtime"]
-
-DEFAULT_CULTURES = ["sapmi", "atlantean", "armenian"]
-
-DEFAULT_TRADE_GOODS = ["grain", "wine", "wool", "cloth", "fish", "fur", "salt", "naval_supplies", "copper", "gold", 
-    "iron", "slaves", "ivory", "tea", "chinaware", "spices", "coffee", "cotton", "sugar", "tobacco", "cocoa", 
-    "silk", "dyes", "tropical_wood", "livestock", "incense", "glass", "paper", "gems", "coal", "cloves", "unknown"]
-
-DEFAULT_TERRAINS = ["ocean", "inland_ocean", "glacier", "farmlands", "forest", "hills", "woods", "mountain", 
-    "impassable_mountains", "grasslands", "jungle", "marsh", "desert", "coastal_desert", "coastline", 
-    "drylands", "highlands", "savannah", "steppe"]
-
-DEFAULT_CLIMATES = ["Temperate", "Arctic", "Tropical", "Arid"]
-
-DEFAULT_CONTINENTS = ["europe", "asia", "africa", "north_america", "south_america", "oceania"]
 
 def doNothing(*argv):
     pass
@@ -121,6 +101,16 @@ class DisplayManager():
         self.tradeGoodField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=DEFAULT_TRADE_GOODS)
         self.tradeGoodField.pack(side=tkinter.TOP)
 
+        self.areaText = tkinter.Label(self.provinceBodyLeft, text="Area")
+        self.areaText.pack(side=tkinter.TOP)
+        self.areaField = tkinter.Entry(self.provinceBodyLeft, justify="center")
+        self.areaField.pack(side=tkinter.TOP)
+
+        self.continentText = tkinter.Label(self.provinceBodyLeft, text="Continent")
+        self.continentText.pack(side=tkinter.TOP)
+        self.continentField = AutocompleteCombobox(self.provinceBodyLeft, completevalues=DEFAULT_CONTINENTS)
+        self.continentField.pack(side=tkinter.TOP)
+
         self.hreState = tkinter.IntVar()
         self.hreBox = tkinter.Checkbutton(self.provinceBodyLeft, variable=self.hreState, text="HRE")
         self.hreBox.pack(side=tkinter.TOP)
@@ -128,26 +118,6 @@ class DisplayManager():
     def createRightProvinceBodyPanel(self):
         self.provinceBodyRight = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyRight.pack(side=tkinter.LEFT)
-
-        self.terrainText = tkinter.Label(self.provinceBodyRight, text="Terrain")
-        self.terrainText.pack(side=tkinter.TOP)
-        self.terrainField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_TERRAINS)
-        self.terrainField.pack(side=tkinter.TOP)
-
-        self.climateText = tkinter.Label(self.provinceBodyRight, text="Climate")
-        self.climateText.pack(side=tkinter.TOP)
-        self.climateField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_CLIMATES)
-        self.climateField.pack(side=tkinter.TOP)
-
-        self.areaText = tkinter.Label(self.provinceBodyRight, text="Area")
-        self.areaText.pack(side=tkinter.TOP)
-        self.areaField = tkinter.Entry(self.provinceBodyRight, justify="center")
-        self.areaField.pack(side=tkinter.TOP)
-
-        self.continentText = tkinter.Label(self.provinceBodyRight, text="Continent")
-        self.continentText.pack(side=tkinter.TOP)
-        self.continentField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_CONTINENTS)
-        self.continentField.pack(side=tkinter.TOP)
 
         self.tagText = tkinter.Label(self.provinceBodyRight, text="Owner")
         self.tagText.pack(side=tkinter.TOP)
@@ -163,6 +133,25 @@ class DisplayManager():
         self.coresText.pack(side=tkinter.TOP)
         self.coresField = tkinter.Entry(self.provinceBodyRight, justify="center")
         self.coresField.pack(side=tkinter.TOP)
+
+        self.terrainText = tkinter.Label(self.provinceBodyRight, text="Terrain")
+        self.terrainText.pack(side=tkinter.TOP)
+        self.terrainField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_TERRAINS)
+        self.terrainField.pack(side=tkinter.TOP)
+
+        self.climateText = tkinter.Label(self.provinceBodyRight, text="Climate")
+        self.climateText.pack(side=tkinter.TOP)
+        self.climateField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_CLIMATES)
+        self.climateField.pack(side=tkinter.TOP)
+
+        self.weatherText = tkinter.Label(self.provinceBodyRight, text="Weather")
+        self.weatherText.pack(side=tkinter.TOP)
+        self.weatherField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_WEATHERS)
+        self.weatherField.pack(side=tkinter.TOP)
+
+        self.impassableState = tkinter.IntVar()
+        self.impassableBox = tkinter.Checkbutton(self.provinceBodyRight, variable=self.impassableState, text="Impassable")
+        self.impassableBox.pack(side=tkinter.TOP)
 
     def createScrollableImage(self):
         self.mapDisplay = ScrollableImage(self.rootPanel, width=1024, height=1024)
@@ -198,10 +187,12 @@ class DisplayManager():
         self.productionText.insert(tkinter.END, province.production)
         self.manpowerText.insert(tkinter.END, province.manpower)
         self.tradeGoodField.set(province.tradeGood)
-        self.hreBox.select if province.hre else self.hreBox.deselect
+        self.hreBox.select() if province.hre else self.hreBox.deselect()
+        self.impassableBox.select() if province.impassable else self.impassableBox.deselect()
         self.terrainField.set(province.terrain)
         self.controllerField.insert(tkinter.END, province.controller)
         self.climateField.set(province.climate)
+        self.weatherField.set(province.weather)
         self.areaField.insert(tkinter.END, province.area)
         self.continentField.set(province.continent)
         self.tagField.insert(tkinter.END, province.owner)

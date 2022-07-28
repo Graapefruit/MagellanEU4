@@ -14,7 +14,7 @@ class Province:
 		self.controller = ""
 		self.culture = ""
 		self.religion = ""
-		self.hre = ""
+		self.hre = False
 		self.tax = 1
 		self.production = 1
 		self.manpower = 1
@@ -25,7 +25,8 @@ class Province:
 		self.continent = ""
 		self.terrain = ""
 		self.climate = ""
-		self.winter = ""
+		self.weather = ""
+		self.impassable = False
 
 		self.extraText = ""
 
