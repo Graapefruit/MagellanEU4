@@ -44,8 +44,10 @@ class DisplayManager():
         self.provinceInfoPanel.pack(fill=tkinter.Y)
         self.createProvinceBodyHeader()
         self.createProvinceBodyPanel()
+        self.createProvinceBodyFooter()
         self.provinceInfoPanel.add(self.provinceHeader)
         self.provinceInfoPanel.add(self.provinceBody)
+        self.provinceInfoPanel.add(self.provinceFooter)
 
     def createProvinceBodyHeader(self):
         self.provinceHeader = tkinter.PanedWindow(self.provinceInfoPanel, bd=2)
@@ -70,6 +72,28 @@ class DisplayManager():
         self.createRightProvinceBodyPanel()
         self.provinceBody.add(self.provinceBodyLeft)
         self.provinceBody.add(self.provinceBodyRight)
+
+    def createProvinceBodyFooter(self):
+        self.provinceFooter = tkinter.PanedWindow(self.provinceInfoPanel, bd=2)
+        self.provinceFooter.pack(side=tkinter.TOP)
+        self.provinceFooterHeader = tkinter.Label(self.provinceFooter, text="Discovered By:")
+        self.provinceFooterHeader.pack(side=tkinter.TOP)
+        self.techGroupToCheckbox = dict()
+        self.techGroupToIntVar = dict()
+        currentPanel = None
+        rowIndex = 0
+        for techGroup in DEFAULT_TECH_GROUPS:
+            if rowIndex == 0:
+                currentPanel = tkinter.PanedWindow(self.provinceFooter, orient=HORIZONTAL)
+                currentPanel.pack(side=tkinter.TOP)
+            techGroupVar = tkinter.IntVar()
+            currentCheckbox = tkinter.Checkbutton(currentPanel, variable=techGroupVar, text=techGroup)
+            currentCheckbox.pack(side=tkinter.LEFT)
+            self.techGroupToCheckbox[techGroup] = currentCheckbox
+            self.techGroupToIntVar[techGroup] = techGroupVar
+            rowIndex += 1
+            if rowIndex == 3:
+                rowIndex = 0
 
     def createLeftProvinceBodyPanel(self):
         self.provinceBodyLeft = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
@@ -201,6 +225,11 @@ class DisplayManager():
             coresText += province.cores[i]
             if i+1 < len(province.cores):
                 coresText += ", "
+        for techGroup in DEFAULT_TECH_GROUPS:
+            if techGroup in province.discovered:
+                self.techGroupToCheckbox[techGroup].select()
+            else:
+                self.techGroupToCheckbox[techGroup].deselect()
         self.coresField.insert(tkinter.END, coresText)
 
     def startMainLoop(self):

@@ -19,3 +19,7 @@ DEFAULT_CLIMATES = ["arctic", "tropical", "arid"]
 DEFAULT_WEATHERS = ["mild_winter", "normal_winter", "severe_winter", "mild_monsoon", "normal_monsoon", "severe_monsoon"]
 
 DEFAULT_CONTINENTS = ["europe", "asia", "africa", "north_america", "south_america", "oceania"]
+
+DEFAULT_TECH_GROUPS = ["western", "eastern", "ottoman", "muslim", "indian", "east_african", "central_african", 
+    "chinese", "nomad_group", "sub_saharan", "north_american", "mesoamerican", "south_american", "andean", 
+    "aboriginal_tech", "polynesian_tech", "high_american"]
