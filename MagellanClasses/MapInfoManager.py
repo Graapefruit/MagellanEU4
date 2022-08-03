@@ -141,7 +141,6 @@ class MapInfoManager():
                     self.populateProvinceTerrainData(terrainName, match[4])
                 newTerrain = Terrain(terrainName, color, extraText, isWater)
                 self.namesToTerrains[terrainName] = newTerrain
-                print(self.namesToTerrains)
         else:
             print("No Terrain File Found")
             sys.stdout.flush()
@@ -150,10 +149,12 @@ class MapInfoManager():
         lines = text.split('\n')
         # On the first line, read any potential entries after the curly brace
         lines[0] = lines[0].split('{')[1]
+        print(lines)
+        sys.stdout.flush()
         for line in lines:
             # Remove Comments
             line = line.split('#')[0]
-            potentialIds = line.split(' ')
+            potentialIds = line.split()
             for potentialId in potentialIds:
                 if potentialId.isdigit():
                     provinceId = int(potentialId)
@@ -297,7 +298,7 @@ class MapInfoManager():
 
         for province in updatedProvinces:
             f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
-            if (self.namesToTerrains and self.namesToTerrains[province.terrain].isWater if province.terrain in self.namesToTerrains else True):
+            if (not self.namesToTerrains[province.terrain].isWater if province.terrain in self.namesToTerrains else True):
                 f.write("capital = \"{}\"\n".format(province.capital))
                 writeFieldIfExists(f, "owner", province.owner)
                 writeFieldIfExists(f, "controller", province.controller)
@@ -358,23 +359,19 @@ class MapInfoManager():
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), 'w')
         f.write("categories = {\n")
-        f.write("\tpti = {\n\t\ttype = pti\n\t}\n\n") # PTI is not matched by our regex but must still be included
-        for terrainName in terrainsToProvinces:
-            terrain = None
-            if terrainName in self.namesToTerrains:
-                terrain = self.namesToTerrains[terrainName]
-            else:
-                terrain = Terrain(terrainName, RGB(0, 0, 0), "", "", "")
+        f.write("\tpti = {\n\t\ttype = pti\n\t}\n") # PTI is not matched by our regex but must still be included
+        for terrainName in self.namesToTerrains:
+            terrain = self.namesToTerrains[terrainName]
             f.write("\t{} = {{\n".format(terrainName))
             f.write("\t\tcolor = {{ {} {} {} }}\n".format(terrain.color.red, terrain.color.green, terrain.color.blue))
             if terrain.extraText != "":
                 f.write("\t\t{}\n".format(terrain.extraText))
-            if len(terrainsToProvinces[terrainName]) > 0:
+            if terrainName in terrainsToProvinces:
                 f.write("\t\tterrain_override = {\n\t\t\t")
                 for province in terrainsToProvinces[terrainName]:
                     f.write("{} ".format(province))
-                f.write("\n\t\t}")
-            f.write("\n\t}\n")
+                f.write("\n\t\t}\n")
+            f.write("\t}\n")
         f.write("}")
         f.close()
 
