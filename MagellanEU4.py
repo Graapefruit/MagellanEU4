@@ -34,7 +34,7 @@ class MagellanEU4():
 			self.currentProvince.capital = self.view.provinceCapitalLabel.get()
 			self.currentProvince.name = self.view.provinceName.get()
 			self.currentProvince.adjective = self.view.provinceAdjective.get()
-			self.currentProvince.cores = list(map(lambda n: n.strip(), self.view.coresField.get().split(',')))
+			self.currentProvince.cores = list(map(lambda n: n.strip(), self.view.coresField.get().split(','))) if not self.view.coresField.get().isspace() else []
 			self.currentProvince.owner = self.view.tagField.get()
 			self.currentProvince.controller = self.view.controllerField.get()
 			self.currentProvince.culture = self.view.cultureField.get()
@@ -59,7 +59,6 @@ class MagellanEU4():
 		fileFormat = path + "/{}/{}"
 		self.model = MapInfoManager(path)
 		self.view.updateMap(Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
-		self.view.terrainField['values'] = list(map(lambda n: n, self.model.namesToTerrains.keys()))
 
 	def onSave(self):
 		self.updateProvinceInfoModel()

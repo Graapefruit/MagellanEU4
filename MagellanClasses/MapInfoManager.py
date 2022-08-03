@@ -101,7 +101,7 @@ class MapInfoManager():
                             case "capital":
                                 pass
                             case _:
-                                province.extraText += line
+                                province.extraText += line.strip()
 
     def populateAreaData(self, path):
         print("Populating Areas...")
@@ -134,14 +134,14 @@ class MapInfoManager():
             matches = re.findall(TERRAIN_FILE_GROUPING_PATTERN, terrainFile.read())
             for match in matches:
                 terrainName = match[0]
-                startText = match[1].strip()
+                extraText = match[1].strip() + match[3].strip() + match[5].strip()
+                isWater = re.search(TERRAIN_FILE_IS_WATER_PATTERN, extraText) != None
                 color = RGB.newFromTuple(match[2].split())
-                middleText = match[3].strip()
                 if len(match[4]) > 0:
                     self.populateProvinceTerrainData(terrainName, match[4])
-                endText = match[5].strip()
-                newTerrain = Terrain(terrainName, color, startText, middleText, endText)
+                newTerrain = Terrain(terrainName, color, extraText, isWater)
                 self.namesToTerrains[terrainName] = newTerrain
+                print(self.namesToTerrains)
         else:
             print("No Terrain File Found")
             sys.stdout.flush()
@@ -271,25 +271,6 @@ class MapInfoManager():
         climateEntryToProvinces["impassable"] = []
         print("Saving History Files...")
         sys.stdout.flush()
-        for province in updatedProvinces:
-            f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
-            f.write("capital = \"{}\"\n".format(province.capital))
-            writeFieldIfExists(f, "owner", province.owner)
-            writeFieldIfExists(f, "controller", province.controller)
-            for core in province.cores:
-                f.write("add_core = {}\n".format(core))
-            writeFieldIfExists(f, "culture", province.culture)
-            writeFieldIfExists(f, "religion", province.religion)
-            f.write("hre = {}\n".format("yes" if province.hre else "no"))
-            f.write("base_tax = {}\n".format(province.tax))
-            f.write("base_production = {}\n".format(province.production))
-            f.write("base_manpower = {}\n".format(province.manpower))
-            writeFieldIfExists(f, "trade_good", province.tradeGood)
-
-            for discoverer in province.discovered:
-                f.write("discovered_by = {}\n".format(discoverer))
-            f.write(province.extraText)
-            f.close()
 
         for province in self.provinces:
             if province.area != "":
@@ -313,6 +294,27 @@ class MapInfoManager():
                 climateEntryToProvinces[province.weather].append(province.id)
             if province.impassable:
                 climateEntryToProvinces["impassable"].append(province.id)
+
+        for province in updatedProvinces:
+            f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
+            if (self.namesToTerrains and self.namesToTerrains[province.terrain].isWater if province.terrain in self.namesToTerrains else True):
+                f.write("capital = \"{}\"\n".format(province.capital))
+                writeFieldIfExists(f, "owner", province.owner)
+                writeFieldIfExists(f, "controller", province.controller)
+                for core in province.cores:
+                    f.write("add_core = {}\n".format(core))
+                writeFieldIfExists(f, "culture", province.culture)
+                writeFieldIfExists(f, "religion", province.religion)
+                f.write("hre = {}\n".format("yes" if province.hre else "no"))
+                f.write("base_tax = {}\n".format(province.tax))
+                f.write("base_production = {}\n".format(province.production))
+                f.write("base_manpower = {}\n".format(province.manpower))
+                writeFieldIfExists(f, "trade_good", province.tradeGood)
+
+            for discoverer in province.discovered:
+                f.write("discovered_by = {}\n".format(discoverer))
+            f.write(province.extraText)
+            f.close()
 
         print("Saving Province Definitions...")
         sys.stdout.flush()
@@ -364,19 +366,16 @@ class MapInfoManager():
             else:
                 terrain = Terrain(terrainName, RGB(0, 0, 0), "", "", "")
             f.write("\t{} = {{\n".format(terrainName))
-            if terrain.startText != "":
-                f.write("\t\t{}\n".format(terrain.startText))
             f.write("\t\tcolor = {{ {} {} {} }}\n".format(terrain.color.red, terrain.color.green, terrain.color.blue))
-            if terrain.middleText != "":
-                f.write("\t\t{}\n".format(terrain.middleText))
+            if terrain.extraText != "":
+                f.write("\t\t{}\n".format(terrain.extraText))
             if len(terrainsToProvinces[terrainName]) > 0:
                 f.write("\t\tterrain_override = {\n\t\t\t")
                 for province in terrainsToProvinces[terrainName]:
                     f.write("{} ".format(province))
                 f.write("\n\t\t}")
             f.write("\n\t}\n")
-            if terrain.endText != "":
-                f.write("\t\t{}\n".format(terrain.endText))
+        f.write("}")
         f.close()
 
         print("Saving Continent File...")
