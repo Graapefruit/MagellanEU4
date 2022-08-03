@@ -13,6 +13,8 @@ CONTINENTS_FILE_NAME = "continent.txt"
 POSITIONS_FILE_NAME = "positions.txt"
 TERRAIN_FILE_NAME = "terrain.txt"
 CLIMATE_FILE_NAME = "climate.txt"
+LOCALIZATION_NAME_FILE = "prov_names_l_english.yml"
+LOCALIZATION_ADJECTIVE_FILE = "prov_names_adj_l_english.yml"
 PROVINCES_HISTORY_PATH = "history/provinces"
 PROVINCE_CHARACTERS_PER_LINE = 85
 
@@ -21,7 +23,8 @@ RNW_PROVINCE_KEY = "RNW"
 
 # Regex
 
-LOCALIZATION_PATTERN = re.compile(" PROV([0-9]*):[0-9]* \"(.*)\"", re.IGNORECASE)
+LOCALIZATION_NAME_PATTERN = re.compile(" _PROV([0-9]+):[0-9]\s*\"(.*)?\"", re.IGNORECASE)
+LOCALIZATION_ADJECTIVE_PATTERN = re.compile(" _ADJ([0-9]+):[0-9]\s*\"(.*)?\"", re.IGNORECASE)
 GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{([a-z0-9_\s]*)}", re.IGNORECASE)
 AREA_GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{\s*(color\s*=\s*{\s*[0-9]{1,3}\s*[0-9]{1,3}\s*[0-9]{1,3}\s*})?([a-z0-9_\s]*)}", re.IGNORECASE)
 AREA_COLOR_GROUPING_PATTERN = re.compile("color\s*=\s*{\s*([0-9]{1,3})\s*([0-9]{1,3})\s*([0-9]{1,3})\s*}")

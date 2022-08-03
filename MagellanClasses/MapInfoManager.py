@@ -31,6 +31,8 @@ class MapInfoManager():
         self.populateProvinceTerrain("{}/{}/{}".format(path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME))
         self.populateContinentData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME))
         self.populateClimateData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME))
+        self.populateNameData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
+        self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         # self.populatePixels()
@@ -44,7 +46,7 @@ class MapInfoManager():
         provincesInfo = open(path)
         reader = csv.reader(provincesInfo, delimiter=';')
         for provinceInfo in reader:
-            if (provinceInfo[0] == "province"):
+            if not provinceInfo[0].isdigit():
                 continue
             rgb = (int(provinceInfo[1]), int(provinceInfo[2]), int(provinceInfo[3]))
             # Skip RNW Provinces (some even share the same colors; yuck wtf)
@@ -96,32 +98,38 @@ class MapInfoManager():
                                 province.tradeGood = lineVal
                             case "discovered_by":
                                 province.discovered.append(lineVal)
+                            case "capital":
+                                pass
                             case _:
                                 province.extraText += line
 
     def populateAreaData(self, path):
         print("Populating Areas...")
         sys.stdout.flush()
-        areaFile = open(path, 'r')
-        fileWithoutComments = ""
-        for line in areaFile:
-            fileWithoutComments += line.split('#')[0] + '\n'
-        matches = re.findall(AREA_GROUPING_PATTERN, fileWithoutComments)
-        for match in matches:
-            name = match[0]
-            color = None
-            if match[1]:
-                rgbComponents = re.findall(AREA_COLOR_GROUPING_PATTERN, match[1])[0]
-                color = RGB(rgbComponents[0], rgbComponents[1], rgbComponents[2])
-            for province in match[2].split():
-                if province.isnumeric():
-                    self.idsToProvinces[int(province)].area = name
-            self.areasToColors[name] = color
+        if exists(path):
+            areaFile = open(path, 'r')
+            fileWithoutComments = ""
+            for line in areaFile:
+                fileWithoutComments += line.split('#')[0] + '\n'
+            matches = re.findall(AREA_GROUPING_PATTERN, fileWithoutComments)
+            for match in matches:
+                name = match[0]
+                color = None
+                if match[1]:
+                    rgbComponents = re.findall(AREA_COLOR_GROUPING_PATTERN, match[1])[0]
+                    color = RGB(rgbComponents[0], rgbComponents[1], rgbComponents[2])
+                for province in match[2].split():
+                    if province.isnumeric():
+                        self.idsToProvinces[int(province)].area = name
+                self.areasToColors[name] = color
+        else:
+            print("No Area File Found")
+            sys.stdout.flush()
 
     def populateProvinceTerrain(self, path):
+        print("Parsing Terrains...")
+        sys.stdout.flush()
         if exists(path):
-            print("Parsing the Terrain.txt")
-            sys.stdout.flush()
             terrainFile = open(path, 'r')
             matches = re.findall(TERRAIN_FILE_GROUPING_PATTERN, terrainFile.read())
             for match in matches:
@@ -135,7 +143,7 @@ class MapInfoManager():
                 newTerrain = Terrain(terrainName, color, startText, middleText, endText)
                 self.namesToTerrains[terrainName] = newTerrain
         else:
-            print("No Terrain.txt File Found")
+            print("No Terrain File Found")
             sys.stdout.flush()
 
     def populateProvinceTerrainData(self, terrainName, text):
@@ -156,38 +164,74 @@ class MapInfoManager():
                         # print("Warning: Terrain {} overrides provinceId {}, which is unused or out of bounds!".format(terrainName, potentialId))
             
     def populateContinentData(self, path):
-        print("Parsing Continents.txt...")
+        print("Parsing Continents...")
         sys.stdout.flush()
-        continentsFile = open(path, 'r')
-        matches = re.findall(CONTINENT_FILE_GROUPING_PATTERN, continentsFile.read())
-        for match in matches:
-            continentName = match[0]
-            for line in match[1].split("\n"):
-                provinceIds = line.split('#')[0].split()
-                for provinceId in provinceIds:
-                    if provinceId.isdigit() and self.idsToProvinces[int(provinceId)]:
-                        self.idsToProvinces[int(provinceId)].continent = continentName
+        if exists(path):
+            continentsFile = open(path, 'r')
+            matches = re.findall(CONTINENT_FILE_GROUPING_PATTERN, continentsFile.read())
+            for match in matches:
+                continentName = match[0]
+                for line in match[1].split("\n"):
+                    provinceIds = line.split('#')[0].split()
+                    for provinceId in provinceIds:
+                        if provinceId.isdigit() and self.idsToProvinces[int(provinceId)]:
+                            self.idsToProvinces[int(provinceId)].continent = continentName
+        else:
+            print("No Continents File Found")
+            sys.stdout.flush()
 
     def populateClimateData(self, path):
         print("Parsing {}...".format(CLIMATE_FILE_NAME))
         sys.stdout.flush()
-        climateFileText = self.getFileTextWithoutComments(path)
-        matches = re.findall(CLIMATE_FILE_GROUPING_PATTERN, climateFileText)
-        for match in matches:
-            key = match[0]
-            values = match[1].split()
-            if key in DEFAULT_CLIMATES:
-                for value in values:
-                    if value.isdigit():
-                        self.idsToProvinces[int(value)].climate = key
-            elif key in DEFAULT_WEATHERS:
-                for value in values:
-                    if value.isdigit():
-                        self.idsToProvinces[int(value)].weather = key
-            elif key == "impassable":
-                for value in values:
-                    if value.isdigit():
-                        self.idsToProvinces[int(value)].impassable = True
+        if exists(path):
+            climateFileText = self.getFileTextWithoutComments(path)
+            matches = re.findall(CLIMATE_FILE_GROUPING_PATTERN, climateFileText)
+            for match in matches:
+                key = match[0]
+                values = match[1].split()
+                if key in DEFAULT_CLIMATES:
+                    for value in values:
+                        if value.isdigit():
+                            self.idsToProvinces[int(value)].climate = key
+                elif key in DEFAULT_WEATHERS:
+                    for value in values:
+                        if value.isdigit():
+                            self.idsToProvinces[int(value)].weather = key
+                elif key == "impassable":
+                    for value in values:
+                        if value.isdigit():
+                            self.idsToProvinces[int(value)].impassable = True
+        else:
+            print("No Climate File Found")
+            sys.stdout.flush()
+
+    def populateNameData(self, path):
+        print("Parsing {}...".format(LOCALIZATION_NAME_FILE))
+        sys.stdout.flush()
+        if exists(path):
+            nameFileText = self.getFileTextWithoutComments(path)
+            matches = re.findall(LOCALIZATION_NAME_PATTERN, nameFileText)
+            for match in matches:
+                provinceId = int(match[0])
+                provinceName = match[1]
+                self.idsToProvinces[provinceId].name = provinceName
+        else:
+            print("{} not found".format(LOCALIZATION_NAME_FILE))
+            sys.stdout.flush()
+
+    def populateAdjectiveData(self, path):
+        print("Parsing {}...".format(LOCALIZATION_ADJECTIVE_FILE))
+        sys.stdout.flush()
+        if exists(path):
+            nameFileText = self.getFileTextWithoutComments(path)
+            matches = re.findall(LOCALIZATION_ADJECTIVE_PATTERN, nameFileText)
+            for match in matches:
+                provinceId = int(match[0])
+                provinceAdjective = match[1]
+                self.idsToProvinces[provinceId].name = provinceAdjective
+        else:
+            print("{} not found".format(LOCALIZATION_ADJECTIVE_FILE))
+            sys.stdout.flush()
 
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
@@ -229,6 +273,7 @@ class MapInfoManager():
         sys.stdout.flush()
         for province in updatedProvinces:
             f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
+            f.write("capital = \"{}\"\n".format(province.capital))
             writeFieldIfExists(f, "owner", province.owner)
             writeFieldIfExists(f, "controller", province.controller)
             for core in province.cores:
@@ -252,27 +297,46 @@ class MapInfoManager():
                     areasToProvinces[province.area].append(province.id)
                 else:
                     areasToProvinces[province.area] = [province.id]
-            
             if province.terrain != "":
                 if province.terrain in terrainsToProvinces:
                     terrainsToProvinces[province.terrain].append(province.id)
                 else:
                     terrainsToProvinces[province.terrain] = [province.id]
-
             if province.continent != "":
                 if province.continent in continentsToProvinces:
                     continentsToProvinces[province.continent].append(province.id)
                 else:
                     continentsToProvinces[province.continent] = [province.id]
-
             if province.climate != "":
                 climateEntryToProvinces[province.climate].append(province.id)
-
             if province.weather != "":
                 climateEntryToProvinces[province.weather].append(province.id)
-
             if province.impassable:
                 climateEntryToProvinces["impassable"].append(province.id)
+
+        print("Saving Province Definitions...")
+        sys.stdout.flush()
+        f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME), 'w')
+        f.write("province;red;green;blue;x;x\n")
+        for province in self.idsToProvinces:
+            if province != None:
+                f.write("{};{};{};{};{};x\n".format(province.id, province.color[0], province.color[1], province.color[2], province.capital))
+
+        print("Saving Name Localizations...")
+        sys.stdout.flush()
+        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE), 'w')
+        f.write("l_english:\n")
+        for province in self.idsToProvinces:
+            if province != None:
+                f.write(" PROV{}:0 \"{}\"\n".format(province.id, province.name))
+
+        print("Saving Adjective Localizations...")
+        sys.stdout.flush()
+        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_ADJECTIVE_FILE), 'w')
+        f.write("l_english:\n")
+        for province in self.idsToProvinces:
+            if province != None:
+                f.write(" ADJ{}:0 \"{}\"\n".format(province.id, province.adjective))
         
         print("Saving Area File...")
         sys.stdout.flush()

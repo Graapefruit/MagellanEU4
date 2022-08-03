@@ -1,14 +1,13 @@
 class Province:
-	def __init__(self, id, name, color):
+	def __init__(self, id, capital, color):
 		self.id = id
-		self.name = name
+		self.capital = capital
 		self.color = color
 		self.pixels = []
-		self.xSum = 0
-		self.ySum = 0
-		self.count = 0
 		self.historyFile = ""
 
+		self.name = capital
+		self.adjective = capital + "er"
 		self.cores = []
 		self.owner = ""
 		self.controller = ""
@@ -29,18 +28,6 @@ class Province:
 		self.impassable = False
 
 		self.extraText = ""
-
-	def addPixel(self, pixel):
-		self.pixels.append(pixel)
-		self.xSum += pixel.x
-		self.ySum += pixel.y
-		self.count += 1
-
-	def calculateAverageX(self):
-		return round(self.xSum / self.count, 3)
-
-	def calculateAverageY(self):
-		return round(self.ySum / self.count, 3)
 
 	def __str__(self):
 		return "Province {}".format(self.key)
