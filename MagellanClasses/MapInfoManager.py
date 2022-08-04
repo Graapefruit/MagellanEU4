@@ -149,7 +149,6 @@ class MapInfoManager():
         lines = text.split('\n')
         # On the first line, read any potential entries after the curly brace
         lines[0] = lines[0].split('{')[1]
-        print(lines)
         sys.stdout.flush()
         for line in lines:
             # Remove Comments
@@ -390,7 +389,7 @@ class MapInfoManager():
             f.write("\n}\n\n")
         f.close()
 
-        print("Saving Climate File...")
+        print("Saving Climate/Weather File...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME), 'w')
         for climateKey in climateEntryToProvinces:
@@ -403,7 +402,7 @@ class MapInfoManager():
                     f.write("\n\t")
                     charactersOnLine = 0
             f.write("\n}\n\n")
-        f.write("equator_y_on_province_image = 656") # I have no Fucking clue what this does, but its at the end of the climate.txt file so...
+        f.write("equator_y_on_province_image = 656") # I have no clue what this does, but its always at the end of the climate.txt file so...
         f.close()
 
         print("Saving Success")

@@ -49,6 +49,7 @@ class MagellanEU4():
 			self.currentProvince.continent = self.view.continentField.get()
 			self.currentProvince.terrain = self.view.terrainField.get()
 			self.currentProvince.climate = self.view.climateField.get()
+			self.currentProvince.weather = self.view.weatherField.get()
 			self.currentProvince.discovered = []
 			for techGroup in self.view.techGroupToIntVar:
 				if self.view.techGroupToIntVar[techGroup].get() == 1:
