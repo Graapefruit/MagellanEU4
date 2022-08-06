@@ -189,17 +189,13 @@ class MapInfoManager():
             for match in matches:
                 key = match[0]
                 values = match[1].split()
-                if key in DEFAULT_CLIMATES:
-                    for value in values:
-                        if value.isdigit():
+                for value in values:
+                    if value.isdigit() and self.idsToProvinces[int(value)] != None:
+                        if key in DEFAULT_CLIMATES:
                             self.idsToProvinces[int(value)].climate = key
-                elif key in DEFAULT_WEATHERS:
-                    for value in values:
-                        if value.isdigit():
+                        elif key in DEFAULT_WEATHERS:
                             self.idsToProvinces[int(value)].weather = key
-                elif key == "impassable":
-                    for value in values:
-                        if value.isdigit():
+                        elif key == "impassable":
                             self.idsToProvinces[int(value)].impassable = True
         else:
             print("No Climate File Found")
@@ -246,7 +242,7 @@ class MapInfoManager():
     # --- Utility --- #
 
     def getFileTextWithoutComments(self, path):
-        f = open(path, 'r')
+        f = open(path, 'r', encoding="utf-8-sig")
         fileText = ""
         for line in f:
             fileText += line.split('#')[0]

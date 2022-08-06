@@ -1,8 +1,11 @@
 import sys
+from MagellanClasses.Defaults import DEFAULT_CONTINENTS, DEFAULT_CULTURES, DEFAULT_RELIGIONS, DEFAULT_TECH_GROUPS, DEFAULT_TRADE_GOODS
 from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
 from MagellanClasses.Constants import *
 from PIL import Image
+from os.path import exists
+from os import listdir
 from random import randint
 
 FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries"]
@@ -57,14 +60,51 @@ class MagellanEU4():
 
 
 	def onNewModOpen(self, path):
-		fileFormat = path + "/{}/{}"
 		self.model = MapInfoManager(path)
-		self.view.updateMap(Image.open(fileFormat.format(MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
+		self.view.updateMap(Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
+		# Combobox Updates
+		self.view.terrainField["values"] = list(self.model.namesToTerrains.keys())
+		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
+		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
+		self.view.religionField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, RELIGIONS_FOLDER), RELIGIONS_FILE, RELIGIONS_GROUPING_PATTERN, DEFAULT_RELIGIONS)
+		self.view.cultureField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, CULTURES_FOLDER), CULTURES_FILE, CULTURES_GROUPING_PATTERN, DEFAULT_CULTURES)
+		self.view.tradeGoodField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER), TRADE_GOODS_FILE, TRADE_GOODS_GROUPING_PATTERN, DEFAULT_TRADE_GOODS)
 
 	def onSave(self):
 		self.updateProvinceInfoModel()
 		self.model.save(self.selectedProvinces)
 		self.selectedProvinces = set()
+
+	def getNewComboBoxEntriesFromFile(self, filePath, regexPattern, default):
+		newEntries = []
+		if exists(filePath):
+			matches = re.findall(regexPattern, open(filePath, 'r').read())
+			for match in matches:
+				newEntries.append(match[0])
+		else:
+			newEntries = default[:]
+		return newEntries
+
+	def getNewTechGroupsFromFile(self, filePath):
+		techGroups = []
+		if exists(filePath):
+			matches = re.findall(TECH_GROUP_GROUPING_PATTERN, open(filePath, 'r').read())
+			for match in matches:
+				techGroups.append(match)
+		else:
+			techGroups = DEFAULT_TECH_GROUPS[:]
+		return techGroups
+
+	def getNewComboBoxEntriesFromFolder(self, folderPath, baseFileName, regexPattern, default):
+		newEntries = default[:]
+		if exists(folderPath):
+			if exists(baseFileName):
+				newEntries = []
+			for fileName in listdir(folderPath):
+				matches = re.findall(regexPattern, open("{}/{}".format(folderPath, fileName), 'r').read())
+				for match in matches:
+					newEntries.append(match)
+		return newEntries
 
 if __name__ == "__main__":
 	controller = MagellanEU4()

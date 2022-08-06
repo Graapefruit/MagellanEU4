@@ -16,6 +16,15 @@ CLIMATE_FILE_NAME = "climate.txt"
 LOCALIZATION_NAME_FILE = "prov_names_l_english.yml"
 LOCALIZATION_ADJECTIVE_FILE = "prov_names_adj_l_english.yml"
 PROVINCES_HISTORY_PATH = "history/provinces"
+COMMON_FOLDER = "common"
+TECHNOLOGY_FILE = "technology.txt"
+RELIGIONS_FOLDER = "religions"
+CULTURES_FOLDER = "cultures"
+TRADE_GOODS_FOLDER = "tradegoods"
+RELIGIONS_FILE = "00_religions.txt"
+CULTURES_FILE = "00_cultures.txt"
+TRADE_GOODS_FILE = "00_tradegoods.txt"
+
 PROVINCE_CHARACTERS_PER_LINE = 85
 
 MAP_FOLDER_NAME = "map"
@@ -33,3 +42,8 @@ TERRAIN_FILE_GROUPING_PATTERN = re.compile("([a-z_]*)\s*=\s*{([\sa-z]*)color *= 
 TERRAIN_FILE_IS_WATER_PATTERN = re.compile("is_water *= *yes", re.IGNORECASE)
 CONTINENT_FILE_GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{([a-z0-9_#\s/.&+:-]*)}", re.IGNORECASE)
 CLIMATE_FILE_GROUPING_PATTERN = re.compile("([a-z_]*)\s=\s{([0-9\s]*)}", re.IGNORECASE)
+# The bottom 4 are all scuffed and might prove buggy in the future
+TECH_GROUP_GROUPING_PATTERN = re.compile("([a-z_]*) = {\s*start_level\s=\s[0-9]+", re.IGNORECASE)
+RELIGIONS_GROUPING_PATTERN = re.compile("([a-z_]*)\s*=\s*{\s*color", re.IGNORECASE)
+CULTURES_GROUPING_PATTERN = re.compile("([a-z_]*)\s*=\s*{\s*primary", re.IGNORECASE)
+TRADE_GOODS_GROUPING_PATTERN = re.compile("([a-z_]*)\s*=\s*{\s*color", re.IGNORECASE)

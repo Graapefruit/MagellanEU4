@@ -1,3 +1,4 @@
+from tabnanny import check
 import tkinter
 from ttkwidgets.autocomplete import AutocompleteCombobox
 from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
@@ -88,14 +89,28 @@ class DisplayManager():
         self.provinceFooter.pack(side=tkinter.TOP)
         self.provinceFooterHeader = tkinter.Label(self.provinceFooter, text="Discovered By:")
         self.provinceFooterHeader.pack(side=tkinter.TOP)
+        self.techGroupToCheckbox = None
+        self.checkBoxPanels = None
+        self.createNewDiscoveryCheckboxes(DEFAULT_TECH_GROUPS)
+
+    def createNewDiscoveryCheckboxes(self, techGroups):
+        self.currentTechGroups = techGroups
+        if self.techGroupToCheckbox:
+            for checkbox in self.techGroupToCheckbox.keys():
+                self.techGroupToCheckbox[checkbox].destroy()
+        if self.checkBoxPanels:
+            for panel in self.checkBoxPanels:
+                panel.destroy()
         self.techGroupToCheckbox = dict()
         self.techGroupToIntVar = dict()
+        self.checkBoxPanels = []
         currentPanel = None
         rowIndex = 0
-        for techGroup in DEFAULT_TECH_GROUPS:
+        for techGroup in techGroups:
             if rowIndex == 0:
                 currentPanel = tkinter.PanedWindow(self.provinceFooter, orient=HORIZONTAL)
                 currentPanel.pack(side=tkinter.TOP)
+                self.checkBoxPanels.append(currentPanel)
             techGroupVar = tkinter.IntVar()
             currentCheckbox = tkinter.Checkbutton(currentPanel, variable=techGroupVar, text=techGroup)
             currentCheckbox.pack(side=tkinter.LEFT)
@@ -237,7 +252,7 @@ class DisplayManager():
             coresText += province.cores[i]
             if i+1 < len(province.cores):
                 coresText += ", "
-        for techGroup in DEFAULT_TECH_GROUPS:
+        for techGroup in self.currentTechGroups:
             if techGroup in province.discovered:
                 self.techGroupToCheckbox[techGroup].select()
             else:

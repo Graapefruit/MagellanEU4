@@ -1,6 +1,3 @@
-from tracemalloc import start
-
-
 class Terrain:
     def __init__(self, name, color, extraText, isWater):
         self.name = name
