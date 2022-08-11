@@ -1,6 +1,7 @@
 import sys
 import csv
 from Utils.Province import Province
+from Utils.ProvinceUpdate import ProvinceUpdate
 from Utils.Terrain import Terrain
 from Utils.RGB import RGB
 from MagellanClasses.Constants import *
@@ -69,8 +70,16 @@ class MapInfoManager():
             if fileId.isdigit():
                 province = self.idsToProvinces[int(fileId)]
                 province.historyFile = fileName
-                provinceHistoryFile = open("{}/{}".format(path, fileName), 'r')
-                for line in provinceHistoryFile:
+                provinceHistoryText = open("{}/{}".format(path, fileName), 'r').read()
+                provinceHistoryUpdates = re.findall(PROVINCE_DATE_UPDATE_GROUPING_PATTERN, provinceHistoryText)
+                for match in provinceHistoryUpdates:
+                    year, month, day = match[0].strip().split('.')
+                    text = match[1]
+                    province.provinceUpdates.append(ProvinceUpdate(int(year), int(month), int(day), text))
+                HistoryUpdatesToRemove = re.findall(PROVINCE_DATE_UPDATE_PATTERN, provinceHistoryText)
+                for match in HistoryUpdatesToRemove:
+                    provinceHistoryText = provinceHistoryText.replace(match, '')
+                for line in provinceHistoryText.split('\n'):
                     splitLine = line.split("=")
                     if len(splitLine) == 2:
                         lineKey = splitLine[0].lower().strip()
@@ -101,7 +110,7 @@ class MapInfoManager():
                             case "capital":
                                 pass
                             case _:
-                                province.extraText += line.strip()
+                                province.extraText += line.strip() + '\n'
 
     def populateAreaData(self, path):
         print("Populating Areas...")
@@ -260,14 +269,11 @@ class MapInfoManager():
         terrainsToProvinces = dict()
         continentsToProvinces = dict()
         climateEntryToProvinces = dict()
+        climateEntryToProvinces["impassable"] = []
         for climate in DEFAULT_CLIMATES:
             climateEntryToProvinces[climate] = []
         for weather in DEFAULT_WEATHERS:
             climateEntryToProvinces[weather] = []
-        climateEntryToProvinces["impassable"] = []
-        print("Saving History Files...")
-        sys.stdout.flush()
-
         for province in self.provinces:
             if province.area != "":
                 if province.area in areasToProvinces:
@@ -290,7 +296,9 @@ class MapInfoManager():
                 climateEntryToProvinces[province.weather].append(province.id)
             if province.impassable:
                 climateEntryToProvinces["impassable"].append(province.id)
-
+        
+        print("Saving History Files...")
+        sys.stdout.flush()
         for province in updatedProvinces:
             f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
             if (not self.namesToTerrains[province.terrain].isWater if province.terrain in self.namesToTerrains else True):
@@ -310,6 +318,9 @@ class MapInfoManager():
             for discoverer in province.discovered:
                 f.write("discovered_by = {}\n".format(discoverer))
             f.write(province.extraText)
+
+            for historyUpdate in province.provinceUpdates:
+                f.write("{} = {{{}}}".format(historyUpdate.date.strftime("%Y.%m.%d"), historyUpdate.text))
             f.close()
 
         print("Saving Province Definitions...")

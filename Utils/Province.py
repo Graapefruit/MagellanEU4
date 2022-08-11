@@ -28,6 +28,7 @@ class Province:
 		self.impassable = False
 
 		self.extraText = ""
+		self.provinceUpdates = []
 
 	def __str__(self):
 		return "Province {}".format(self.key)

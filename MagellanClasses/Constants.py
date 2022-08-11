@@ -42,6 +42,8 @@ TERRAIN_FILE_GROUPING_PATTERN = re.compile("([a-z_]*)\s*=\s*{([\sa-z]*)color *= 
 TERRAIN_FILE_IS_WATER_PATTERN = re.compile("is_water *= *yes", re.IGNORECASE)
 CONTINENT_FILE_GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{([a-z0-9_#\s/.&+:-]*)}", re.IGNORECASE)
 CLIMATE_FILE_GROUPING_PATTERN = re.compile("([a-z_]*)\s=\s{([0-9\s]*)}", re.IGNORECASE)
+PROVINCE_DATE_UPDATE_GROUPING_PATTERN = re.compile("([0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2})\s=\s({[\s\S]*)}", re.IGNORECASE)
+PROVINCE_DATE_UPDATE_PATTERN = re.compile("[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}\s=\s{[\s\S]*}", re.IGNORECASE)
 # The bottom 4 are all scuffed and might prove buggy in the future
 TECH_GROUP_GROUPING_PATTERN = re.compile("([a-z_]*) = {\s*start_level\s=\s[0-9]+", re.IGNORECASE)
 RELIGIONS_GROUPING_PATTERN = re.compile("([a-z_]*)\s*=\s*{\s*color", re.IGNORECASE)
