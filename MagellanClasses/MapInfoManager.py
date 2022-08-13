@@ -219,7 +219,7 @@ class MapInfoManager():
             for match in matches:
                 provinceId = int(match[0])
                 provinceName = match[1]
-                self.idsToProvinces[provinceId].name = provinceName
+                self.idsToProvinces[provinceId].localizationName = provinceName
         else:
             print("{} not found".format(LOCALIZATION_NAME_FILE))
             sys.stdout.flush()
@@ -233,7 +233,7 @@ class MapInfoManager():
             for match in matches:
                 provinceId = int(match[0])
                 provinceAdjective = match[1]
-                self.idsToProvinces[provinceId].name = provinceAdjective
+                self.idsToProvinces[provinceId].localizationAdjective = provinceAdjective
         else:
             print("{} not found".format(LOCALIZATION_ADJECTIVE_FILE))
             sys.stdout.flush()
@@ -337,7 +337,7 @@ class MapInfoManager():
         f.write("l_english:\n")
         for province in self.idsToProvinces:
             if province != None:
-                f.write(" PROV{}:0 \"{}\"\n".format(province.id, province.name))
+                f.write(" PROV{}:0 \"{}\"\n".format(province.id, province.localizationName))
 
         print("Saving Adjective Localizations...")
         sys.stdout.flush()
@@ -345,7 +345,7 @@ class MapInfoManager():
         f.write("l_english:\n")
         for province in self.idsToProvinces:
             if province != None:
-                f.write(" ADJ{}:0 \"{}\"\n".format(province.id, province.adjective))
+                f.write(" ADJ{}:0 \"{}\"\n".format(province.id, province.localizationAdjective))
         
         print("Saving Area File...")
         sys.stdout.flush()

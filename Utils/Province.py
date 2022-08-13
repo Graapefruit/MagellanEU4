@@ -6,8 +6,8 @@ class Province:
 		self.pixels = []
 		self.historyFile = ""
 
-		self.name = capital
-		self.adjective = capital + "er"
+		self.localizationName = capital
+		self.localizationAdjective = capital + "er"
 		self.cores = []
 		self.owner = ""
 		self.controller = ""

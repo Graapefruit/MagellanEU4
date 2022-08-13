@@ -35,8 +35,8 @@ class MagellanEU4():
 		else:
 			sys.stdout.flush()
 			self.currentProvince.capital = self.view.provinceCapitalLabel.get()
-			self.currentProvince.name = self.view.provinceName.get()
-			self.currentProvince.adjective = self.view.provinceAdjective.get()
+			self.currentProvince.localizationName = self.view.provinceLocalizationName.get()
+			self.currentProvince.localizationAdjective = self.view.provinceLocalizationAdjective.get()
 			self.currentProvince.cores = list(map(lambda n: n.strip(), self.view.coresField.get().split(','))) if not self.view.coresField.get().isspace() else []
 			self.currentProvince.owner = self.view.tagField.get()
 			self.currentProvince.controller = self.view.controllerField.get()
@@ -101,7 +101,7 @@ class MagellanEU4():
 			if exists(baseFileName):
 				newEntries = []
 			for fileName in listdir(folderPath):
-				matches = re.findall(regexPattern, open("{}/{}".format(folderPath, fileName), 'r').read())
+				matches = re.findall(regexPattern, open("{}/{}".format(folderPath, fileName), 'r', encoding="utf-8").read())
 				for match in matches:
 					newEntries.append(match)
 		return newEntries
