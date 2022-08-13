@@ -1,13 +1,14 @@
 class Province:
-	def __init__(self, id, capital, color):
+	def __init__(self, id, name, color):
 		self.id = id
-		self.capital = capital
+		self.name = name
 		self.color = color
 		self.pixels = []
 		self.historyFile = ""
+		self.localizationName = name
+		self.localizationAdjective = name + "er"
 
-		self.localizationName = capital
-		self.localizationAdjective = capital + "er"
+		self.capital = name
 		self.cores = []
 		self.owner = ""
 		self.controller = ""

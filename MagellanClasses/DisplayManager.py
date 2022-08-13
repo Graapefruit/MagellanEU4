@@ -1,7 +1,7 @@
 from tabnanny import check
 import tkinter
 from ttkwidgets.autocomplete import AutocompleteCombobox
-from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
+from tkinter import CENTER, HORIZONTAL, RAISED, VERTICAL, filedialog
 from .ScrollableImage import ScrollableImage
 from .Defaults import *
 from PIL import ImageTk
@@ -55,8 +55,8 @@ class DisplayManager():
         self.provinceHeader.pack(side=tkinter.TOP)
         self.provinceIdSv = tkinter.StringVar()
         self.provinceIdSv.set("No Province Selected")
-        self.provinceCapitalSv = tkinter.StringVar()
-        self.provinceCapitalSv.set("No Province Selected")
+        self.provinceNameSv = tkinter.StringVar()
+        self.provinceNameSv.set("No Province Selected")
         self.provinceLocalizationNameSv = tkinter.StringVar()
         self.provinceLocalizationNameSv.set("No Province Selected")
         self.provinceLocalizationAdjectiveSv = tkinter.StringVar()
@@ -65,8 +65,8 @@ class DisplayManager():
         self.provinceColorSv.set("Red: -- Green: -- Blue: --")
         self.provinceIdLabel = tkinter.Label(self.provinceHeader, textvariable=self.provinceIdSv)
         self.provinceIdLabel.pack(side=tkinter.TOP)
-        self.provinceCapitalLabel = tkinter.Entry(self.provinceHeader, width=17, justify="center", textvariable=self.provinceCapitalSv)
-        self.provinceCapitalLabel.pack(side=tkinter.TOP)
+        self.provinceNameLabel = tkinter.Label(self.provinceHeader, textvariable=self.provinceNameSv)
+        self.provinceNameLabel.pack(side=tkinter.TOP)
         self.provinceLocalizationPanel = tkinter.PanedWindow(self.provinceHeader)
         self.provinceLocalizationPanel.pack(side=tkinter.TOP)
         self.provinceLocalizationName = tkinter.Entry(self.provinceLocalizationPanel, width=14, justify="center", textvariable=self.provinceLocalizationNameSv)
@@ -123,6 +123,11 @@ class DisplayManager():
     def createLeftProvinceBodyPanel(self):
         self.provinceBodyLeft = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyLeft.pack(side=tkinter.LEFT)
+
+        self.capitalText = tkinter.Label(self.provinceBodyLeft, text ="Capital")
+        self.capitalText.pack(side=tkinter.TOP)
+        self.capitalField = tkinter.Entry(self.provinceBodyLeft, width=12, justify="center")
+        self.capitalField.pack(side=tkinter.TOP)
 
         self.religionText = tkinter.Label(self.provinceBodyLeft, text="Religion")
         self.religionText.pack(side=tkinter.TOP)
@@ -221,10 +226,12 @@ class DisplayManager():
 
     def updateProvinceInfo(self, province):
         self.provinceIdSv.set("Id: {}".format(province.id))
-        self.provinceCapitalSv.set("{}".format(province.capital))
+        self.provinceNameSv.set("{}".format(province.name))
         self.provinceLocalizationNameSv.set(province.localizationName)
         self.provinceLocalizationAdjectiveSv.set(province.localizationAdjective)
         self.provinceColorSv.set("Red: {} Green: {} Blue: {}".format(province.color[0], province.color[1], province.color[2]))
+        self.capitalField.delete('0', tkinter.END)
+        self.capitalField.insert(tkinter.END, province.capital)
         self.religionField.set(province.religion)
         self.cultureField.set(province.culture)
         self.taxText.delete('0', tkinter.END)

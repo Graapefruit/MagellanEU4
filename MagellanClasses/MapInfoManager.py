@@ -108,7 +108,7 @@ class MapInfoManager():
                             case "discovered_by":
                                 province.discovered.append(lineVal)
                             case "capital":
-                                pass
+                                province.capital = lineVal.replace('\"', '')
                             case _:
                                 province.extraText += line.strip() + '\n'
 
@@ -302,7 +302,7 @@ class MapInfoManager():
         for province in updatedProvinces:
             f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
             if (not self.namesToTerrains[province.terrain].isWater if province.terrain in self.namesToTerrains else True):
-                f.write("capital = \"{}\"\n".format(province.capital))
+                writeFieldIfExists(f, "capital", province.capital)
                 writeFieldIfExists(f, "owner", province.owner)
                 writeFieldIfExists(f, "controller", province.controller)
                 for core in province.cores:
@@ -329,7 +329,7 @@ class MapInfoManager():
         f.write("province;red;green;blue;x;x\n")
         for province in self.idsToProvinces:
             if province != None:
-                f.write("{};{};{};{};{};x\n".format(province.id, province.color[0], province.color[1], province.color[2], province.capital))
+                f.write("{};{};{};{};{};x\n".format(province.id, province.color[0], province.color[1], province.color[2], province.name))
 
         print("Saving Name Localizations...")
         sys.stdout.flush()
