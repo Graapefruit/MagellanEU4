@@ -37,7 +37,6 @@ class MagellanEU4():
 			self.currentProvince.capital = self.view.capitalField.get()
 			self.currentProvince.localizationName = self.view.provinceLocalizationName.get()
 			self.currentProvince.localizationAdjective = self.view.provinceLocalizationAdjective.get()
-			sys.stdout.flush()
 			self.currentProvince.cores = list(map(lambda n: n.strip(), self.view.coresField.get().split(','))) if len(self.view.coresField.get().strip()) > 0 else []
 			self.currentProvince.owner = self.view.tagField.get()
 			self.currentProvince.controller = self.view.controllerField.get()

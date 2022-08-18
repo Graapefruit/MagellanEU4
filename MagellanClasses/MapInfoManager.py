@@ -34,6 +34,7 @@ class MapInfoManager():
         self.populateClimateData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME))
         self.populateNameData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
+        self.populateTradeNodes("{}/{}/{}".format(path, TRADE_NODE_FOLDER))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         # self.populatePixels()
@@ -237,6 +238,16 @@ class MapInfoManager():
         else:
             print("{} not found".format(LOCALIZATION_ADJECTIVE_FILE))
             sys.stdout.flush()
+
+    def populateTradeNodes(self, path, folderName):
+        print("Parsing Trade Nodes...")
+        sys.stdout.flush()
+        tradeNodes = dict()
+        if exists(path):
+            
+        else:
+            print("NOTE: No trade node folder found. One will be created")
+            os.mkdir(path)
 
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
