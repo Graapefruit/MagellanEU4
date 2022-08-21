@@ -63,7 +63,7 @@ class MagellanEU4():
 		self.model = MapInfoManager(path)
 		self.view.updateMap(Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
 		# Combobox Updates
-		self.view.terrainField["values"] = list(self.model.namesToTerrains.keys())
+		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
 		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
 		self.view.religionField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, RELIGIONS_FOLDER), RELIGIONS_FILE, RELIGIONS_GROUPING_PATTERN, DEFAULT_RELIGIONS)

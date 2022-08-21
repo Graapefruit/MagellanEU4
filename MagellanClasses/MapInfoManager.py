@@ -2,7 +2,6 @@ import sys
 import csv
 from Utils.Province import Province
 from Utils.ProvinceUpdate import ProvinceUpdate
-from Utils.Terrain import Terrain
 from Utils.RGB import RGB
 from MagellanClasses.Constants import *
 from .Defaults import *
@@ -11,19 +10,15 @@ from os import listdir
 from os.path import exists
 import re
 import numpy
+import MagellanClasses.EU4DataFileParser as EU4DataFileParser
 
-# TODO:
-# 1. History File
-# 2. Localization
-# 3. Areas, Regions, Subcontinents, Continents
-# 4. Tags
 class MapInfoManager():
     def __init__(self, path):
         self.path = path
-        self.max_provinces = 5000 # TODO: Grab this from Default.map
+        self.max_provinces = 6500 # TODO: Grab this from Default.map
         self.provinces = []
         self.areasToColors = dict()
-        self.namesToTerrains = dict()
+        self.terrainTree = None
         self.colorsToProvinces = dict()
         self.idsToProvinces = [None] * self.max_provinces
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
@@ -34,7 +29,7 @@ class MapInfoManager():
         self.populateClimateData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME))
         self.populateNameData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
-        self.populateTradeNodes("{}/{}/{}".format(path, TRADE_NODE_FOLDER))
+        #self.populateTradeNodes("{}/{}/{}".format(path, TRADE_NODE_FOLDER))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         # self.populatePixels()
@@ -140,38 +135,15 @@ class MapInfoManager():
         print("Parsing Terrains...")
         sys.stdout.flush()
         if exists(path):
-            terrainFile = open(path, 'r')
-            matches = re.findall(TERRAIN_FILE_GROUPING_PATTERN, terrainFile.read())
-            for match in matches:
-                terrainName = match[0]
-                extraText = match[1].strip() + match[3].strip() + match[5].strip()
-                isWater = re.search(TERRAIN_FILE_IS_WATER_PATTERN, extraText) != None
-                color = RGB.newFromTuple(match[2].split())
-                if len(match[4]) > 0:
-                    self.populateProvinceTerrainData(terrainName, match[4])
-                newTerrain = Terrain(terrainName, color, extraText, isWater)
-                self.namesToTerrains[terrainName] = newTerrain
-        else:
-            print("No Terrain File Found")
-            sys.stdout.flush()
-
-    def populateProvinceTerrainData(self, terrainName, text):
-        lines = text.split('\n')
-        # On the first line, read any potential entries after the curly brace
-        lines[0] = lines[0].split('{')[1]
-        sys.stdout.flush()
-        for line in lines:
-            # Remove Comments
-            line = line.split('#')[0]
-            potentialIds = line.split()
-            for potentialId in potentialIds:
-                if potentialId.isdigit():
-                    provinceId = int(potentialId)
-                    if provinceId <= self.max_provinces and self.idsToProvinces[provinceId]:
-                        self.idsToProvinces[provinceId].terrain = terrainName
-                    else:
-                        pass
-                        # print("Warning: Terrain {} overrides provinceId {}, which is unused or out of bounds!".format(terrainName, potentialId))
+            rootNode = EU4DataFileParser.parseEU4File(path)
+            self.terrainTree = rootNode
+            for category in rootNode["categories"].getChildren():
+                if "terrain_override" in category:
+                    for provinceIdString in category["terrain_override"].values:
+                        provinceId = int(provinceIdString)
+                        if provinceId < len(self.idsToProvinces):
+                            self.idsToProvinces[provinceId].terrain = category.name
+                    category["terrain_override"].values = []
             
     def populateContinentData(self, path):
         print("Parsing Continents...")
@@ -243,11 +215,11 @@ class MapInfoManager():
         print("Parsing Trade Nodes...")
         sys.stdout.flush()
         tradeNodes = dict()
-        if exists(path):
+        #if exists(path):
             
-        else:
-            print("NOTE: No trade node folder found. One will be created")
-            os.mkdir(path)
+        #else:
+        #    print("NOTE: No trade node folder found. One will be created")
+        #    os.mkdir(path)
 
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
@@ -277,10 +249,10 @@ class MapInfoManager():
 
     def save(self, updatedProvinces):
         areasToProvinces = dict()
-        terrainsToProvinces = dict()
         continentsToProvinces = dict()
         climateEntryToProvinces = dict()
         climateEntryToProvinces["impassable"] = []
+
         for climate in DEFAULT_CLIMATES:
             climateEntryToProvinces[climate] = []
         for weather in DEFAULT_WEATHERS:
@@ -292,10 +264,7 @@ class MapInfoManager():
                 else:
                     areasToProvinces[province.area] = [province.id]
             if province.terrain != "":
-                if province.terrain in terrainsToProvinces:
-                    terrainsToProvinces[province.terrain].append(province.id)
-                else:
-                    terrainsToProvinces[province.terrain] = [province.id]
+                self.terrainTree["categories"].getAndCreateIfNotExists(province.terrain).getAndCreateIfNotExists("terrain_override").appendValueOverwriteDict(str(province.id))
             if province.continent != "":
                 if province.continent in continentsToProvinces:
                     continentsToProvinces[province.continent].append(province.id)
@@ -312,7 +281,7 @@ class MapInfoManager():
         sys.stdout.flush()
         for province in updatedProvinces:
             f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
-            if (not self.namesToTerrains[province.terrain].isWater if province.terrain in self.namesToTerrains else True):
+            if not self.provinceIsWater(province):
                 writeFieldIfExists(f, "capital", province.capital)
                 writeFieldIfExists(f, "owner", province.owner)
                 writeFieldIfExists(f, "controller", province.controller)
@@ -374,23 +343,7 @@ class MapInfoManager():
 
         print("Saving Terrain File...")
         sys.stdout.flush()
-        f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), 'w')
-        f.write("categories = {\n")
-        f.write("\tpti = {\n\t\ttype = pti\n\t}\n") # PTI is not matched by our regex but must still be included
-        for terrainName in self.namesToTerrains:
-            terrain = self.namesToTerrains[terrainName]
-            f.write("\t{} = {{\n".format(terrainName))
-            f.write("\t\tcolor = {{ {} {} {} }}\n".format(terrain.color.red, terrain.color.green, terrain.color.blue))
-            if terrain.extraText != "":
-                f.write("\t\t{}\n".format(terrain.extraText))
-            if terrainName in terrainsToProvinces:
-                f.write("\t\tterrain_override = {\n\t\t\t")
-                for province in terrainsToProvinces[terrainName]:
-                    f.write("{} ".format(province))
-                f.write("\n\t\t}\n")
-            f.write("\t}\n")
-        f.write("}")
-        f.close()
+        EU4DataFileParser.writeToFileFromRootNode("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), self.terrainTree)
 
         print("Saving Continent File...")
         sys.stdout.flush()
@@ -425,6 +378,13 @@ class MapInfoManager():
 
         print("Saving Success")
         sys.stdout.flush()
+    
+    def provinceIsWater(self, province):
+        terrainName = province.terrain
+        if terrainName in self.terrainTree["categories"]:
+            if "is_water" in self.terrainTree["categories"][terrainName]:
+                return self.terrainTree["categories"][terrainName]["is_water"].values == "yes"
+        return False
 
 def writeFieldIfExists(file, text, field):
     if field != "":

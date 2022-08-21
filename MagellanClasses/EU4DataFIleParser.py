@@ -1,6 +1,6 @@
 from os import listdir
 from enum import Enum
-import string
+from os.path import exists
 # Three Cases:
 # 1. key = value
 # 2. key = { values ... values }
@@ -19,6 +19,29 @@ class EU4DataNode():
     def toString(self):
         return self._toStringHelper(0)
 
+    def getChildren(self):
+        return self.values.values()
+
+    def getAndCreateIfNotExists(self, name):
+        if not name in self.values:
+            self.values[name] = EU4DataNode(name)
+        return self.values[name]
+
+    def appendValueOverwriteDict(self, name):
+        if isinstance(self.values, dict):
+            self.values = [name]
+        else:
+            self.values.append(name)
+
+    def __getitem__(self, name):
+        return self.values[name]
+
+    def __setitem__(self, name, value):
+        self.values[name] = value
+
+    def __contains__(self, value):
+        return value in self.values
+
     def _toStringHelper(self, depth):
         s = "\t" * depth + self.name + " = "
         if isinstance(self.values, str):
@@ -32,68 +55,76 @@ class EU4DataNode():
             s += "{\n"
             for child in self.values.values():
                 s += child._toStringHelper(depth+1)
-            s += "\n" + "\t" * depth + "}\n"
+            s += "\t" * depth + "}\n"
         else:
             print("WARNING: Values field of {}, {}, is of unrecognized type!".format(self.name, self.values))
         return s
 
+def writeToFileFromRootNode(filePath, rootNode):
+    f = open(filePath, 'w')
+    for value in rootNode.getChildren():
+        f.write(value.toString() + '\n')
+
 def parseEU4File(filePath):
-    baseNode = EU4DataNode("__ROOT__")
-    dataPath = [baseNode]
-    pastStrings = []
-    currentString = ''
-    currentState = EU4DataFileReaderState.FIRST_STRING
-    for char in readDataFile(filePath):
-        match currentState:
-            case EU4DataFileReaderState.FIRST_STRING:
-                # Spaces are separators between words
-                if char == ' ':
-                    if len(currentString) > 0:
-                        pastStrings.append(currentString)
-                        currentString = ''
-                # Equals confirms that the parent node is case 3
-                elif char == '=':
-                    name = None
-                    if len(currentString) > 0:
-                        name = currentString
-                    else:
-                        name = pastStrings[-1]
-                    newNode = EU4DataNode(name)
-                    dataPath[-1].values[name] = newNode
-                    dataPath.append(newNode)
-                    currentState = EU4DataFileReaderState.POST_EQUALS
-                    pastStrings = []
-                    currentString = ''
-                # Pop up a level. If there are leftover values, then the parent node is case 2
-                elif char == "}":
-                    if len(pastStrings) > 0 or not currentString == '':
-                        pastStrings.append(currentString)
-                        dataPath[-1].values = pastStrings
+    baseNode = None
+    if exists(filePath):
+        baseNode = EU4DataNode("__ROOT__")
+        dataPath = [baseNode]
+        pastStrings = []
+        currentString = ''
+        currentState = EU4DataFileReaderState.FIRST_STRING
+        for char in readDataFile(filePath):
+            match currentState:
+                case EU4DataFileReaderState.FIRST_STRING:
+                    # Spaces are separators between words
+                    if char.isspace():
+                        if len(currentString) > 0:
+                            pastStrings.append(currentString)
+                            currentString = ''
+                    # Equals confirms that the parent node is case 3
+                    elif char == '=':
+                        name = None
+                        if len(currentString) > 0:
+                            name = currentString
+                        else:
+                            name = pastStrings[-1]
+                        newNode = EU4DataNode(name)
+                        dataPath[-1][name] = newNode
+                        dataPath.append(newNode)
+                        currentState = EU4DataFileReaderState.POST_EQUALS
                         pastStrings = []
                         currentString = ''
-                    dataPath.pop()
-                else:
-                    currentString += char
+                    # Pop up a level. If there are leftover values, then the parent node is case 2
+                    elif char == "}":
+                        if len(pastStrings) > 0 or not currentString == '':
+                            if len(currentString) > 0: 
+                                pastStrings.append(currentString)
+                            dataPath[-1].values = pastStrings
+                            pastStrings = []
+                            currentString = ''
+                        dataPath.pop()
+                    else:
+                        currentString += char
 
-            case EU4DataFileReaderState.POST_EQUALS:
-                if char.isspace():
-                    pass
-                # Current node is Case 2 or 3
-                elif char == '{':
-                    currentState = EU4DataFileReaderState.FIRST_STRING
-                # Current node is Case 1
-                else:
-                    currentState = EU4DataFileReaderState.SECOND_STRING
-                    currentString += char
+                case EU4DataFileReaderState.POST_EQUALS:
+                    if char.isspace():
+                        pass
+                    # Current node is Case 2 or 3
+                    elif char == '{':
+                        currentState = EU4DataFileReaderState.FIRST_STRING
+                    # Current node is Case 1
+                    else:
+                        currentState = EU4DataFileReaderState.SECOND_STRING
+                        currentString += char
 
-            case EU4DataFileReaderState.SECOND_STRING:
-                if char.isspace():
-                    dataPath[-1].values = currentString
-                    currentString = ''
-                    dataPath.pop()
-                    currentState = EU4DataFileReaderState.FIRST_STRING
-                else:
-                    currentString += char
+                case EU4DataFileReaderState.SECOND_STRING:
+                    if char.isspace():
+                        dataPath[-1].values = currentString
+                        currentString = ''
+                        dataPath.pop()
+                        currentState = EU4DataFileReaderState.FIRST_STRING
+                    else:
+                        currentString += char
     return baseNode
 
 def mostCompletePreviousString(pastStrings):
@@ -119,4 +150,4 @@ def readDataFile(path):
 if __name__ == "__main__":
     fileName = "E:/EU4Copy/common/tradenodes/00_tradenodes.txt"
     headNode = parseEU4File(fileName)
-    print(headNode.toString())
+    writeToFileFromRootNode("C:/Users/User/Desktop/tradeNodeOutput.txt", headNode)
