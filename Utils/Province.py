@@ -19,6 +19,7 @@ class Province:
 		self.production = 1
 		self.manpower = 1
 		self.tradeGood = ""
+		self.tradeNode = ""
 		self.discovered = []
 
 		self.area = ""

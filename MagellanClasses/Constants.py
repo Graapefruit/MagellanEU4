@@ -21,10 +21,11 @@ TECHNOLOGY_FILE = "technology.txt"
 RELIGIONS_FOLDER = "religions"
 CULTURES_FOLDER = "cultures"
 TRADE_GOODS_FOLDER = "tradegoods"
+TRADE_NODE_FOLDER = "tradenodes"
 RELIGIONS_FILE = "00_religions.txt"
 CULTURES_FILE = "00_cultures.txt"
 TRADE_GOODS_FILE = "00_tradegoods.txt"
-TRADE_NODE_FOLDER = "tradenodes"
+TRADE_NODES_FILE = "00_tradenodes.txt"
 
 PROVINCE_CHARACTERS_PER_LINE = 85
 

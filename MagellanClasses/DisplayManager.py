@@ -203,6 +203,11 @@ class DisplayManager():
         self.weatherField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_WEATHERS)
         self.weatherField.pack(side=tkinter.TOP)
 
+        self.tradeNodeText = tkinter.Label(self.provinceBodyRight, text="Trade Node")
+        self.tradeNodeText.pack(side=tkinter.TOP)
+        self.tradeNodeField = AutocompleteCombobox(self.provinceBodyRight, completevalues=[])
+        self.tradeNodeField.pack(side=tkinter.TOP)
+
         self.impassableState = tkinter.IntVar()
         self.impassableBox = tkinter.Checkbutton(self.provinceBodyRight, variable=self.impassableState, text="Impassable")
         self.impassableBox.pack(side=tkinter.TOP)
@@ -254,6 +259,7 @@ class DisplayManager():
         self.areaField.insert(tkinter.END, province.area)
         self.continentField.set(province.continent)
         self.tagField.insert(tkinter.END, province.owner)
+        self.tradeNodeField.set(province.tradeNode)
         coresText = ""
         for i in range(0, len(province.cores)):
             coresText += province.cores[i]

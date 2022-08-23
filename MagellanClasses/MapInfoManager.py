@@ -18,7 +18,8 @@ class MapInfoManager():
         self.max_provinces = 6500 # TODO: Grab this from Default.map
         self.provinces = []
         self.areasToColors = dict()
-        self.terrainTree = None
+        self.terrainTree = EU4DataFileParser.EU4DataNode("__ROOT__")
+        self.tradeNodeTree = EU4DataFileParser.EU4DataNode("__ROOT__")
         self.colorsToProvinces = dict()
         self.idsToProvinces = [None] * self.max_provinces
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
@@ -29,6 +30,7 @@ class MapInfoManager():
         self.populateClimateData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME))
         self.populateNameData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
+        self.populateTradeNodes("{}/{}/{}/{}".format(path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE))
         #self.populateTradeNodes("{}/{}/{}".format(path, TRADE_NODE_FOLDER))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
@@ -141,7 +143,7 @@ class MapInfoManager():
                 if "terrain_override" in category:
                     for provinceIdString in category["terrain_override"].values:
                         provinceId = int(provinceIdString)
-                        if provinceId < len(self.idsToProvinces):
+                        if provinceId < len(self.idsToProvinces) and self.idsToProvinces[provinceId] != None:
                             self.idsToProvinces[provinceId].terrain = category.name
                     category["terrain_override"].values = []
             
@@ -211,15 +213,18 @@ class MapInfoManager():
             print("{} not found".format(LOCALIZATION_ADJECTIVE_FILE))
             sys.stdout.flush()
 
-    def populateTradeNodes(self, path, folderName):
+    def populateTradeNodes(self, path):
         print("Parsing Trade Nodes...")
         sys.stdout.flush()
-        tradeNodes = dict()
-        #if exists(path):
-            
-        #else:
-        #    print("NOTE: No trade node folder found. One will be created")
-        #    os.mkdir(path)
+        if exists(path):
+            rootNode = EU4DataFileParser.parseEU4File(path)
+            self.tradeNodeTree = rootNode
+            for tradeNode in rootNode.getChildren():
+                if "members" in tradeNode:
+                    for provinceId in tradeNode["members"].values:
+                        if provinceId.isdigit() and int(provinceId) < len(self.idsToProvinces) and self.idsToProvinces[int(provinceId)] != None:
+                            self.idsToProvinces[int(provinceId)].tradeNode = tradeNode.name
+                    tradeNode["members"].values = []
 
     def populatePixels(self):
         #TODO: Slow-ish. Multithread?
@@ -276,6 +281,8 @@ class MapInfoManager():
                 climateEntryToProvinces[province.weather].append(province.id)
             if province.impassable:
                 climateEntryToProvinces["impassable"].append(province.id)
+            if province.tradeNode != "" and not province.tradeNode.isspace():
+                self.tradeNodeTree.getAndCreateIfNotExists(province.tradeNode).getAndCreateIfNotExists("members").appendValueOverwriteDict(str(province.id))
         
         print("Saving History Files...")
         sys.stdout.flush()
@@ -375,6 +382,10 @@ class MapInfoManager():
             f.write("\n}\n\n")
         f.write("equator_y_on_province_image = 656") # I have no clue what this does, but its always at the end of the climate.txt file so...
         f.close()
+
+        print("Saving Trade Node Data...")
+        sys.stdout.flush()
+        EU4DataFileParser.writeToFileFromRootNode("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), self.tradeNodeTree)
 
         print("Saving Success")
         sys.stdout.flush()

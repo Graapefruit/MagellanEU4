@@ -33,7 +33,6 @@ class MagellanEU4():
 			print("ERROR: At least one of tax, production, or manpower is not an integer. Please fix this before selecting another province")
 			sys.stdout.flush()
 		else:
-			sys.stdout.flush()
 			self.currentProvince.capital = self.view.capitalField.get()
 			self.currentProvince.localizationName = self.view.provinceLocalizationName.get()
 			self.currentProvince.localizationAdjective = self.view.provinceLocalizationAdjective.get()
@@ -53,6 +52,7 @@ class MagellanEU4():
 			self.currentProvince.terrain = self.view.terrainField.get()
 			self.currentProvince.climate = self.view.climateField.get()
 			self.currentProvince.weather = self.view.weatherField.get()
+			self.currentProvince.tradeNode = self.view.tradeNodeField.get()
 			self.currentProvince.discovered = []
 			for techGroup in self.view.techGroupToIntVar:
 				if self.view.techGroupToIntVar[techGroup].get() == 1:
@@ -64,6 +64,7 @@ class MagellanEU4():
 		self.view.updateMap(Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
 		# Combobox Updates
 		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
+		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
 		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
 		self.view.religionField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, RELIGIONS_FOLDER), RELIGIONS_FILE, RELIGIONS_GROUPING_PATTERN, DEFAULT_RELIGIONS)
