@@ -10,7 +10,7 @@ from os import listdir
 from os.path import exists
 import re
 import numpy
-import MagellanClasses.EU4DataFileParser as EU4DataFileParser
+from MagellanClasses.EU4DataFileParser import *
 
 class MapInfoManager():
     def __init__(self, path):
@@ -18,8 +18,8 @@ class MapInfoManager():
         self.max_provinces = 6500 # TODO: Grab this from Default.map
         self.provinces = []
         self.areasToColors = dict()
-        self.terrainTree = EU4DataFileParser.EU4DataNode("__ROOT__")
-        self.tradeNodeTree = EU4DataFileParser.EU4DataNode("__ROOT__")
+        self.terrainTree = EU4DataNode("__ROOT__")
+        self.tradeNodeTree = EU4DataNode("__ROOT__")
         self.colorsToProvinces = dict()
         self.idsToProvinces = [None] * self.max_provinces
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
@@ -31,7 +31,6 @@ class MapInfoManager():
         self.populateNameData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.populateTradeNodes("{}/{}/{}/{}".format(path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE))
-        #self.populateTradeNodes("{}/{}/{}".format(path, TRADE_NODE_FOLDER))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         # self.populatePixels()
@@ -137,7 +136,7 @@ class MapInfoManager():
         print("Parsing Terrains...")
         sys.stdout.flush()
         if exists(path):
-            rootNode = EU4DataFileParser.parseEU4File(path)
+            rootNode = parseEU4File(path)
             self.terrainTree = rootNode
             for category in rootNode["categories"].getChildren():
                 if "terrain_override" in category:
@@ -217,7 +216,7 @@ class MapInfoManager():
         print("Parsing Trade Nodes...")
         sys.stdout.flush()
         if exists(path):
-            rootNode = EU4DataFileParser.parseEU4File(path)
+            rootNode = parseEU4File(path)
             self.tradeNodeTree = rootNode
             for tradeNode in rootNode.getChildren():
                 if "members" in tradeNode:
@@ -231,10 +230,8 @@ class MapInfoManager():
         print("Populating Pixels... This may take a while")
         sys.stdout.flush()
         for y in range(0, len(self.provinceMapArray)):
-            sys.stdout.flush()
             for x in range(0, len(self.provinceMapArray[y])):
                 self.getProvinceAtIndex(x, y).pixels.append((x, y))
-
 
     # --- Utility --- #
 
@@ -350,7 +347,7 @@ class MapInfoManager():
 
         print("Saving Terrain File...")
         sys.stdout.flush()
-        EU4DataFileParser.writeToFileFromRootNode("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), self.terrainTree)
+        writeToFileFromRootNode("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), self.terrainTree)
 
         print("Saving Continent File...")
         sys.stdout.flush()
@@ -385,7 +382,7 @@ class MapInfoManager():
 
         print("Saving Trade Node Data...")
         sys.stdout.flush()
-        EU4DataFileParser.writeToFileFromRootNode("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), self.tradeNodeTree)
+        writeToFileFromRootNode("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), self.tradeNodeTree)
 
         print("Saving Success")
         sys.stdout.flush()

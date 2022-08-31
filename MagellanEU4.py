@@ -8,7 +8,9 @@ from os.path import exists
 from os import listdir
 from random import randint
 
-FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries"]
+from Utils.MapMode import MapMode
+
+FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry"]
 
 class MagellanEU4():
 	def __init__(self):
@@ -18,6 +20,7 @@ class MagellanEU4():
 		self.view.onMenuFileOpen = self.onNewModOpen
 		self.view.onMenuFileSave = self.onSave
 		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
+		self.mapModes = dict()
 		self.model = None
                 
 	def onPixelClicked(self, x, y):
@@ -58,10 +61,12 @@ class MagellanEU4():
 				if self.view.techGroupToIntVar[techGroup].get() == 1:
 					self.currentProvince.discovered.append(techGroup)
 
-
 	def onNewModOpen(self, path):
 		self.model = MapInfoManager(path)
-		self.view.updateMap(Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)))
+		self.mapModes = dict()
+		self.mapModes["province"] = MapMode("province", self.model, None)
+		self.mapModes["province"].image = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
+		self.view.updateMapMode(self.mapModes["province"])
 		# Combobox Updates
 		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
 		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())

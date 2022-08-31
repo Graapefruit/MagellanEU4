@@ -226,8 +226,10 @@ class DisplayManager():
 
     # --- Public Methods --- #
 
-    def updateMap(self, image):
-        self.mapDisplay.updateImage(ImageTk.PhotoImage(image))
+    def updateMapMode(self, mapMode):
+        if mapMode.image == None:
+            mapMode.generateImage()
+        self.mapDisplay.updateImage(ImageTk.PhotoImage(mapMode.image))
 
     def updateProvinceInfo(self, province):
         self.provinceIdSv.set("Id: {}".format(province.id))
