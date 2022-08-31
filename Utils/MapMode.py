@@ -12,9 +12,12 @@ class MapMode():
     def generateImage(self):
         self.image = Image.new("RGB", self.model.provinceMapImage.size)
         for province in self.model.idsToProvinces:
-            color = self._getMaybeAddProvinceColor(province)
+            if province == None:
+                continue
+            colorRGB = self._getMaybeAddProvinceColor(province)
+            color = (colorRGB.red, colorRGB.green, colorRGB.blue)
             for pixel in province.pixels:
-                self.image.putpixel((pixel.x, pixel.y), color)
+                self.image.putpixel((pixel[0], pixel[1]), color)
     
     def _getMaybeAddProvinceColor(self, province):
         fieldValue = ""

@@ -20,6 +20,7 @@ class MagellanEU4():
 		self.view.onMenuFileOpen = self.onNewModOpen
 		self.view.onMenuFileSave = self.onSave
 		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
+		self.view.onNewMapMode = self.changeMapMode
 		self.mapModes = dict()
 		self.model = None
                 
@@ -66,6 +67,7 @@ class MagellanEU4():
 		self.mapModes = dict()
 		self.mapModes["province"] = MapMode("province", self.model, None)
 		self.mapModes["province"].image = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
+		self.mapModes["religion"] = MapMode("religion", self.model, None)
 		self.view.updateMapMode(self.mapModes["province"])
 		# Combobox Updates
 		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
@@ -80,6 +82,13 @@ class MagellanEU4():
 		self.updateProvinceInfoModel()
 		self.model.save(self.selectedProvinces)
 		self.selectedProvinces = set()
+
+	def changeMapMode(self, mapModeString):
+		mapMode = self.mapModes[mapModeString]
+		if mapMode.image == None:
+			print("Generating the {} MapMode for the first time. This will take time...".format(mapModeString))
+			mapMode.generateImage()
+		self.view.updateMapMode(mapMode)
 
 	def getNewComboBoxEntriesFromFile(self, filePath, regexPattern, default):
 		newEntries = []

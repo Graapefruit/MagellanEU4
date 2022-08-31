@@ -38,6 +38,11 @@ class DisplayManager():
         fileMenu.add_command(label="Open", command=(lambda : self.onMenuFileOpen(filedialog.askdirectory())))
         fileMenu.add_command(label="Save", command=(lambda : self.onMenuFileSave()))
         menubar.add_cascade(label="File", menu=fileMenu)
+
+        mapModeMenu = tkinter.Menu(menubar, tearoff=0)
+        mapModeMenu.add_command(label="Provinces", command=(lambda : self.onNewMapMode("province")))
+        mapModeMenu.add_command(label="Religions", command=(lambda : self.onNewMapMode("religion")))
+        menubar.add_cascade(label="Map Modes", menu=mapModeMenu)
         self.window.config(menu=menubar)
 
     def createProvinceInfoPanel(self):
@@ -227,8 +232,6 @@ class DisplayManager():
     # --- Public Methods --- #
 
     def updateMapMode(self, mapMode):
-        if mapMode.image == None:
-            mapMode.generateImage()
         self.mapDisplay.updateImage(ImageTk.PhotoImage(mapMode.image))
 
     def updateProvinceInfo(self, province):

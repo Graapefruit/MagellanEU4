@@ -33,7 +33,7 @@ class MapInfoManager():
         self.populateTradeNodes("{}/{}/{}/{}".format(path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
-        # self.populatePixels()
+        self.populatePixels()
         self.provinceMapLocation = "{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)
 
     # --- Setup --- #
@@ -64,7 +64,7 @@ class MapInfoManager():
         provinceHistoryFiles = listdir(path)
         for fileName in provinceHistoryFiles:
             fileId = fileName.split("-")[0].split()[0]
-            if fileId.isdigit():
+            if fileId.isdigit() and self.idsToProvinces[int(fileId)] != None:
                 province = self.idsToProvinces[int(fileId)]
                 province.historyFile = fileName
                 provinceHistoryText = open("{}/{}".format(path, fileName), 'r').read()
