@@ -41,7 +41,7 @@ class MapInfoManager():
     def populateFromDefinitionFile(self, path):
         print("Parsing Definition File... ")
         sys.stdout.flush()
-        provincesInfo = open(path)
+        provincesInfo = open(path, 'r', errors="replace")
         reader = csv.reader(provincesInfo, delimiter=';')
         for provinceInfo in reader:
             if not provinceInfo[0].isdigit():
@@ -67,7 +67,7 @@ class MapInfoManager():
             if fileId.isdigit() and self.idsToProvinces[int(fileId)] != None:
                 province = self.idsToProvinces[int(fileId)]
                 province.historyFile = fileName
-                provinceHistoryText = open("{}/{}".format(path, fileName), 'r').read()
+                provinceHistoryText = open("{}/{}".format(path, fileName), 'r', errors="replace").read()
                 provinceHistoryUpdates = re.findall(PROVINCE_DATE_UPDATE_GROUPING_PATTERN, provinceHistoryText)
                 for match in provinceHistoryUpdates:
                     year, month, day = match[0].strip().split('.')
@@ -113,7 +113,7 @@ class MapInfoManager():
         print("Populating Areas...")
         sys.stdout.flush()
         if exists(path):
-            areaFile = open(path, 'r')
+            areaFile = open(path, 'r', errors="replace")
             fileWithoutComments = ""
             for line in areaFile:
                 fileWithoutComments += line.split('#')[0] + '\n'
@@ -150,7 +150,7 @@ class MapInfoManager():
         print("Parsing Continents...")
         sys.stdout.flush()
         if exists(path):
-            continentsFile = open(path, 'r')
+            continentsFile = open(path, 'r', errors="replace")
             matches = re.findall(CONTINENT_FILE_GROUPING_PATTERN, continentsFile.read())
             for match in matches:
                 continentName = match[0]
@@ -236,7 +236,7 @@ class MapInfoManager():
     # --- Utility --- #
 
     def getFileTextWithoutComments(self, path):
-        f = open(path, 'r', encoding="utf-8-sig")
+        f = open(path, 'r', encoding="utf-8-sig", errors="replace")
         fileText = ""
         for line in f:
             fileText += line.split('#')[0]
