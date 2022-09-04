@@ -67,7 +67,7 @@ class MapInfoManager():
             if fileId.isdigit() and self.idsToProvinces[int(fileId)] != None:
                 province = self.idsToProvinces[int(fileId)]
                 province.historyFile = fileName
-                provinceHistoryText = open("{}/{}".format(path, fileName), 'r', errors="replace").read()
+                provinceHistoryText = self.getFileTextWithoutComments("{}/{}".format(path, fileName))
                 provinceHistoryUpdates = re.findall(PROVINCE_DATE_UPDATE_GROUPING_PATTERN, provinceHistoryText)
                 for match in provinceHistoryUpdates:
                     year, month, day = match[0].strip().split('.')
@@ -80,7 +80,7 @@ class MapInfoManager():
                     splitLine = line.split("=")
                     if len(splitLine) == 2:
                         lineKey = splitLine[0].lower().strip()
-                        lineVal = splitLine[1].lower().strip()
+                        lineVal = splitLine[1].lower().strip().replace("\"", "")
                         match lineKey:
                             case "add_core":
                                 province.cores.append(lineVal)
@@ -105,7 +105,7 @@ class MapInfoManager():
                             case "discovered_by":
                                 province.discovered.append(lineVal)
                             case "capital":
-                                province.capital = lineVal.replace('\"', '')
+                                province.capital = lineVal
                             case _:
                                 province.extraText += line.strip() + '\n'
 
@@ -239,7 +239,10 @@ class MapInfoManager():
         f = open(path, 'r', encoding="utf-8-sig", errors="replace")
         fileText = ""
         for line in f:
+            commentPartitions = line.split('#')
             fileText += line.split('#')[0]
+            if len(commentPartitions) > 1:
+                fileText += "\n"
         return fileText
 
     # --- Public --- #
