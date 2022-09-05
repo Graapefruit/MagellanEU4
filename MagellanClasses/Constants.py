@@ -42,8 +42,8 @@ AREA_COLOR_GROUPING_PATTERN = re.compile("color\s*=\s*{\s*([0-9]{1,3})\s*([0-9]{
 REGION_GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{\s*areas\s*=\s*{([a-z0-9_\s]*)}[monsoon0-9.={}\s]*}", re.IGNORECASE) # Note that monsoons are ignored. They will have to be done manually, or add this feature in later
 CONTINENT_FILE_GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{([a-z0-9_#\s/.&+:-]*)}", re.IGNORECASE)
 CLIMATE_FILE_GROUPING_PATTERN = re.compile("([a-z_]*)\s=\s{([0-9\s]*)}", re.IGNORECASE)
-PROVINCE_DATE_UPDATE_GROUPING_PATTERN = re.compile("([0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2})\s=\s({[\s\S]*)}", re.IGNORECASE)
-PROVINCE_DATE_UPDATE_PATTERN = re.compile("[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}\s=\s{[\s\S]*}", re.IGNORECASE)
+PROVINCE_DATE_UPDATE_GROUPING_PATTERN = re.compile("([0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2})\s*=\s*({[\s\S]*)}", re.IGNORECASE)
+PROVINCE_DATE_UPDATE_PATTERN = re.compile("[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}\s*=\s*{[\s\S]*}", re.IGNORECASE)
 # The bottom 4 are all scuffed and might prove buggy in the future
 TECH_GROUP_GROUPING_PATTERN = re.compile("([a-z_]*) = {\s*start_level\s=\s[0-9]+", re.IGNORECASE)
 RELIGIONS_GROUPING_PATTERN = re.compile("([a-z_]*)\s*=\s*{\s*color", re.IGNORECASE)
