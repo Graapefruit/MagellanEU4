@@ -1,6 +1,7 @@
 from PIL import Image
 from random import randint
-from .RGB import RGB
+
+EMPTY_COLOUR = (255, 255, 255)
 
 class MapMode():
     def __init__(self, name, model, colorMapping):
@@ -8,14 +9,14 @@ class MapMode():
         self.name = name
         self.model = model
         self.colorMapping = (colorMapping if colorMapping != None else dict())
+        self.colorMapping[""] = EMPTY_COLOUR
 
     def generateImage(self):
         self.image = Image.new("RGB", self.model.provinceMapImage.size)
         for province in self.model.idsToProvinces:
             if province == None:
                 continue
-            colorRGB = self._getMaybeAddProvinceColor(province)
-            color = (colorRGB.red, colorRGB.green, colorRGB.blue)
+            color = self._getMaybeAddProvinceColor(province)
             for pixel in province.pixels:
                 self.image.putpixel((pixel[0], pixel[1]), color)
     
@@ -62,5 +63,5 @@ class MapMode():
                 print("ERROR: Map type \"{}\" cannot be populated".format(self.name))
 
         if not (fieldValue in self.colorMapping):
-            self.colorMapping[fieldValue] = RGB(randint(0, 255), randint(0, 255), randint(0, 255))
+            self.colorMapping[fieldValue] = (randint(0, 255), randint(0, 255), randint(0, 255))
         return self.colorMapping[fieldValue]

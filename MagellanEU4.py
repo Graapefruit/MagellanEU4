@@ -1,5 +1,5 @@
 import sys
-from MagellanClasses.Defaults import DEFAULT_CONTINENTS, DEFAULT_CULTURES, DEFAULT_RELIGIONS, DEFAULT_TECH_GROUPS, DEFAULT_TRADE_GOODS
+from MagellanClasses.Defaults import DEFAULT_CONTINENTS, DEFAULT_TECH_GROUPS
 from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
 from MagellanClasses.Constants import *
@@ -7,6 +7,8 @@ from PIL import Image
 from os.path import exists
 from os import listdir
 from random import randint
+
+from MagellanClasses.EU4DataFileParser import *
 
 from Utils.MapMode import MapMode
 
@@ -67,7 +69,7 @@ class MagellanEU4():
 		self.mapModes = dict()
 		self.mapModes["province"] = MapMode("province", self.model, None)
 		self.mapModes["province"].image = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
-		self.mapModes["religion"] = MapMode("religion", self.model, None)
+		self.mapModes["religion"] = MapMode("religion", self.model, self.model.religionsToColours)
 		self.mapModes["culture"] = MapMode("culture", self.model, None)
 		self.mapModes["tax"] = MapMode("tax", self.model, None)
 		self.mapModes["production"] = MapMode("production", self.model, None)
@@ -85,14 +87,14 @@ class MagellanEU4():
 		self.mapModes["tradeNode"] = MapMode("tradeNode", self.model, None)
 		self.mapModes["impassable"] = MapMode("impassable", self.model, None)
 		self.view.updateMapMode(self.mapModes["province"])
+		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
 		# Combobox Updates
 		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
 		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
-		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
-		self.view.religionField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, RELIGIONS_FOLDER), RELIGIONS_FILE, RELIGIONS_GROUPING_PATTERN, DEFAULT_RELIGIONS)
-		self.view.cultureField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, CULTURES_FOLDER), CULTURES_FILE, CULTURES_GROUPING_PATTERN, DEFAULT_CULTURES)
-		self.view.tradeGoodField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER), TRADE_GOODS_FILE, TRADE_GOODS_GROUPING_PATTERN, DEFAULT_TRADE_GOODS)
+		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
+		#self.view.cultureField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, CULTURES_FOLDER), CULTURES_FILE, CULTURES_GROUPING_PATTERN, DEFAULT_CULTURES)
+		#self.view.tradeGoodField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER), TRADE_GOODS_FILE, TRADE_GOODS_GROUPING_PATTERN, DEFAULT_TRADE_GOODS)
 
 	def onSave(self):
 		self.updateProvinceInfoModel()
@@ -119,9 +121,9 @@ class MagellanEU4():
 	def getNewTechGroupsFromFile(self, filePath):
 		techGroups = []
 		if exists(filePath):
-			matches = re.findall(TECH_GROUP_GROUPING_PATTERN, open(filePath, 'r').read())
-			for match in matches:
-				techGroups.append(match)
+			rootNode = parseEU4File(filePath)
+			for techGroupNode in rootNode["groups"].getChildren():
+				techGroups.append(techGroupNode.name)
 		else:
 			techGroups = DEFAULT_TECH_GROUPS[:]
 		return techGroups

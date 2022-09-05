@@ -1,9 +1,31 @@
-DEFAULT_RELIGIONS = ["catholic", "anglican", "hussite", "protestant", "reformed", "orthodox", "coptic", 
-    "sunni", "shiite", "ibadi", 
-    "buddhism", "vajrayana", "mahayana", "confucianism", "shinto", 
-    "hinduism", "sikhism", "jewish", "zoroastrian"
-    "animism", "shamanism", "totemism", "inti", "nahuatl", 
-    "mesoamerican_religion", "norse_pagan_reformed", "tengri_pagan_reformed", "dreamtime"]
+DEFAULT_RELIGIONS = {"catholic": (204, 204, 0), 
+    "anglican": (135, 77, 255), 
+    "hussite": (244, 55, 9), 
+    "protestant": (0, 0, 178), 
+    "reformed": (76, 76, 229), 
+    "orthodox": (178, 127, 0), 
+    "coptic": (178, 38, 76), 
+    "sunni": (0, 153, 0), 
+    "shiite": (0, 204, 0),
+    "ibadi": (0, 102, 0),
+    "buddhism": (204, 76, 0), 
+    "vajrayana": (204, 76, 76), 
+    "mahayana": (204, 76, 127), 
+    "confucianism": (214, 229, 140), 
+    "shinto": (204, 0, 0), 
+    "hinduism": (0, 204, 204), 
+    "sikhism": (0, 153, 153), 
+    "jewish": (0, 156, 231), 
+    "zoroastrian": (127, 178, 51),
+    "animism": (127, 0, 0), 
+    "shamanism": (127, 76, 76), 
+    "totemism": (127, 115, 115), 
+    "inti": (64, 115, 115),
+    "nahuatl": (64, 115, 64), 
+    "mesoamerican_religion": (76, 25, 178), 
+    "norse_pagan_reformed": (191, 191, 191), 
+    "tengri_pagan_reformed": (25, 76, 217), 
+    "dreamtime": (197, 133, 43)}
 
 DEFAULT_CULTURES = ["sapmi", "atlantean", "armenian"]
 

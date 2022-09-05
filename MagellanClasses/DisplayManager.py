@@ -152,7 +152,7 @@ class DisplayManager():
 
         self.religionText = tkinter.Label(self.provinceBodyLeft, text="Religion")
         self.religionText.pack(side=tkinter.TOP)
-        self.religionField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=DEFAULT_RELIGIONS)
+        self.religionField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=list(DEFAULT_RELIGIONS.keys()))
         self.religionField.pack(side=tkinter.TOP)
 
         self.cultureText = tkinter.Label(self.provinceBodyLeft, text="Culture")

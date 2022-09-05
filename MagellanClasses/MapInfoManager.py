@@ -21,7 +21,9 @@ class MapInfoManager():
         self.terrainTree = EU4DataNode("__ROOT__")
         self.tradeNodeTree = EU4DataNode("__ROOT__")
         self.colorsToProvinces = dict()
+        self.religionsToColours = DEFAULT_RELIGIONS.copy()
         self.idsToProvinces = [None] * self.max_provinces
+
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
         self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
         self.populateAreaData("{}/{}/{}".format(path, MAP_FOLDER_NAME, AREAS_FILE_NAME))
@@ -31,6 +33,7 @@ class MapInfoManager():
         self.populateNameData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.populateTradeNodes("{}/{}/{}/{}".format(path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE))
+        self.populateReligionData("{}/{}/{}".format(path, COMMON_FOLDER, RELIGIONS_FOLDER))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         self.populatePixels()
@@ -232,6 +235,26 @@ class MapInfoManager():
         for y in range(0, len(self.provinceMapArray)):
             for x in range(0, len(self.provinceMapArray[y])):
                 self.getProvinceAtIndex(x, y).pixels.append((x, y))
+
+    def populateReligionData(self, path):
+        print("Poulating religion->colour mappings...")
+        sys.stdout.flush()
+        if exists(path):
+            # If the base file exists, we overwrite base game values. Otherwise, we include them
+            if exists(RELIGIONS_FILE):
+                self.religionsToColours = dict()
+            for fileName in listdir(path):
+                filePath = "{}/{}".format(path, fileName)
+                rootNode = parseEU4File(filePath)
+                for religionGroup in rootNode.getChildren():
+                    # Parse through every field in a religious group. Religions are every child that is a data node and isn't a muslim religious school
+                    for religionGroupData in religionGroup.getChildren():
+                        if type(religionGroupData.values) == dict and religionGroupData.name != "religious_schools":
+                            religionName = religionGroupData.name
+                            sys.stdout.flush()
+                            religionColour = religionGroupData["color"]
+                            religionColour = (int(religionColour[0]), int(religionColour[1]), int(religionColour[2]))
+                            self.religionsToColours[religionName] = religionColour
 
     # --- Utility --- #
 
