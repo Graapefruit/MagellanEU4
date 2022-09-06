@@ -15,6 +15,7 @@ from MagellanClasses.EU4DataFileParser import *
 from Utils.MapMode import MapMode
 
 FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry"]
+MAP_MODE_NAMES = ["province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continet", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable"]
 
 class MagellanEU4():
 	def __init__(self):
@@ -48,25 +49,11 @@ class MagellanEU4():
 	def onNewModOpen(self, path):
 		self.model = MapInfoManager(path)
 		self.mapModes = dict()
-		self.mapModes["province"] = MapMode("province", self.model, None)
+		colorMappings = {"religion": self.model.religionsToColours}
+		for mapModeName in MAP_MODE_NAMES:
+			colorMapping = None if mapModeName not in colorMappings else colorMappings[mapModeName]
+			self.mapModes[mapModeName] = MapMode(mapModeName, self.model, colorMapping)
 		self.mapModes["province"].image = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
-		self.mapModes["religion"] = MapMode("religion", self.model, self.model.religionsToColours)
-		self.mapModes["culture"] = MapMode("culture", self.model, None)
-		self.mapModes["tax"] = MapMode("tax", self.model, None)
-		self.mapModes["production"] = MapMode("production", self.model, None)
-		self.mapModes["manpower"] = MapMode("manpower", self.model, None)
-		self.mapModes["development"] = MapMode("development", self.model, None)
-		self.mapModes["tradeGood"] = MapMode("tradeGood", self.model, None)
-		self.mapModes["area"] = MapMode("area", self.model, None)
-		self.mapModes["continent"] = MapMode("continent", self.model, None)
-		self.mapModes["hre"] = MapMode("hre", self.model, None)
-		self.mapModes["owner"] = MapMode("owner", self.model, None)
-		self.mapModes["controller"] = MapMode("controller", self.model, None)
-		self.mapModes["terrain"] = MapMode("terrain", self.model, None)
-		self.mapModes["climate"] = MapMode("climate", self.model, None)
-		self.mapModes["weather"] = MapMode("weather", self.model, None)
-		self.mapModes["tradeNode"] = MapMode("tradeNode", self.model, None)
-		self.mapModes["impassable"] = MapMode("impassable", self.model, None)
 		self.changeMapMode("province")
 		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
 		# Combobox Updates
