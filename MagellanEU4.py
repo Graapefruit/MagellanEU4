@@ -7,6 +7,8 @@ from PIL import Image
 from os.path import exists
 from os import listdir
 from random import randint
+from tkinter import Entry, Checkbutton
+from ttkwidgets.autocomplete import AutocompleteCombobox
 
 from MagellanClasses.EU4DataFileParser import *
 
@@ -16,6 +18,7 @@ FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "emba
 
 class MagellanEU4():
 	def __init__(self):
+		self.currentMapMode = None
 		self.currentProvince = None
 		self.selectedProvinces = set()
 		self.view = DisplayManager()
@@ -23,46 +26,24 @@ class MagellanEU4():
 		self.view.onMenuFileSave = self.onSave
 		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
 		self.view.onNewMapMode = self.changeMapMode
+		self.view.onFieldUpdate = self.fieldUpdated
 		self.mapModes = dict()
 		self.model = None
                 
 	def onPixelClicked(self, x, y):
-		self.updateProvinceInfoModel()
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
 		self.view.updateProvinceInfo(self.currentProvince)
 		self.selectedProvinces.add(self.currentProvince)
 
-	def updateProvinceInfoModel(self):
-		if not self.currentProvince:
-			pass # No province selected; ignore
-		elif not self.view.taxText.get().isdigit() or not self.view.productionText.get().isdigit() or not self.view.manpowerText.get().isdigit():
-			print("ERROR: At least one of tax, production, or manpower is not an integer. Please fix this before selecting another province")
-			sys.stdout.flush()
-		else:
-			self.currentProvince.capital = self.view.capitalField.get()
-			self.currentProvince.localizationName = self.view.provinceLocalizationName.get()
-			self.currentProvince.localizationAdjective = self.view.provinceLocalizationAdjective.get()
-			self.currentProvince.cores = list(map(lambda n: n.strip(), self.view.coresField.get().split(','))) if len(self.view.coresField.get().strip()) > 0 else []
-			self.currentProvince.owner = self.view.tagField.get()
-			self.currentProvince.controller = self.view.controllerField.get()
-			self.currentProvince.culture = self.view.cultureField.get()
-			self.currentProvince.religion = self.view.religionField.get()
-			self.currentProvince.hre = self.view.hreState.get() == 1
-			self.currentProvince.impassable = self.view.impassableState.get() == 1
-			self.currentProvince.tax = int(self.view.taxText.get())
-			self.currentProvince.production = int(self.view.productionText.get())
-			self.currentProvince.manpower = int(self.view.manpowerText.get())
-			self.currentProvince.tradeGood = self.view.tradeGoodField.get()
-			self.currentProvince.area = self.view.areaField.get()
-			self.currentProvince.continent = self.view.continentField.get()
-			self.currentProvince.terrain = self.view.terrainField.get()
-			self.currentProvince.climate = self.view.climateField.get()
-			self.currentProvince.weather = self.view.weatherField.get()
-			self.currentProvince.tradeNode = self.view.tradeNodeField.get()
-			self.currentProvince.discovered = []
-			for techGroup in self.view.techGroupToIntVar:
-				if self.view.techGroupToIntVar[techGroup].get() == 1:
-					self.currentProvince.discovered.append(techGroup)
+	# TODO: Discovery
+	def fieldUpdated(self, fieldName, fieldValue):
+		if self.currentProvince:
+			self.currentProvince.setFieldFromString(fieldName, fieldValue)
+			if fieldName in self.mapModes:
+				mapMode = self.mapModes[fieldName]
+				mapMode.updateProvince(self.currentProvince)
+				if self.currentMapMode == mapMode:
+					self.view.updateMapMode(self.currentMapMode)
 
 	def onNewModOpen(self, path):
 		self.model = MapInfoManager(path)
@@ -86,7 +67,7 @@ class MagellanEU4():
 		self.mapModes["weather"] = MapMode("weather", self.model, None)
 		self.mapModes["tradeNode"] = MapMode("tradeNode", self.model, None)
 		self.mapModes["impassable"] = MapMode("impassable", self.model, None)
-		self.view.updateMapMode(self.mapModes["province"])
+		self.changeMapMode("province")
 		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
 		# Combobox Updates
 		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
@@ -97,16 +78,15 @@ class MagellanEU4():
 		#self.view.tradeGoodField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER), TRADE_GOODS_FILE, TRADE_GOODS_GROUPING_PATTERN, DEFAULT_TRADE_GOODS)
 
 	def onSave(self):
-		self.updateProvinceInfoModel()
 		self.model.save(self.selectedProvinces)
 		self.selectedProvinces = set()
 
 	def changeMapMode(self, mapModeString):
-		mapMode = self.mapModes[mapModeString]
-		if mapMode.image == None:
+		self.currentMapMode = self.mapModes[mapModeString]
+		if self.currentMapMode.image == None:
 			print("Generating the {} MapMode for the first time. This will take time...".format(mapModeString))
-			mapMode.generateImage()
-		self.view.updateMapMode(mapMode)
+			self.currentMapMode.generateImage()
+		self.view.updateMapMode(self.currentMapMode)
 
 	def getNewComboBoxEntriesFromFile(self, filePath, regexPattern, default):
 		newEntries = []

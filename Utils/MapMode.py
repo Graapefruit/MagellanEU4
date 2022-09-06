@@ -16,52 +16,18 @@ class MapMode():
         for province in self.model.idsToProvinces:
             if province == None:
                 continue
-            color = self._getMaybeAddProvinceColor(province)
+            self.updateProvince(province)
+
+    def updateProvince(self, province):
+        if self.image:
+            fieldValue = province.getFieldFromString(self.name)
+            if not (fieldValue in self.colorMapping):
+                self.colorMapping[fieldValue] = (randint(0, 255), randint(0, 255), randint(0, 255))
             for pixel in province.pixels:
-                self.image.putpixel((pixel[0], pixel[1]), color)
+                self.image.putpixel(pixel, self.colorMapping[fieldValue])
     
     def _getMaybeAddProvinceColor(self, province):
-        fieldValue = ""
-        match self.name:
-            case "religion":
-                fieldValue = province.religion
-            case "culture":
-                fieldValue = province.culture
-            case "tax":
-                fieldValue = province.tax
-            case "production":
-                fieldValue = province.production
-            case "manpower":
-                fieldValue = province.manpower
-            case "development":
-                fieldValue = province.tax + province.production + province.manpower
-            case "tradeGood":
-                fieldValue = province.tradeGood
-            case "area":
-                fieldValue = province.area
-            case "continent":
-                fieldValue = province.continent
-            case "hre":
-                fieldValue = province.hre
-            case "owner":
-                fieldValue = province.owner
-            case "controller":
-                fieldValue = province.controller
-            #case "cores":
-            #    fieldValue = province.cores
-            case "terrain":
-                fieldValue = province.terran
-            case "climate":
-                fieldValue = province.climate
-            case "weather":
-                fieldValue = province.weather
-            case "tradeNode":
-                fieldValue = province.tradeNode
-            case "impassable":
-                fieldValue = province.impassable
-            case _:
-                print("ERROR: Map type \"{}\" cannot be populated".format(self.name))
-
+        fieldValue = province.getFieldFromString(self.name)
         if not (fieldValue in self.colorMapping):
             self.colorMapping[fieldValue] = (randint(0, 255), randint(0, 255), randint(0, 255))
         return self.colorMapping[fieldValue]

@@ -1,7 +1,10 @@
+from cProfile import label
+import string
 from tabnanny import check
 import tkinter
+from tkinter.ttk import Combobox
 from ttkwidgets.autocomplete import AutocompleteCombobox
-from tkinter import CENTER, HORIZONTAL, RAISED, VERTICAL, filedialog
+from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
 from .ScrollableImage import ScrollableImage
 from .Defaults import *
 from PIL import ImageTk
@@ -9,8 +12,8 @@ from PIL import ImageTk
 def doNothing(*argv):
     pass
 
-def callBack(sv):
-    print(sv.get())
+def printCallback(*argv):
+    print("hi")
 
 class DisplayManager():
     def __init__(self):
@@ -23,6 +26,7 @@ class DisplayManager():
         self.onMenuFileOpen = doNothing
         self.onMenuFileSave = doNothing
         self.onNewMapMode = doNothing
+        self.onFieldUpdate = doNothing
 
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.pack(fill=tkinter.BOTH)
@@ -145,47 +149,21 @@ class DisplayManager():
         self.provinceBodyLeft = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyLeft.pack(side=tkinter.LEFT)
 
-        self.capitalText = tkinter.Label(self.provinceBodyLeft, text ="Capital")
-        self.capitalText.pack(side=tkinter.TOP)
-        self.capitalField = tkinter.Entry(self.provinceBodyLeft, width=12, justify="center")
-        self.capitalField.pack(side=tkinter.TOP)
-
-        self.religionText = tkinter.Label(self.provinceBodyLeft, text="Religion")
-        self.religionText.pack(side=tkinter.TOP)
-        self.religionField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=list(DEFAULT_RELIGIONS.keys()))
-        self.religionField.pack(side=tkinter.TOP)
-
-        self.cultureText = tkinter.Label(self.provinceBodyLeft, text="Culture")
-        self.cultureText.pack(side=tkinter.TOP)
-        self.cultureField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=DEFAULT_CULTURES)
-        self.cultureField.pack(side=tkinter.TOP)
+        self.capitalSv, self.capitalLabel, self.capitalField = self.createNewEntry("Capital", self.provinceBodyLeft)
+        self.religionSv, self.religionLabel, self.religionField = self.createNewAutocompletecombobox("Religion", self.provinceBodyLeft, list(DEFAULT_RELIGIONS.keys()))
+        self.cultureSv, self.cultureLabel, self.cultureField = self.createNewAutocompletecombobox("Culture", self.provinceBodyLeft, DEFAULT_CULTURES)
 
         self.devText = tkinter.Label(self.provinceBodyLeft, text="Adm | Dip | Mil")
         self.devText.pack(side=tkinter.TOP)
         self.devPanel = tkinter.PanedWindow(self.provinceBodyLeft, orient=HORIZONTAL)
         self.devPanel.pack(side=tkinter.TOP)
-        self.taxText = tkinter.Entry(self.devPanel, width=3, justify="center")
-        self.productionText = tkinter.Entry(self.devPanel, width=3, justify="center")
-        self.manpowerText = tkinter.Entry(self.devPanel, width=3, justify="center")
-        self.taxText.pack(side=tkinter.LEFT, padx=(5, 5))
-        self.productionText.pack(side=tkinter.LEFT, padx=(5, 5))
-        self.manpowerText.pack(side=tkinter.LEFT, padx=(5, 5))
-
-        self.tradeGoodText = tkinter.Label(self.provinceBodyLeft, text="Trade Good")
-        self.tradeGoodText.pack(side=tkinter.TOP)
-        self.tradeGoodField = AutocompleteCombobox(self.provinceBodyLeft, width=12, completevalues=DEFAULT_TRADE_GOODS)
-        self.tradeGoodField.pack(side=tkinter.TOP)
-
-        self.areaText = tkinter.Label(self.provinceBodyLeft, text="Area")
-        self.areaText.pack(side=tkinter.TOP)
-        self.areaField = tkinter.Entry(self.provinceBodyLeft, justify="center")
-        self.areaField.pack(side=tkinter.TOP)
-
-        self.continentText = tkinter.Label(self.provinceBodyLeft, text="Continent")
-        self.continentText.pack(side=tkinter.TOP)
-        self.continentField = AutocompleteCombobox(self.provinceBodyLeft, completevalues=DEFAULT_CONTINENTS)
-        self.continentField.pack(side=tkinter.TOP)
-
+        self.taxSv, self.taxText = self.createNewDevelopmentEntry("Tax", self.devPanel)
+        self.productionSv, self.productionText = self.createNewDevelopmentEntry("Production", self.devPanel)
+        self.manpowerSv, self.manpowerText = self.createNewDevelopmentEntry("Manpower", self.devPanel)
+        
+        self.tradeGoodSv, self.tradeGoodLabel, self.tradeGoodField = self.createNewAutocompletecombobox("Trade Good", self.provinceBodyLeft, DEFAULT_TRADE_GOODS)
+        self.areaSv, self.areaLabel, self.areaField = self.createNewEntry("Area", self.provinceBodyLeft)
+        self.continentSv, self.continentLabel, self.continentField = self.createNewAutocompletecombobox("Continent", self.provinceBodyLeft, DEFAULT_CONTINENTS)
         self.hreState = tkinter.IntVar()
         self.hreBox = tkinter.Checkbutton(self.provinceBodyLeft, variable=self.hreState, text="HRE")
         self.hreBox.pack(side=tkinter.TOP)
@@ -194,40 +172,13 @@ class DisplayManager():
         self.provinceBodyRight = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyRight.pack(side=tkinter.LEFT)
 
-        self.tagText = tkinter.Label(self.provinceBodyRight, text="Owner")
-        self.tagText.pack(side=tkinter.TOP)
-        self.tagField = tkinter.Entry(self.provinceBodyRight, justify="center")
-        self.tagField.pack(side=tkinter.TOP)
-
-        self.controllerText = tkinter.Label(self.provinceBodyRight, text="Controller")
-        self.controllerText.pack(side=tkinter.TOP)
-        self.controllerField = tkinter.Entry(self.provinceBodyRight, justify="center")
-        self.controllerField.pack(side=tkinter.TOP)
-
-        self.coresText = tkinter.Label(self.provinceBodyRight, text="Cores")
-        self.coresText.pack(side=tkinter.TOP)
-        self.coresField = tkinter.Entry(self.provinceBodyRight, justify="center")
-        self.coresField.pack(side=tkinter.TOP)
-
-        self.terrainText = tkinter.Label(self.provinceBodyRight, text="Terrain")
-        self.terrainText.pack(side=tkinter.TOP)
-        self.terrainField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_TERRAINS)
-        self.terrainField.pack(side=tkinter.TOP)
-
-        self.climateText = tkinter.Label(self.provinceBodyRight, text="Climate")
-        self.climateText.pack(side=tkinter.TOP)
-        self.climateField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_CLIMATES)
-        self.climateField.pack(side=tkinter.TOP)
-
-        self.weatherText = tkinter.Label(self.provinceBodyRight, text="Weather")
-        self.weatherText.pack(side=tkinter.TOP)
-        self.weatherField = AutocompleteCombobox(self.provinceBodyRight, completevalues=DEFAULT_WEATHERS)
-        self.weatherField.pack(side=tkinter.TOP)
-
-        self.tradeNodeText = tkinter.Label(self.provinceBodyRight, text="Trade Node")
-        self.tradeNodeText.pack(side=tkinter.TOP)
-        self.tradeNodeField = AutocompleteCombobox(self.provinceBodyRight, completevalues=[])
-        self.tradeNodeField.pack(side=tkinter.TOP)
+        self.ownerSv, self.ownerLabel, self.ownerField = self.createNewEntry("Owner", self.provinceBodyRight)
+        self.controllerSv, self.controllerLabel, self.controllerField = self.createNewEntry("Controller", self.provinceBodyRight)
+        self.coresSv, self.coresLabel, self.coresField = self.createNewEntry("Cores", self.provinceBodyRight)
+        self.terrainSv, self.terrainLabel, self.terrainField = self.createNewAutocompletecombobox("Terrain", self.provinceBodyRight, DEFAULT_TERRAINS)
+        self.climateSv, self.climateLabel, self.climateField = self.createNewAutocompletecombobox("Climate", self.provinceBodyRight, DEFAULT_CLIMATES)
+        self.weatherSv, self.weatherLabel, self.weatherField = self.createNewAutocompletecombobox("Weather", self.provinceBodyRight, DEFAULT_WEATHERS)
+        self.tradeNodeSv, self.tradeNodeLabel, self.tradeNodeField = self.createNewAutocompletecombobox("Trade Node", self.provinceBodyRight, [])
 
         self.impassableState = tkinter.IntVar()
         self.impassableBox = tkinter.Checkbutton(self.provinceBodyRight, variable=self.impassableState, text="Impassable")
@@ -236,6 +187,35 @@ class DisplayManager():
     def createScrollableImage(self):
         self.mapDisplay = ScrollableImage(self.rootPanel, width=1024, height=1024)
         self.mapDisplay.pack()
+
+    # --- Helpers --- #
+
+    def createNewEntry(self, fieldString, panel):
+        stringVar, label = self.createStringVarAndLabel(fieldString, panel)
+        entry = tkinter.Entry(panel, textvariable=stringVar, width=12, justify="center")
+        entry.pack(side=tkinter.TOP)
+        return stringVar, label, entry
+
+    def createNewDevelopmentEntry(self, mapModeString, panel):
+        stringVar = tkinter.StringVar()
+        stringVar.trace_add("write", (lambda name, index, mode : self.onFieldUpdate(mapModeString, stringVar.get())))
+        entry = tkinter.Entry(self.devPanel, width=3, justify="center")
+        entry.pack(side=tkinter.LEFT, padx=(5, 5))
+        return stringVar, entry
+
+    def createNewAutocompletecombobox(self, fieldString, panel, completeValues):
+        stringVar, label = self.createStringVarAndLabel(fieldString, panel)
+        combobox = AutocompleteCombobox(panel, textvariable=stringVar, completevalues=completeValues)
+        combobox.pack(side=tkinter.TOP)
+        return stringVar, label, combobox
+
+    def createStringVarAndLabel(self, fieldString, panel):
+        mapModeString = fieldString[0].lower() + fieldString[1:].replace(' ', '')
+        stringVar = tkinter.StringVar()
+        stringVar.trace_add("write", (lambda name, index, mode : self.onFieldUpdate(mapModeString, stringVar.get())))
+        label = tkinter.Label(panel, text=fieldString)
+        label.pack(side=tkinter.TOP)
+        return stringVar, label
 
     # --- Private Methods --- #
 
@@ -263,7 +243,7 @@ class DisplayManager():
         self.taxText.delete('0', tkinter.END)
         self.productionText.delete('0', tkinter.END)
         self.manpowerText.delete('0', tkinter.END)
-        self.tagField.delete('0', tkinter.END)
+        self.ownerField.delete('0', tkinter.END)
         self.controllerField.delete('0', tkinter.END)
         self.coresField.delete('0', tkinter.END)
         self.areaField.delete('0', tkinter.END)
@@ -279,7 +259,7 @@ class DisplayManager():
         self.weatherField.set(province.weather)
         self.areaField.insert(tkinter.END, province.area)
         self.continentField.set(province.continent)
-        self.tagField.insert(tkinter.END, province.owner)
+        self.ownerField.insert(tkinter.END, province.owner)
         self.tradeNodeField.set(province.tradeNode)
         coresText = ""
         for i in range(0, len(province.cores)):
