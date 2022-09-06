@@ -37,6 +37,8 @@ class Province:
 
 	def getFieldFromString(self, field):
 		match field:
+			case "capital":
+				return self.capital
 			case "religion":
 				return self.religion
 			case "culture":
@@ -64,7 +66,7 @@ class Province:
             #case "cores":
             #    fieldValue = province.cores
 			case "terrain":
-				return self.terran
+				return self.terrain
 			case "climate":
 				return self.climate
 			case "weather":
@@ -105,7 +107,7 @@ class Province:
 			case "cores":
 				self.cores = list(map(lambda n: n.strip(), value.split(','))) if len(value.strip()) > 0 else []
 			case "terrain":
-				self.terran = value
+				self.terrain = value
 			case "climate":
 				self.climate = value
 			case "weather":

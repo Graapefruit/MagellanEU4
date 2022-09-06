@@ -39,12 +39,13 @@ class MagellanEU4():
 	# TODO: Discovery
 	def fieldUpdated(self, fieldName, fieldValue):
 		if self.currentProvince:
-			self.currentProvince.setFieldFromString(fieldName, fieldValue)
-			if fieldName in self.mapModes:
-				mapMode = self.mapModes[fieldName]
-				mapMode.updateProvince(self.currentProvince)
-				if self.currentMapMode == mapMode:
-					self.view.updateMapMode(self.currentMapMode)
+			if self.currentProvince.getFieldFromString(fieldName) != fieldValue:
+				self.currentProvince.setFieldFromString(fieldName, fieldValue)
+				if fieldName in self.mapModes:
+					mapMode = self.mapModes[fieldName]
+					mapMode.updateProvince(self.currentProvince)
+					if self.currentMapMode == mapMode:
+						self.view.updateMapMode(self.currentMapMode)
 
 	def onNewModOpen(self, path):
 		self.model = MapInfoManager(path)
