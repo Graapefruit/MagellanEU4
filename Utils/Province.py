@@ -77,6 +77,7 @@ class Province:
 				return self.impassable
 			case _:
 				print("ERROR: Field {} is unknown".format(field))
+				return None
 
 	def setFieldFromString(self, field, value):
 		match field:

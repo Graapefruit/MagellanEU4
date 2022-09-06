@@ -15,7 +15,7 @@ from MagellanClasses.EU4DataFileParser import *
 from Utils.MapMode import MapMode
 
 FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry"]
-MAP_MODE_NAMES = ["province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continet", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable"]
+MAP_MODE_NAMES = {"province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continet", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable"}
 
 class MagellanEU4():
 	def __init__(self):
@@ -25,25 +25,37 @@ class MagellanEU4():
 		self.view = DisplayManager()
 		self.view.onMenuFileOpen = self.onNewModOpen
 		self.view.onMenuFileSave = self.onSave
-		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
+		self.view.mapDisplay.onLeftClick = self.selectProvince
+		self.view.mapDisplay.onRightClick = self.colourProvince
 		self.view.onNewMapMode = self.changeMapMode
-		self.view.onFieldUpdate = self.fieldUpdated
+		self.view.onFieldUpdate = self.updateCurrentProvince
 		self.mapModes = dict()
 		self.model = None
                 
-	def onPixelClicked(self, x, y):
+	def selectProvince(self, x, y):
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
 		self.view.updateProvinceInfo(self.currentProvince)
 		self.selectedProvinces.add(self.currentProvince)
 
-	# TODO: Discovery
-	def fieldUpdated(self, fieldName, fieldValue):
+	def colourProvince(self, x, y):
 		if self.currentProvince:
-			if self.currentProvince.getFieldFromString(fieldName) != fieldValue:
-				self.currentProvince.setFieldFromString(fieldName, fieldValue)
+			fieldName = self.currentMapMode.name
+			if fieldName != "province":
+				province = self.model.getProvinceAtIndex(x, y)
+				fieldValue = self.currentProvince.getFieldFromString(fieldName)
+				self.updateProvince(province, fieldName, fieldValue)
+
+	def updateCurrentProvince(self, fieldName, fieldValue):
+		self.updateProvince(self.currentProvince, fieldName, fieldValue)
+
+	# TODO: Discovery
+	def updateProvince(self, province, fieldName, fieldValue):
+		if province:
+			if province.getFieldFromString(fieldName) != fieldValue:
+				province.setFieldFromString(fieldName, fieldValue)
 				if fieldName in self.mapModes:
 					mapMode = self.mapModes[fieldName]
-					mapMode.updateProvince(self.currentProvince)
+					mapMode.updateProvince(province)
 					if self.currentMapMode == mapMode:
 						self.view.updateMapMode(self.currentMapMode)
 
@@ -64,6 +76,7 @@ class MagellanEU4():
 		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
 		#self.view.cultureField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, CULTURES_FOLDER), CULTURES_FILE, CULTURES_GROUPING_PATTERN, DEFAULT_CULTURES)
 		#self.view.tradeGoodField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER), TRADE_GOODS_FILE, TRADE_GOODS_GROUPING_PATTERN, DEFAULT_TRADE_GOODS)
+		print("Map Successfully Loaded")
 
 	def onSave(self):
 		self.model.save(self.selectedProvinces)
