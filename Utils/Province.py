@@ -20,7 +20,7 @@ class Province:
 		self.manpower = 1
 		self.tradeGood = ""
 		self.tradeNode = ""
-		self.discovered = []
+		self.discovered = set()
 
 		self.area = ""
 		self.continent = ""
@@ -76,8 +76,11 @@ class Province:
 			case "impassable":
 				return self.impassable
 			case _:
-				print("ERROR: Field {} is unknown".format(field))
-				return None
+				if field in self.discovered:
+					return self.discovered[field]
+				else:
+					print("ERROR: Field {} is unknown".format(field))
+					return None
 
 	def setFieldFromString(self, field, value):
 		match field:
@@ -118,4 +121,7 @@ class Province:
 			case "impassable":
 				self.impassable = (value == 1)
 			case _:
-				print("ERROR: Field {} is unknown".format(field))
+				if field in self.discovered:
+					self.discovered[field] = value
+				else:
+					print("ERROR: Field {} is unknown".format(field))

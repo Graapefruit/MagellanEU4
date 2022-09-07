@@ -20,10 +20,12 @@ class MapInfoManager():
         self.areasToColors = dict()
         self.terrainTree = EU4DataNode("__ROOT__")
         self.tradeNodeTree = EU4DataNode("__ROOT__")
+        self.techGroups = []
         self.colorsToProvinces = dict()
         self.religionsToColours = DEFAULT_RELIGIONS.copy()
         self.idsToProvinces = [None] * self.max_provinces
 
+        self.populateTechGroups("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE))
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
         self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
         self.populateAreaData("{}/{}/{}".format(path, MAP_FOLDER_NAME, AREAS_FILE_NAME))
@@ -38,14 +40,27 @@ class MapInfoManager():
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         self.populatePixels()
         self.provinceMapLocation = "{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)
+        print("Finished Loading the Map Info")
+        sys.stdout.flush()
 
     # --- Setup --- #
+
+    def populateTechGroups(self, path):
+        if exists(path):
+            rootNode = parseEU4File(path)
+            for techGroupNode in rootNode["groups"].getChildren():
+                self.techGroups.append(techGroupNode.name)
+            else:
+                self.techGroups = DEFAULT_TECH_GROUPS[:]
 
     def populateFromDefinitionFile(self, path):
         print("Parsing Definition File... ")
         sys.stdout.flush()
         provincesInfo = open(path, 'r', errors="replace")
         reader = csv.reader(provincesInfo, delimiter=';')
+        baseDiscovered = dict()
+        for techGroup in self.techGroups:
+            baseDiscovered[techGroup] = False
         for provinceInfo in reader:
             if not provinceInfo[0].isdigit():
                 continue
@@ -57,6 +72,7 @@ class MapInfoManager():
                 print("ERROR: Two provinces share the same colour! IDs: {} {}".format(self.colorsToProvinces[rgb].id, provinceInfo[0]))
                 quit()
             province = Province(int(provinceInfo[0]), provinceInfo[4], rgb)
+            province.discovered = baseDiscovered.copy()
             self.provinces.append(province)
             self.colorsToProvinces[rgb] = province
             self.idsToProvinces[int(provinceInfo[0])] = province
@@ -106,7 +122,7 @@ class MapInfoManager():
                             case "trade_good":
                                 province.tradeGood = lineVal
                             case "discovered_by":
-                                province.discovered.append(lineVal)
+                                province.discovered[lineVal] = True
                             case "capital":
                                 province.capital = lineVal
                             case _:

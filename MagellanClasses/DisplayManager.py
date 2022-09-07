@@ -43,26 +43,27 @@ class DisplayManager():
         fileMenu.add_command(label="Save", command=(lambda : self.onMenuFileSave()))
         menubar.add_cascade(label="File", menu=fileMenu)
 
-        mapModeMenu = tkinter.Menu(menubar, tearoff=0)
-        mapModeMenu.add_command(label="Provinces", command=(lambda : self.onNewMapMode("province")))
-        mapModeMenu.add_command(label="Religions", command=(lambda : self.onNewMapMode("religion")))
-        mapModeMenu.add_command(label="Cultures", command=(lambda : self.onNewMapMode("culture")))
-        mapModeMenu.add_command(label="Tax", command=(lambda : self.onNewMapMode("tax")))
-        mapModeMenu.add_command(label="Production", command=(lambda : self.onNewMapMode("production")))
-        mapModeMenu.add_command(label="Manpower", command=(lambda : self.onNewMapMode("manpower")))
-        mapModeMenu.add_command(label="Total Development", command=(lambda : self.onNewMapMode("development")))
-        mapModeMenu.add_command(label="Trade Goods", command=(lambda : self.onNewMapMode("tradeGood")))
-        mapModeMenu.add_command(label="Areas", command=(lambda : self.onNewMapMode("area")))
-        mapModeMenu.add_command(label="Continents", command=(lambda : self.onNewMapMode("continent")))
-        mapModeMenu.add_command(label="HRE", command=(lambda : self.onNewMapMode("hre")))
-        mapModeMenu.add_command(label="Owners", command=(lambda : self.onNewMapMode("owner")))
-        mapModeMenu.add_command(label="Controllers", command=(lambda : self.onNewMapMode("controller")))
-        mapModeMenu.add_command(label="Terrains", command=(lambda : self.onNewMapMode("terrain")))
-        mapModeMenu.add_command(label="Climates", command=(lambda : self.onNewMapMode("climate")))
-        mapModeMenu.add_command(label="Weathers", command=(lambda : self.onNewMapMode("weather")))
-        mapModeMenu.add_command(label="Trade Nodes", command=(lambda : self.onNewMapMode("tradeNode")))
-        mapModeMenu.add_command(label="Impassables", command=(lambda : self.onNewMapMode("impassable")))
-        menubar.add_cascade(label="Map Modes", menu=mapModeMenu)
+        self.mapModeMenu = tkinter.Menu(menubar, tearoff=0)
+        self.mapModeMenu.add_command(label="Provinces", command=(lambda : self.onNewMapMode("province")))
+        self.mapModeMenu.add_command(label="Religions", command=(lambda : self.onNewMapMode("religion")))
+        self.mapModeMenu.add_command(label="Cultures", command=(lambda : self.onNewMapMode("culture")))
+        self.mapModeMenu.add_command(label="Tax", command=(lambda : self.onNewMapMode("tax")))
+        self.mapModeMenu.add_command(label="Production", command=(lambda : self.onNewMapMode("production")))
+        self.mapModeMenu.add_command(label="Manpower", command=(lambda : self.onNewMapMode("manpower")))
+        self.mapModeMenu.add_command(label="Total Development", command=(lambda : self.onNewMapMode("development")))
+        self.mapModeMenu.add_command(label="Trade Goods", command=(lambda : self.onNewMapMode("tradeGood")))
+        self.mapModeMenu.add_command(label="Areas", command=(lambda : self.onNewMapMode("area")))
+        self.mapModeMenu.add_command(label="Continents", command=(lambda : self.onNewMapMode("continent")))
+        self.mapModeMenu.add_command(label="HRE", command=(lambda : self.onNewMapMode("hre")))
+        self.mapModeMenu.add_command(label="Owners", command=(lambda : self.onNewMapMode("owner")))
+        self.mapModeMenu.add_command(label="Controllers", command=(lambda : self.onNewMapMode("controller")))
+        self.mapModeMenu.add_command(label="Terrains", command=(lambda : self.onNewMapMode("terrain")))
+        self.mapModeMenu.add_command(label="Climates", command=(lambda : self.onNewMapMode("climate")))
+        self.mapModeMenu.add_command(label="Weathers", command=(lambda : self.onNewMapMode("weather")))
+        self.mapModeMenu.add_command(label="Trade Nodes", command=(lambda : self.onNewMapMode("tradeNode")))
+        self.mapModeMenu.add_command(label="Impassables", command=(lambda : self.onNewMapMode("impassable")))
+        self.mapModeMenu.add_separator()
+        menubar.add_cascade(label="Map Modes", menu=self.mapModeMenu)
         self.window.config(menu=menubar)
 
     def createProvinceInfoPanel(self):
@@ -123,6 +124,7 @@ class DisplayManager():
         if self.techGroupToCheckbox:
             for checkbox in self.techGroupToCheckbox.keys():
                 self.techGroupToCheckbox[checkbox].destroy()
+                self.mapModeMenu.delete(checkbox)
         if self.checkBoxPanels:
             for panel in self.checkBoxPanels:
                 panel.destroy()
@@ -132,6 +134,7 @@ class DisplayManager():
         currentPanel = None
         rowIndex = 0
         for techGroup in techGroups:
+            self.mapModeMenu.add_command(label=techGroup, command=(lambda n=techGroup: self.onNewMapMode(n)))
             if rowIndex == 0:
                 currentPanel = tkinter.PanedWindow(self.provinceFooter, orient=HORIZONTAL)
                 currentPanel.pack(side=tkinter.TOP)
@@ -199,7 +202,7 @@ class DisplayManager():
     def createNewDevelopmentEntry(self, mapModeString, panel):
         stringVar = tkinter.StringVar()
         stringVar.trace_add("write", (lambda name, index, mode : self.onFieldUpdate(mapModeString, stringVar.get())))
-        entry = tkinter.Entry(self.devPanel, width=3, justify="center")
+        entry = tkinter.Entry(panel, width=3, justify="center")
         entry.pack(side=tkinter.LEFT, padx=(5, 5))
         return stringVar, entry
 

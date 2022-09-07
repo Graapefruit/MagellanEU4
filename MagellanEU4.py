@@ -1,5 +1,5 @@
 import sys
-from MagellanClasses.Defaults import DEFAULT_CONTINENTS, DEFAULT_TECH_GROUPS
+from MagellanClasses.Defaults import DEFAULT_CONTINENTS
 from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
 from MagellanClasses.Constants import *
@@ -7,8 +7,6 @@ from PIL import Image
 from os.path import exists
 from os import listdir
 from random import randint
-from tkinter import Entry, Checkbutton
-from ttkwidgets.autocomplete import AutocompleteCombobox
 
 from MagellanClasses.EU4DataFileParser import *
 
@@ -62,13 +60,15 @@ class MagellanEU4():
 	def onNewModOpen(self, path):
 		self.model = MapInfoManager(path)
 		self.mapModes = dict()
-		colorMappings = {"religion": self.model.religionsToColours}
+		colorMappings = {"religion": self.model.religionsToColours, "discovery": {True: (255, 255, 255), False: (96, 96, 96)}}
 		for mapModeName in MAP_MODE_NAMES:
 			colorMapping = None if mapModeName not in colorMappings else colorMappings[mapModeName]
 			self.mapModes[mapModeName] = MapMode(mapModeName, self.model, colorMapping)
+		for mapModeName in self.model.techGroups:
+			self.mapModes[mapModeName] = MapMode(mapModeName, self.model, colorMappings["discovery"])
 		self.mapModes["province"].image = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
 		self.changeMapMode("province")
-		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
+		self.view.createNewDiscoveryCheckboxes(self.model.techGroups)
 		# Combobox Updates
 		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
 		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())
@@ -98,16 +98,6 @@ class MagellanEU4():
 		else:
 			newEntries = default[:]
 		return newEntries
-
-	def getNewTechGroupsFromFile(self, filePath):
-		techGroups = []
-		if exists(filePath):
-			rootNode = parseEU4File(filePath)
-			for techGroupNode in rootNode["groups"].getChildren():
-				techGroups.append(techGroupNode.name)
-		else:
-			techGroups = DEFAULT_TECH_GROUPS[:]
-		return techGroups
 
 	def getNewComboBoxEntriesFromFolder(self, folderPath, baseFileName, regexPattern, default):
 		newEntries = default[:]
