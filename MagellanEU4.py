@@ -46,7 +46,6 @@ class MagellanEU4():
 	def updateCurrentProvince(self, fieldName, fieldValue):
 		self.updateProvince(self.currentProvince, fieldName, fieldValue)
 
-	# TODO: Discovery
 	def updateProvince(self, province, fieldName, fieldValue):
 		if province:
 			if province.getFieldFromString(fieldName) != fieldValue:
@@ -54,6 +53,7 @@ class MagellanEU4():
 				if fieldName in self.mapModes:
 					mapMode = self.mapModes[fieldName]
 					mapMode.updateProvince(province)
+					mapMode.generateImage()
 					if self.currentMapMode == mapMode:
 						self.view.updateMapMode(self.currentMapMode)
 
@@ -86,7 +86,7 @@ class MagellanEU4():
 		self.currentMapMode = self.mapModes[mapModeString]
 		if self.currentMapMode.image == None:
 			print("Generating the {} MapMode for the first time. This will take time...".format(mapModeString))
-			self.currentMapMode.generateImage()
+			self.currentMapMode.initializeMapMode()
 		self.view.updateMapMode(self.currentMapMode)
 
 	def getNewComboBoxEntriesFromFile(self, filePath, regexPattern, default):

@@ -1,8 +1,4 @@
-from cProfile import label
-import string
-from tabnanny import check
 import tkinter
-from tkinter.ttk import Combobox
 from ttkwidgets.autocomplete import AutocompleteCombobox
 from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
 from .ScrollableImage import ScrollableImage

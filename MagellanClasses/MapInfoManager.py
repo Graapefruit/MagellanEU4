@@ -245,12 +245,14 @@ class MapInfoManager():
                     tradeNode["members"].values = []
 
     def populatePixels(self):
-        #TODO: Slow-ish. Multithread?
         print("Populating Pixels... This may take a while")
         sys.stdout.flush()
         for y in range(0, len(self.provinceMapArray)):
             for x in range(0, len(self.provinceMapArray[y])):
                 self.getProvinceAtIndex(x, y).pixels.append((x, y))
+        for province in self.idsToProvinces:
+            if province:
+                province.pixels = numpy.array(province.pixels)
 
     def populateReligionData(self, path):
         print("Poulating religion->colour mappings...")
