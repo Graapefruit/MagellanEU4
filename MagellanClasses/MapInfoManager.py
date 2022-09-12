@@ -328,29 +328,44 @@ class MapInfoManager():
         print("Saving History Files...")
         sys.stdout.flush()
         for province in updatedProvinces:
-            f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
-            if not self.provinceIsWater(province):
-                writeFieldIfExists(f, "capital", province.capital)
-                writeFieldIfExists(f, "owner", province.owner)
-                writeFieldIfExists(f, "controller", province.controller)
-                for core in province.cores:
-                    f.write("add_core = {}\n".format(core))
-                writeFieldIfExists(f, "culture", province.culture)
-                writeFieldIfExists(f, "religion", province.religion)
-                f.write("hre = {}\n".format("yes" if province.hre else "no"))
-                f.write("base_tax = {}\n".format(province.tax))
-                f.write("base_production = {}\n".format(province.production))
-                f.write("base_manpower = {}\n".format(province.manpower))
-                writeFieldIfExists(f, "trade_good", province.tradeGood)
+            saveFileSafely("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), (lambda : self.saveProvinceHistory(province)))
 
-            for discoverer in province.discovered:
-                f.write("discovered_by = {}\n".format(discoverer))
-            f.write(province.extraText)
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME), (lambda : self.saveProvinceDefinitions()))
+        saveFileSafely("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE), (lambda : self.saveLocalization(LOCALIZATION_NAME_FILE, "Name", "PROV")))
+        saveFileSafely("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_ADJECTIVE_FILE), (lambda : self.saveLocalization(LOCALIZATION_ADJECTIVE_FILE, "Adjective", "ADJ")))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, AREAS_FILE_NAME), (lambda : self.saveAreaFile(areasToProvinces)))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), (lambda : self.saveDataTree("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), "Terrain", self.terrainTree)))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), lambda : self.saveContinentsFile(continentsToProvinces))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME), (lambda : self.saveClimateFile(climateEntryToProvinces)))
+        saveFileSafely("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), (lambda : self.saveDataTree("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), "Trade Node", self.tradeNodeTree)))
+        print("Saving Success")
+        sys.stdout.flush()
 
-            for historyUpdate in province.provinceUpdates:
-                f.write("{} = {{{}}}".format(historyUpdate.date.strftime("%Y.%m.%d"), historyUpdate.text))
-            f.close()
+    def saveProvinceHistory(self, province):
+        f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
+        if not self.provinceIsWater(province):
+            writeFieldIfExists(f, "capital", province.capital)
+            writeFieldIfExists(f, "owner", province.owner)
+            writeFieldIfExists(f, "controller", province.controller)
+            for core in province.cores:
+                f.write("add_core = {}\n".format(core))
+            writeFieldIfExists(f, "culture", province.culture)
+            writeFieldIfExists(f, "religion", province.religion)
+            f.write("hre = {}\n".format("yes" if province.hre else "no"))
+            f.write("base_tax = {}\n".format(province.tax))
+            f.write("base_production = {}\n".format(province.production))
+            f.write("base_manpower = {}\n".format(province.manpower))
+            writeFieldIfExists(f, "trade_good", province.tradeGood)
 
+        for discoverer in province.discovered:
+            f.write("discovered_by = {}\n".format(discoverer))
+        f.write(province.extraText)
+
+        for historyUpdate in province.provinceUpdates:
+            f.write("{} = {{{}}}".format(historyUpdate.date.strftime("%Y.%m.%d"), historyUpdate.text))
+        f.close()
+    
+    def saveProvinceDefinitions(self):
         print("Saving Province Definitions...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME), 'w')
@@ -359,22 +374,16 @@ class MapInfoManager():
             if province != None:
                 f.write("{};{};{};{};{};x\n".format(province.id, province.color[0], province.color[1], province.color[2], province.name))
 
-        print("Saving Name Localizations...")
+    def saveLocalization(self, fileName, localizationType, localizationPrefix):
+        print("Saving {} Localizations...".format(localizationType))
         sys.stdout.flush()
-        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE), 'w')
+        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, fileName), 'w')
         f.write("l_english:\n")
         for province in self.idsToProvinces:
             if province != None:
-                f.write(" PROV{}:0 \"{}\"\n".format(province.id, province.localizationName))
+                f.write(" {}{}:0 \"{}\"\n".format(localizationPrefix, province.id, province.localizationName))
 
-        print("Saving Adjective Localizations...")
-        sys.stdout.flush()
-        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_ADJECTIVE_FILE), 'w')
-        f.write("l_english:\n")
-        for province in self.idsToProvinces:
-            if province != None:
-                f.write(" ADJ{}:0 \"{}\"\n".format(province.id, province.localizationAdjective))
-        
+    def saveAreaFile(self, areasToProvinces):
         print("Saving Area File...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, AREAS_FILE_NAME), 'w')
@@ -389,10 +398,12 @@ class MapInfoManager():
             f.write("\n}\n\n")
         f.close()
 
-        print("Saving Terrain File...")
+    def saveDataTree(self, path, name, tree):
+        print("Saving {} File...".format(name))
         sys.stdout.flush()
-        writeToFileFromRootNode("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), self.terrainTree)
+        writeToFileFromRootNode(path, tree)
 
+    def saveContinentsFile(self, continentsToProvinces):
         print("Saving Continent File...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), 'w')
@@ -408,6 +419,7 @@ class MapInfoManager():
             f.write("\n}\n\n")
         f.close()
 
+    def saveClimateFile(self, climateEntryToProvinces):
         print("Saving Climate/Weather File...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME), 'w')
@@ -424,19 +436,20 @@ class MapInfoManager():
         f.write("equator_y_on_province_image = 656") # I have no clue what this does, but its always at the end of the climate.txt file so...
         f.close()
 
-        print("Saving Trade Node Data...")
-        sys.stdout.flush()
-        writeToFileFromRootNode("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), self.tradeNodeTree)
-
-        print("Saving Success")
-        sys.stdout.flush()
-    
     def provinceIsWater(self, province):
         terrainName = province.terrain
         if terrainName in self.terrainTree["categories"]:
             if "is_water" in self.terrainTree["categories"][terrainName]:
                 return self.terrainTree["categories"][terrainName]["is_water"].values == "yes"
         return False
+
+def saveFileSafely(filePath, saveFunc):
+    originalFileContents = open(filePath, 'r', encoding="utf-8-sig", errors="surrogateescape").read()
+    try:
+        saveFunc()
+    except:
+        open(filePath, 'r').write(originalFileContents)
+        print("Something went wrong when saving to {}. The original file contents have been kept, and the rest of the files will be saved.")
 
 def writeFieldIfExists(file, text, field):
     if field != "":

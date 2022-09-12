@@ -19,7 +19,7 @@ class MagellanEU4():
 	def __init__(self):
 		self.currentMapMode = None
 		self.currentProvince = None
-		self.selectedProvinces = set()
+		self.modifiedProvinces = set()
 		self.view = DisplayManager()
 		self.view.onMenuFileOpen = self.onNewModOpen
 		self.view.onMenuFileSave = self.onSave
@@ -33,7 +33,7 @@ class MagellanEU4():
 	def selectProvince(self, x, y):
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
 		self.view.updateProvinceInfo(self.currentProvince)
-		self.selectedProvinces.add(self.currentProvince)
+		self.modifiedProvinces.add(self.currentProvince)
 
 	def colourProvince(self, x, y):
 		if self.currentProvince:
@@ -56,6 +56,7 @@ class MagellanEU4():
 					mapMode.generateImage()
 					if self.currentMapMode == mapMode:
 						self.view.updateMapMode(self.currentMapMode)
+					self.modifiedProvinces.add(province)
 
 	def onNewModOpen(self, path):
 		self.model = MapInfoManager(path)
@@ -79,8 +80,8 @@ class MagellanEU4():
 		print("Map Successfully Loaded")
 
 	def onSave(self):
-		self.model.save(self.selectedProvinces)
-		self.selectedProvinces = set()
+		self.model.save(self.modifiedProvinces)
+		self.modifiedProvinces = set()
 
 	def changeMapMode(self, mapModeString):
 		self.currentMapMode = self.mapModes[mapModeString]
