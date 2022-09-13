@@ -266,7 +266,7 @@ class DisplayManager():
             if i+1 < len(province.cores):
                 coresText += ", "
         for techGroup in self.currentTechGroups:
-            if techGroup in province.discovered:
+            if province.discovered[techGroup]:
                 self.techGroupToCheckbox[techGroup].select()
             else:
                 self.techGroupToCheckbox[techGroup].deselect()

@@ -63,8 +63,8 @@ class Province:
 				return self.owner
 			case "controller":
 				return self.controller
-            #case "cores":
-            #    fieldValue = province.cores
+			case "cores":
+				return self.cores
 			case "terrain":
 				return self.terrain
 			case "climate":
