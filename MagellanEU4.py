@@ -1,4 +1,3 @@
-import sys
 from MagellanClasses.Defaults import DEFAULT_CONTINENTS
 from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
@@ -14,6 +13,7 @@ from Utils.MapMode import MapMode
 
 FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry"]
 MAP_MODE_NAMES = {"province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continet", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable"}
+DEVELOPMENT_EXPECTED_RANGE = 36
 
 class MagellanEU4():
 	def __init__(self):
@@ -61,7 +61,15 @@ class MagellanEU4():
 	def onNewModOpen(self, path):
 		self.model = MapInfoManager(path)
 		self.mapModes = dict()
-		colorMappings = {"religion": self.model.religionsToColours, "discovery": {True: (255, 255, 255), False: (96, 96, 96)}}
+		colorMappings = {"religion": self.model.religionsToColours, 
+			"discovery": {True: (255, 255, 255), False: (96, 96, 96)}, 
+			"tradeNode": self.populateTradeNodeMappings(),
+			"tax": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"production": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"manpower": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"development": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE),
+			"HRE": {True: (0, 255, 0), False: (255, 0, 0)}}
+
 		for mapModeName in MAP_MODE_NAMES:
 			colorMapping = None if mapModeName not in colorMappings else colorMappings[mapModeName]
 			self.mapModes[mapModeName] = MapMode(mapModeName, self.model, colorMapping)
@@ -75,9 +83,24 @@ class MagellanEU4():
 		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
 		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
-		#self.view.cultureField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, CULTURES_FOLDER), CULTURES_FILE, CULTURES_GROUPING_PATTERN, DEFAULT_CULTURES)
-		#self.view.tradeGoodField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER), TRADE_GOODS_FILE, TRADE_GOODS_GROUPING_PATTERN, DEFAULT_TRADE_GOODS)
 		print("Map Successfully Loaded")
+
+	def getDevelopmentMappings(self, max):
+		devToColours = dict()
+		yellowMin = max//2
+		for i in range(1, yellowMin+1):
+			devToColours[str(i)] = (255, (255 // yellowMin) * i, 0)
+		for i in range(yellowMin+1, max+1):
+			devToColours[str(i)] = ((255 // yellowMin) * (yellowMin - i), 255, 0)
+		return devToColours
+
+	def populateTradeNodeMappings(self):
+		tradeNodeMappings = dict()
+		for tradeNode in self.model.tradeNodeTree.getChildren():
+			if "color" in tradeNode.values:
+				rgb = tuple(map((lambda n : int(n)), tradeNode["color"]))
+				tradeNodeMappings[tradeNode.name] = rgb
+		return tradeNodeMappings
 
 	def onSave(self):
 		self.model.save(self.modifiedProvinces)

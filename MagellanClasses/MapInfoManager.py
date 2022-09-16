@@ -119,7 +119,7 @@ class MapInfoManager():
                                 province.production = lineVal
                             case "base_manpower":
                                 province.manpower = lineVal
-                            case "trade_good":
+                            case "trade_goods":
                                 province.tradeGood = lineVal
                             case "discovered_by":
                                 province.discovered[lineVal] = True
@@ -355,7 +355,7 @@ class MapInfoManager():
             f.write("base_tax = {}\n".format(province.tax))
             f.write("base_production = {}\n".format(province.production))
             f.write("base_manpower = {}\n".format(province.manpower))
-            writeFieldIfExists(f, "trade_good", province.tradeGood)
+            writeFieldIfExists(f, "trade_goods", province.tradeGood)
 
         for discoverer in (techGroup for techGroup in province.discovered.keys() if province.discovered[techGroup]):
             f.write("discovered_by = {}\n".format(discoverer))
