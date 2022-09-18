@@ -6,6 +6,7 @@ from PIL import Image
 from os.path import exists
 from os import listdir
 from random import randint
+import sys
 
 from MagellanClasses.EU4DataFileParser import *
 
@@ -13,7 +14,7 @@ from Utils.MapMode import MapMode
 
 FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry"]
 MAP_MODE_NAMES = {"province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continet", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable"}
-DEVELOPMENT_EXPECTED_RANGE = 36
+DEVELOPMENT_EXPECTED_RANGE = 39
 
 class MagellanEU4():
 	def __init__(self):
@@ -43,17 +44,22 @@ class MagellanEU4():
 				fieldValue = self.currentProvince.getFieldFromString(fieldName)
 				self.updateProvince(province, fieldName, fieldValue)
 
-	def updateCurrentProvince(self, fieldName, fieldValue):
-		self.updateProvince(self.currentProvince, fieldName, fieldValue)
+	def updateCurrentProvince(self, fieldName, newFieldValue, sanityCheck):
+		if sanityCheck(newFieldValue):
+			self.updateProvince(self.currentProvince, fieldName, newFieldValue)
+		else:
+			print("Error: field {} has malformed input {}! Ignoring...".format(fieldName, newFieldValue))
+			sys.stdout.flush()
 
-	def updateProvince(self, province, fieldName, fieldValue):
+	def updateProvince(self, province, fieldName, newFieldValue):
 		if province:
-			if province.getFieldFromString(fieldName) != fieldValue:
-				province.setFieldFromString(fieldName, fieldValue)
+			if  province.getFieldFromString(fieldName) != newFieldValue:
+				province.setFieldFromString(fieldName, newFieldValue)
 				if fieldName in self.mapModes:
 					mapMode = self.mapModes[fieldName]
-					mapMode.updateProvince(province)
-					mapMode.generateImage()
+					if mapMode.image:
+						mapMode.updateProvince(province)
+						mapMode.generateImage()
 					if self.currentMapMode == mapMode:
 						self.view.updateMapMode(self.currentMapMode)
 					self.modifiedProvinces.add(province)
@@ -83,15 +89,15 @@ class MagellanEU4():
 		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
 		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
-		print("Map Successfully Loaded")
+		print("Mod Successfully Loaded")
 
 	def getDevelopmentMappings(self, max):
 		devToColours = dict()
 		yellowMin = max//2
 		for i in range(1, yellowMin+1):
-			devToColours[str(i)] = (255, (255 // yellowMin) * i, 0)
+			devToColours[i] = (255, (255 // yellowMin) * i, 0)
 		for i in range(yellowMin+1, max+1):
-			devToColours[str(i)] = ((255 // yellowMin) * (yellowMin - i), 255, 0)
+			devToColours[i] = ((255 // yellowMin) * (yellowMin - i), 255, 0)
 		return devToColours
 
 	def populateTradeNodeMappings(self):

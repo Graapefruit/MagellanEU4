@@ -91,11 +91,20 @@ class Province:
 			case "culture":
 				self.culture = value
 			case "tax":
-				self.tax = value
+				if value == "":
+					self.tax = 0
+				else:
+					self.tax = int(value)
 			case "production":
-				self.production = value
+				if value == "":
+					self.production = 0
+				else:
+					self.production = int(value)
 			case "manpower":
-				self.manpower = value
+				if value == "":
+					self.manpower = 0
+				else:
+					self.manpower = int(value)
 			case "tradeGood":
 				self.tradeGood = value
 			case "area":

@@ -114,11 +114,14 @@ class MapInfoManager():
                             case "hre":
                                 province.hre = True if "yes" else False
                             case "base_tax":
-                                province.tax = lineVal
+                                if lineVal.isdigit():
+                                    province.tax = int(lineVal)
                             case "base_production":
-                                province.production = lineVal
+                                if lineVal.isdigit():
+                                    province.production = int(lineVal)
                             case "base_manpower":
-                                province.manpower = lineVal
+                                if lineVal.isdigit():
+                                    province.manpower = int(lineVal)
                             case "trade_goods":
                                 province.tradeGood = lineVal
                             case "discovered_by":

@@ -1,4 +1,6 @@
+from statistics import mode
 import tkinter
+from unicodedata import name
 from ttkwidgets.autocomplete import AutocompleteCombobox
 from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
 from .ScrollableImage import ScrollableImage
@@ -10,6 +12,9 @@ def doNothing(*argv):
 
 def printCallback(*argv):
     print("hi")
+
+def noSanityCheck(fieldValue):
+    return True
 
 class DisplayManager():
     def __init__(self):
@@ -23,6 +28,9 @@ class DisplayManager():
         self.onMenuFileSave = doNothing
         self.onNewMapMode = doNothing
         self.onFieldUpdate = doNothing
+        
+        self.stringVars = []
+        self.traceMethods = []
 
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.pack(fill=tkinter.BOTH)
@@ -148,40 +156,46 @@ class DisplayManager():
         self.provinceBodyLeft = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyLeft.pack(side=tkinter.LEFT)
 
-        self.capitalSv, self.capitalLabel, self.capitalField = self.createNewEntry("Capital", self.provinceBodyLeft)
-        self.religionSv, self.religionLabel, self.religionField = self.createNewAutocompletecombobox("Religion", self.provinceBodyLeft, list(DEFAULT_RELIGIONS.keys()))
-        self.cultureSv, self.cultureLabel, self.cultureField = self.createNewAutocompletecombobox("Culture", self.provinceBodyLeft, DEFAULT_CULTURES)
+        capitalSv, capitalTrace, self.capitalLabel, self.capitalField = self.createNewEntry("Capital", self.provinceBodyLeft, noSanityCheck)
+        religionSv, religionTrace, self.religionLabel, self.religionField = self.createNewAutocompletecombobox("Religion", self.provinceBodyLeft, list(DEFAULT_RELIGIONS.keys()), noSanityCheck)
+        cultureSv, cultureTrace, self.cultureLabel, self.cultureField = self.createNewAutocompletecombobox("Culture", self.provinceBodyLeft, DEFAULT_CULTURES, noSanityCheck)
 
         self.devText = tkinter.Label(self.provinceBodyLeft, text="Adm | Dip | Mil")
         self.devText.pack(side=tkinter.TOP)
         self.devPanel = tkinter.PanedWindow(self.provinceBodyLeft, orient=HORIZONTAL)
         self.devPanel.pack(side=tkinter.TOP)
-        self.taxSv, self.taxText = self.createNewDevelopmentEntry("Tax", self.devPanel)
-        self.productionSv, self.productionText = self.createNewDevelopmentEntry("Production", self.devPanel)
-        self.manpowerSv, self.manpowerText = self.createNewDevelopmentEntry("Manpower", self.devPanel)
+        taxSv, taxTrace, self.taxText = self.createNewDevelopmentEntry("Tax", self.devPanel)
+        productionSv, productionTrace, self.productionText = self.createNewDevelopmentEntry("Production", self.devPanel)
+        manpowerSv, manpowerTrace, self.manpowerText = self.createNewDevelopmentEntry("Manpower", self.devPanel)
         
-        self.tradeGoodSv, self.tradeGoodLabel, self.tradeGoodField = self.createNewAutocompletecombobox("Trade Good", self.provinceBodyLeft, DEFAULT_TRADE_GOODS)
-        self.areaSv, self.areaLabel, self.areaField = self.createNewEntry("Area", self.provinceBodyLeft)
-        self.continentSv, self.continentLabel, self.continentField = self.createNewAutocompletecombobox("Continent", self.provinceBodyLeft, DEFAULT_CONTINENTS)
+        tradeGoodSv, tradeGoodTrace, self.tradeGoodLabel, self.tradeGoodField = self.createNewAutocompletecombobox("Trade Good", self.provinceBodyLeft, DEFAULT_TRADE_GOODS, noSanityCheck)
+        areaSv, areaTrace, self.areaLabel, self.areaField = self.createNewEntry("Area", self.provinceBodyLeft, noSanityCheck)
+        continentSv, continentTrace, self.continentLabel, self.continentField = self.createNewAutocompletecombobox("Continent", self.provinceBodyLeft, DEFAULT_CONTINENTS, noSanityCheck)
         self.hreState = tkinter.IntVar()
         self.hreBox = tkinter.Checkbutton(self.provinceBodyLeft, variable=self.hreState, text="HRE")
         self.hreBox.pack(side=tkinter.TOP)
+
+        self.stringVars += [capitalSv, religionSv, cultureSv, taxSv, productionSv, manpowerSv, tradeGoodSv, areaSv, continentSv]
+        self.traceMethods += [capitalTrace, religionTrace, cultureTrace, taxTrace, productionTrace, manpowerTrace, tradeGoodTrace, areaTrace, continentTrace]
 
     def createRightProvinceBodyPanel(self):
         self.provinceBodyRight = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyRight.pack(side=tkinter.LEFT)
 
-        self.ownerSv, self.ownerLabel, self.ownerField = self.createNewEntry("Owner", self.provinceBodyRight)
-        self.controllerSv, self.controllerLabel, self.controllerField = self.createNewEntry("Controller", self.provinceBodyRight)
-        self.coresSv, self.coresLabel, self.coresField = self.createNewEntry("Cores", self.provinceBodyRight)
-        self.terrainSv, self.terrainLabel, self.terrainField = self.createNewAutocompletecombobox("Terrain", self.provinceBodyRight, DEFAULT_TERRAINS)
-        self.climateSv, self.climateLabel, self.climateField = self.createNewAutocompletecombobox("Climate", self.provinceBodyRight, DEFAULT_CLIMATES)
-        self.weatherSv, self.weatherLabel, self.weatherField = self.createNewAutocompletecombobox("Weather", self.provinceBodyRight, DEFAULT_WEATHERS)
-        self.tradeNodeSv, self.tradeNodeLabel, self.tradeNodeField = self.createNewAutocompletecombobox("Trade Node", self.provinceBodyRight, [])
+        ownerSv, ownerTrace, self.ownerLabel, self.ownerField = self.createNewEntry("Owner", self.provinceBodyRight, noSanityCheck)
+        controllerSv, controllerTrace, self.controllerLabel, self.controllerField = self.createNewEntry("Controller", self.provinceBodyRight, noSanityCheck)
+        coresSv, coreTrace, self.coresLabel, self.coresField = self.createNewEntry("Cores", self.provinceBodyRight, noSanityCheck)
+        terrainSv, terrainTrace, self.terrainLabel, self.terrainField = self.createNewAutocompletecombobox("Terrain", self.provinceBodyRight, DEFAULT_TERRAINS, noSanityCheck)
+        climateSv, climateTrace, self.climateLabel, self.climateField = self.createNewAutocompletecombobox("Climate", self.provinceBodyRight, DEFAULT_CLIMATES, noSanityCheck)
+        weatherSv, weatherTrace, self.weatherLabel, self.weatherField = self.createNewAutocompletecombobox("Weather", self.provinceBodyRight, DEFAULT_WEATHERS, noSanityCheck)
+        tradeNodeSv, tradeNodeTrace, self.tradeNodeLabel, self.tradeNodeField = self.createNewAutocompletecombobox("Trade Node", self.provinceBodyRight, [], noSanityCheck)
 
         self.impassableState = tkinter.IntVar()
         self.impassableBox = tkinter.Checkbutton(self.provinceBodyRight, variable=self.impassableState, text="Impassable")
         self.impassableBox.pack(side=tkinter.TOP)
+
+        self.stringVars += [ownerSv, controllerSv, coresSv, terrainSv, climateSv, weatherSv, tradeNodeSv]
+        self.traceMethods += [ownerTrace, controllerTrace, coreTrace, terrainTrace, climateTrace, weatherTrace, tradeNodeTrace]
 
     def createScrollableImage(self):
         self.mapDisplay = ScrollableImage(self.rootPanel, width=1024, height=1024)
@@ -189,32 +203,38 @@ class DisplayManager():
 
     # --- Helpers --- #
 
-    def createNewEntry(self, fieldString, panel):
-        stringVar, label = self.createStringVarAndLabel(fieldString, panel)
+    def createNewEntry(self, fieldString, panel, sanityCheck):
+        stringVar, traceMethod, label = self.createStringVarAndLabel(fieldString, panel, sanityCheck)
         entry = tkinter.Entry(panel, textvariable=stringVar, width=12, justify="center")
         entry.pack(side=tkinter.TOP)
-        return stringVar, label, entry
+        return stringVar, traceMethod, label, entry
 
-    def createNewDevelopmentEntry(self, mapModeString, panel):
-        stringVar = tkinter.StringVar()
-        stringVar.trace_add("write", (lambda name, index, mode : self.onFieldUpdate(mapModeString, stringVar.get())))
-        entry = tkinter.Entry(panel, width=3, justify="center")
-        entry.pack(side=tkinter.LEFT, padx=(5, 5))
-        return stringVar, entry
-
-    def createNewAutocompletecombobox(self, fieldString, panel, completeValues):
-        stringVar, label = self.createStringVarAndLabel(fieldString, panel)
+    def createNewAutocompletecombobox(self, fieldString, panel, completeValues, sanityCheck):
+        stringVar, traceMethod, label = self.createStringVarAndLabel(fieldString, panel, sanityCheck)
         combobox = AutocompleteCombobox(panel, textvariable=stringVar, completevalues=completeValues)
         combobox.pack(side=tkinter.TOP)
-        return stringVar, label, combobox
+        return stringVar, traceMethod, label, combobox
 
-    def createStringVarAndLabel(self, fieldString, panel):
-        mapModeString = fieldString[0].lower() + fieldString[1:].replace(' ', '')
+    def createStringVarAndLabel(self, fieldString, panel, sanityCheck):
+        mapModeString = self.getMapModeString(fieldString)
+        traceMethod = (lambda name, index, mode : self.onFieldUpdate(mapModeString, stringVar.get(), sanityCheck))
         stringVar = tkinter.StringVar()
-        stringVar.trace_add("write", (lambda name, index, mode : self.onFieldUpdate(mapModeString, stringVar.get())))
+        stringVar.trace_add("write", traceMethod)
         label = tkinter.Label(panel, text=fieldString)
         label.pack(side=tkinter.TOP)
-        return stringVar, label
+        return stringVar, traceMethod, label
+
+    def createNewDevelopmentEntry(self, fieldString, panel):
+        mapModeString = self.getMapModeString(fieldString)
+        stringVar = tkinter.StringVar()
+        traceMethod = (lambda name, index, mode : self.onFieldUpdate(mapModeString, stringVar.get(), (lambda n : n.isdigit() or n == "")))
+        stringVar.trace_add("write", traceMethod, )
+        entry = tkinter.Entry(panel, width=3, justify="center", textvariable=stringVar)
+        entry.pack(side=tkinter.LEFT, padx=(5, 5))
+        return stringVar, traceMethod, entry
+
+    def getMapModeString(self, fieldString):
+        return fieldString[0].lower() + fieldString[1:].replace(' ', '')
 
     # --- Private Methods --- #
 
@@ -230,6 +250,7 @@ class DisplayManager():
         self.mapDisplay.updateImage(ImageTk.PhotoImage(mapMode.image))
 
     def updateProvinceInfo(self, province):
+        self.disableTraceMethods()
         self.provinceIdSv.set("Id: {}".format(province.id))
         self.provinceNameSv.set("{}".format(province.name))
         self.provinceLocalizationNameSv.set(province.localizationName)
@@ -246,9 +267,9 @@ class DisplayManager():
         self.controllerField.delete('0', tkinter.END)
         self.coresField.delete('0', tkinter.END)
         self.areaField.delete('0', tkinter.END)
-        self.taxText.insert(tkinter.END, province.tax)
-        self.productionText.insert(tkinter.END, province.production)
-        self.manpowerText.insert(tkinter.END, province.manpower)
+        self.taxText.insert(tkinter.END, str(province.tax))
+        self.productionText.insert(tkinter.END, str(province.production))
+        self.manpowerText.insert(tkinter.END, str(province.manpower))
         self.tradeGoodField.set(province.tradeGood)
         self.hreBox.select() if province.hre else self.hreBox.deselect()
         self.impassableBox.select() if province.impassable else self.impassableBox.deselect()
@@ -271,6 +292,15 @@ class DisplayManager():
             else:
                 self.techGroupToCheckbox[techGroup].deselect()
         self.coresField.insert(tkinter.END, coresText)
+        self.enableTraceMethods()
+
+    def disableTraceMethods(self):
+        for i in range(0, len(self.stringVars)):
+            self.stringVars[i].trace_remove('write', self.stringVars[i].trace_info()[0][1])
+
+    def enableTraceMethods(self):
+        for i in range(0, len(self.stringVars)):
+            self.stringVars[i].trace_add("write", self.traceMethods[i])
 
     def startMainLoop(self):
         self.window.mainloop()
