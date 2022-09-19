@@ -15,7 +15,8 @@ from MagellanClasses.EU4DataFileParser import *
 class MapInfoManager():
     def __init__(self, path):
         self.path = path
-        self.max_provinces = 6500 # TODO: Grab this from Default.map
+        self.maxProvinces = 5000
+        self.defaultsTree = EU4DataNode("__ROOT__")
         self.provinces = []
         self.areasToColors = dict()
         self.terrainTree = EU4DataNode("__ROOT__")
@@ -24,10 +25,11 @@ class MapInfoManager():
         self.colorsToProvinces = dict()
         self.religionsToColours = DEFAULT_RELIGIONS.copy()
         self.terrainsToColours = dict()
-        self.idsToProvinces = [None] * self.max_provinces
-
+        self.populateDefaults("{}/{}/{}".format(path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME))
+        self.idsToProvinces = [None] * self.maxProvinces # Must grab the right maxProvinces from the Defaults file first
         self.populateTechGroups("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE))
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
+        self.populateSeasAndLakes()
         self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
         self.populateAreaData("{}/{}/{}".format(path, MAP_FOLDER_NAME, AREAS_FILE_NAME))
         self.populateProvinceTerrain("{}/{}/{}".format(path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME))
@@ -45,6 +47,12 @@ class MapInfoManager():
         sys.stdout.flush()
 
     # --- Setup --- #
+
+    def populateDefaults(self, path):
+        print("Loading Defaults...")
+        sys.stdout.flush()
+        self.defaultsTree = parseEU4File(path)
+        self.maxProvinces = int(self.defaultsTree["max_provinces"].values)
 
     def populateTechGroups(self, path):
         if exists(path):
@@ -77,6 +85,18 @@ class MapInfoManager():
             self.provinces.append(province)
             self.colorsToProvinces[rgb] = province
             self.idsToProvinces[int(provinceInfo[0])] = province
+
+    def populateSeasAndLakes(self):
+        for provinceId in self.defaultsTree["sea_starts"].values:
+            provinceId = int(provinceId)
+            if self.idsToProvinces[provinceId]:
+                self.idsToProvinces[provinceId].isSea = True
+        for provinceId in self.defaultsTree["lakes"].values:
+            provinceId = int(provinceId)
+            if self.idsToProvinces[provinceId]:
+                self.idsToProvinces[provinceId].isLake = True
+        self.defaultsTree["sea_starts"].values = []
+        self.defaultsTree["lakes"].values = []
 
     def populateProvinceHistoryFiles(self, path):
         print("Parsing History Files...")
@@ -333,6 +353,11 @@ class MapInfoManager():
                 climateEntryToProvinces["impassable"].append(province.id)
             if province.tradeNode != "" and not province.tradeNode.isspace():
                 self.tradeNodeTree.getAndCreateIfNotExists(province.tradeNode).getAndCreateIfNotExists("members").appendValueOverwriteDict(str(province.id))
+            if province.isSea:
+                self.defaultsTree["sea_starts"].values.append(str(province.id))
+            if province.isLake:
+                self.defaultsTree["lakes"].values.append(str(province.id))
+
         
         print("Saving History Files...")
         sys.stdout.flush()
@@ -347,6 +372,7 @@ class MapInfoManager():
         saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), lambda : self.saveContinentsFile(continentsToProvinces))
         saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME), (lambda : self.saveClimateFile(climateEntryToProvinces)))
         saveFileSafely("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), (lambda : self.saveDataTree("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), "Trade Node", self.tradeNodeTree)))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME), (lambda : self.saveDataTree("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME), "Defaults", self.defaultsTree)))
         print("Saving Success")
         sys.stdout.flush()
 
@@ -446,11 +472,7 @@ class MapInfoManager():
         f.close()
 
     def provinceIsWater(self, province):
-        terrainName = province.terrain
-        if terrainName in self.terrainTree["categories"]:
-            if "is_water" in self.terrainTree["categories"][terrainName]:
-                return self.terrainTree["categories"][terrainName]["is_water"].values == "yes"
-        return False
+        return province.isSea or province.isLake
 
 def saveFileSafely(filePath, saveFunc):
     originalFileContents = open(filePath, 'r', encoding="utf-8-sig", errors="surrogateescape").read()

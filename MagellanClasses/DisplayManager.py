@@ -66,6 +66,8 @@ class DisplayManager():
         self.mapModeMenu.add_command(label="Weathers", command=(lambda : self.onNewMapMode("weather")))
         self.mapModeMenu.add_command(label="Trade Nodes", command=(lambda : self.onNewMapMode("tradeNode")))
         self.mapModeMenu.add_command(label="Impassables", command=(lambda : self.onNewMapMode("impassable")))
+        self.mapModeMenu.add_command(label="Is Sea", command=(lambda : self.onNewMapMode("isSea")))
+        self.mapModeMenu.add_command(label="Is Lake", command=(lambda : self.onNewMapMode("isLake")))
         self.mapModeMenu.add_separator()
         menubar.add_cascade(label="Map Modes", menu=self.mapModeMenu)
         self.window.config(menu=menubar)
@@ -171,12 +173,11 @@ class DisplayManager():
         tradeGoodSv, tradeGoodTrace, self.tradeGoodLabel, self.tradeGoodField = self.createNewAutocompletecombobox("Trade Good", self.provinceBodyLeft, DEFAULT_TRADE_GOODS, noSanityCheck)
         areaSv, areaTrace, self.areaLabel, self.areaField = self.createNewEntry("Area", self.provinceBodyLeft, noSanityCheck)
         continentSv, continentTrace, self.continentLabel, self.continentField = self.createNewAutocompletecombobox("Continent", self.provinceBodyLeft, DEFAULT_CONTINENTS, noSanityCheck)
-        self.hreState = tkinter.IntVar()
-        self.hreBox = tkinter.Checkbutton(self.provinceBodyLeft, variable=self.hreState, text="HRE")
-        self.hreBox.pack(side=tkinter.TOP)
+        hreIv, hreTrace, self.hreBox = self.createNewCheckbutton("Hre", self.provinceBodyLeft)
+        isLakeIv, isLakeTrace, self.isLakeBox = self.createNewCheckbutton("Is Lake", self.provinceBodyLeft)
 
-        self.stringVars += [capitalSv, religionSv, cultureSv, taxSv, productionSv, manpowerSv, tradeGoodSv, areaSv, continentSv]
-        self.traceMethods += [capitalTrace, religionTrace, cultureTrace, taxTrace, productionTrace, manpowerTrace, tradeGoodTrace, areaTrace, continentTrace]
+        self.stringVars += [capitalSv, religionSv, cultureSv, taxSv, productionSv, manpowerSv, tradeGoodSv, areaSv, continentSv, hreIv, isLakeIv]
+        self.traceMethods += [capitalTrace, religionTrace, cultureTrace, taxTrace, productionTrace, manpowerTrace, tradeGoodTrace, areaTrace, continentTrace, hreTrace, isLakeTrace]
 
     def createRightProvinceBodyPanel(self):
         self.provinceBodyRight = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
@@ -189,13 +190,11 @@ class DisplayManager():
         climateSv, climateTrace, self.climateLabel, self.climateField = self.createNewAutocompletecombobox("Climate", self.provinceBodyRight, DEFAULT_CLIMATES, noSanityCheck)
         weatherSv, weatherTrace, self.weatherLabel, self.weatherField = self.createNewAutocompletecombobox("Weather", self.provinceBodyRight, DEFAULT_WEATHERS, noSanityCheck)
         tradeNodeSv, tradeNodeTrace, self.tradeNodeLabel, self.tradeNodeField = self.createNewAutocompletecombobox("Trade Node", self.provinceBodyRight, [], noSanityCheck)
+        impassableIv, impassableTrace, self.impassableBox = self.createNewCheckbutton("Impassable", self.provinceBodyRight)
+        isSeaIv, isSeaTrace, self.isSeaBox = self.createNewCheckbutton("is Sea", self.provinceBodyRight)
 
-        self.impassableState = tkinter.IntVar()
-        self.impassableBox = tkinter.Checkbutton(self.provinceBodyRight, variable=self.impassableState, text="Impassable")
-        self.impassableBox.pack(side=tkinter.TOP)
-
-        self.stringVars += [ownerSv, controllerSv, coresSv, terrainSv, climateSv, weatherSv, tradeNodeSv]
-        self.traceMethods += [ownerTrace, controllerTrace, coreTrace, terrainTrace, climateTrace, weatherTrace, tradeNodeTrace]
+        self.stringVars += [ownerSv, controllerSv, coresSv, terrainSv, climateSv, weatherSv, tradeNodeSv, impassableIv, isSeaIv]
+        self.traceMethods += [ownerTrace, controllerTrace, coreTrace, terrainTrace, climateTrace, weatherTrace, tradeNodeTrace, impassableTrace, isSeaTrace]
 
     def createScrollableImage(self):
         self.mapDisplay = ScrollableImage(self.rootPanel, width=1024, height=1024)
@@ -214,6 +213,15 @@ class DisplayManager():
         combobox = AutocompleteCombobox(panel, textvariable=stringVar, completevalues=completeValues)
         combobox.pack(side=tkinter.TOP)
         return stringVar, traceMethod, label, combobox
+
+    def createNewCheckbutton(self, fieldString, panel):
+        mapModeString = self.getMapModeString(fieldString)
+        intVar = tkinter.IntVar()
+        traceMethod = (lambda name, index, mode : self.onFieldUpdate(mapModeString, intVar.get(), (lambda n : True)))
+        intVar.trace_add("write", traceMethod)
+        checkButton = tkinter.Checkbutton(panel, variable=intVar, text=fieldString)
+        checkButton.pack(side=tkinter.TOP)
+        return intVar, traceMethod, checkButton
 
     def createStringVarAndLabel(self, fieldString, panel, sanityCheck):
         mapModeString = self.getMapModeString(fieldString)
@@ -273,6 +281,8 @@ class DisplayManager():
         self.tradeGoodField.set(province.tradeGood)
         self.hreBox.select() if province.hre else self.hreBox.deselect()
         self.impassableBox.select() if province.impassable else self.impassableBox.deselect()
+        self.isLakeBox.select() if province.isLake else self.isLakeBox.deselect()
+        self.isSeaBox.select() if province.isSea else self.isSeaBox.deselect()
         self.terrainField.set(province.terrain)
         self.controllerField.insert(tkinter.END, province.controller)
         self.climateField.set(province.climate)

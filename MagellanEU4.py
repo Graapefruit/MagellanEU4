@@ -13,7 +13,7 @@ from MagellanClasses.EU4DataFileParser import *
 from Utils.MapMode import MapMode
 
 FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry", "insult your rivals", "turn off your edicts"]
-MAP_MODE_NAMES = {"province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continent", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable"}
+MAP_MODE_NAMES = {"province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continent", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable", "isSea", "isLake"}
 DEVELOPMENT_EXPECTED_RANGE = 39
 
 class MagellanEU4():
@@ -78,7 +78,9 @@ class MagellanEU4():
 			"climate": {"": (102, 127, 68), "temperate": (102, 127, 68), "arctic": (255, 255, 255), "tropical": (102, 178, 48), "arid": (216, 214, 66)},
 			"weather": {"": (0, 0, 0), "no_winter": (0, 0, 0), "mild_winter": (85, 85, 85), "normal_winter": (170, 170, 170), "severe_winter": (255, 255, 255), "mild_monsoon": (0, 0, 85), "normal_monsoon": (0, 0, 170), "severe_monsoon": (0, 0, 255)},
 			"impassable": {True: (0, 0, 0), False: (96, 96, 96)},
-			"terrain": self.model.terrainsToColours}
+			"terrain": self.model.terrainsToColours,
+			"isSea": {True: (0, 255, 255), False: (64, 64, 64)},
+			"isLake": {True: (0, 255, 255), False: (64, 64, 64)}}
 
 		for mapModeName in MAP_MODE_NAMES:
 			colorMapping = None if mapModeName not in colorMappings else colorMappings[mapModeName]

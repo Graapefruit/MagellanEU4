@@ -7,6 +7,8 @@ class Province:
 		self.historyFile = ""
 		self.localizationName = name
 		self.localizationAdjective = name + "er"
+		self.isSea = False
+		self.isLake = False
 
 		self.capital = name
 		self.cores = []
@@ -75,6 +77,10 @@ class Province:
 				return self.tradeNode
 			case "impassable":
 				return self.impassable
+			case "isSea":
+				return self.isSea
+			case "isLake":
+				return self.isLake
 			case _:
 				if field in self.discovered:
 					return self.discovered[field]
@@ -129,6 +135,10 @@ class Province:
 				self.tradeNode = value
 			case "impassable":
 				self.impassable = (value == 1)
+			case "isSea":
+				self.isSea = (value == 1)
+			case "isLake":
+				self.isLake = (value == 1)
 			case _:
 				if field in self.discovered:
 					self.discovered[field] = value

@@ -26,6 +26,7 @@ RELIGIONS_FILE = "00_religions.txt"
 CULTURES_FILE = "00_cultures.txt"
 TRADE_GOODS_FILE = "00_tradegoods.txt"
 TRADE_NODES_FILE = "00_tradenodes.txt"
+DEFAULTS_FILE_NAME = "default.map"
 
 PROVINCE_CHARACTERS_PER_LINE = 85
 
