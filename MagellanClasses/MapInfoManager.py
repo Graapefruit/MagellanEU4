@@ -23,6 +23,7 @@ class MapInfoManager():
         self.techGroups = []
         self.colorsToProvinces = dict()
         self.religionsToColours = DEFAULT_RELIGIONS.copy()
+        self.terrainsToColours = dict()
         self.idsToProvinces = [None] * self.max_provinces
 
         self.populateTechGroups("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE))
@@ -112,7 +113,7 @@ class MapInfoManager():
                             case "religion":
                                 province.religion = lineVal
                             case "hre":
-                                province.hre = True if "yes" else False
+                                province.hre = True if lineVal == "yes" else False
                             case "base_tax":
                                 if lineVal.isdigit():
                                     province.tax = int(lineVal)
@@ -167,6 +168,9 @@ class MapInfoManager():
                         if provinceId < len(self.idsToProvinces) and self.idsToProvinces[provinceId] != None:
                             self.idsToProvinces[provinceId].terrain = category.name
                     category["terrain_override"].values = []
+                if "color" in category:
+                    colorString = category["color"].values
+                    self.terrainsToColours[category.name] = (int(colorString[0]), int(colorString[1]), int(colorString[2]))
             
     def populateContinentData(self, path):
         print("Parsing Continents...")
@@ -303,9 +307,11 @@ class MapInfoManager():
         climateEntryToProvinces["impassable"] = []
 
         for climate in DEFAULT_CLIMATES:
-            climateEntryToProvinces[climate] = []
+            if climate != "":
+                climateEntryToProvinces[climate] = []
         for weather in DEFAULT_WEATHERS:
-            climateEntryToProvinces[weather] = []
+            if weather != "":
+                climateEntryToProvinces[weather] = []
         for province in self.provinces:
             if province.area != "":
                 if province.area in areasToProvinces:

@@ -12,7 +12,8 @@ class MapMode():
         self.name = name
         self.model = model
         self.colorMapping = (colorMapping if colorMapping != None else dict())
-        self.colorMapping[""] = EMPTY_COLOUR
+        if not "" in self.colorMapping:
+            self.colorMapping[""] = EMPTY_COLOUR
 
     def initializeMapMode(self):
         self.image = Image.new("RGB", self.model.provinceMapImage.size)
