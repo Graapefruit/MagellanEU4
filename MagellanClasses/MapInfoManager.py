@@ -10,26 +10,7 @@ from os import listdir
 from os.path import exists
 import re
 import numpy
-from multiprocessing import pool
 from MagellanClasses.EU4DataFileParser import *
-
-THREADS_TO_USE = 8
-
-class ImageParserThread(threading.Thread):
-    def __init__(self, threadId, model):
-        threading.Thread.__init__(self)
-        self.threadId = threadId
-        self.model = model
-    def run(self):
-        imageWidth, imageHeight = self.model.provinceMapImage.size
-        xWidth = (imageWidth // THREADS_TO_USE) + (0 if self.threadId < THREADS_TO_USE-1 else imageWidth % THREADS_TO_USE)
-        xStart = xWidth * self.threadId
-        for y in range(0, imageHeight):
-            for x in range(xStart, xStart + xWidth):
-                province = self.model.getProvinceAtIndex(x, y)
-                province.pixels.append((x, y))
-        print("Stinkypooper")
-        sys.stdout.flush()
 
 class MapInfoManager():
     def __init__(self, path):
