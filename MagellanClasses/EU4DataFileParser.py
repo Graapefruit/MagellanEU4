@@ -140,7 +140,7 @@ def parseEU4Folder(path):
     return data
 
 def readDataFile(path):
-    f = open(path, 'r')
+    f = open(path, 'r', encoding="utf-8-sig", errors="ignore")
     r = ""
     for line in f.readlines():
         r += line.split('#')[0].strip() + ' '

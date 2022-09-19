@@ -34,16 +34,21 @@ class ImageParserThread(threading.Thread):
 class MapInfoManager():
     def __init__(self, path):
         self.path = path
-        self.max_provinces = 6500 # TODO: Grab this from Default.map
+        self.maxProvinces = 5000
+        self.defaultsTree = EU4DataNode("__ROOT__")
         self.provinces = []
         self.areasToColors = dict()
         self.terrainTree = EU4DataNode("__ROOT__")
         self.tradeNodeTree = EU4DataNode("__ROOT__")
+        self.techGroups = []
         self.colorsToProvinces = dict()
         self.religionsToColours = DEFAULT_RELIGIONS.copy()
-        self.idsToProvinces = [None] * self.max_provinces
-
+        self.terrainsToColours = dict()
+        self.populateDefaults("{}/{}/{}".format(path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME))
+        self.idsToProvinces = [None] * self.maxProvinces # Must grab the right maxProvinces from the Defaults file first
+        self.populateTechGroups("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE))
         self.populateFromDefinitionFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME))
+        self.populateSeasAndLakes()
         self.populateProvinceHistoryFiles("{}/{}".format(path, PROVINCES_HISTORY_PATH))
         self.populateAreaData("{}/{}/{}".format(path, MAP_FOLDER_NAME, AREAS_FILE_NAME))
         self.populateProvinceTerrain("{}/{}/{}".format(path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME))
@@ -57,14 +62,33 @@ class MapInfoManager():
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         self.populatePixels()
         self.provinceMapLocation = "{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)
+        print("Finished Loading the Map Info")
+        sys.stdout.flush()
 
     # --- Setup --- #
+
+    def populateDefaults(self, path):
+        print("Loading Defaults...")
+        sys.stdout.flush()
+        self.defaultsTree = parseEU4File(path)
+        self.maxProvinces = int(self.defaultsTree["max_provinces"].values)
+
+    def populateTechGroups(self, path):
+        if exists(path):
+            rootNode = parseEU4File(path)
+            for techGroupNode in rootNode["groups"].getChildren():
+                self.techGroups.append(techGroupNode.name)
+            else:
+                self.techGroups = DEFAULT_TECH_GROUPS[:]
 
     def populateFromDefinitionFile(self, path):
         print("Parsing Definition File... ")
         sys.stdout.flush()
         provincesInfo = open(path, 'r', errors="replace")
         reader = csv.reader(provincesInfo, delimiter=';')
+        baseDiscovered = dict()
+        for techGroup in self.techGroups:
+            baseDiscovered[techGroup] = False
         for provinceInfo in reader:
             if not provinceInfo[0].isdigit():
                 continue
@@ -76,9 +100,22 @@ class MapInfoManager():
                 print("ERROR: Two provinces share the same colour! IDs: {} {}".format(self.colorsToProvinces[rgb].id, provinceInfo[0]))
                 quit()
             province = Province(int(provinceInfo[0]), provinceInfo[4], rgb)
+            province.discovered = baseDiscovered.copy()
             self.provinces.append(province)
             self.colorsToProvinces[rgb] = province
             self.idsToProvinces[int(provinceInfo[0])] = province
+
+    def populateSeasAndLakes(self):
+        for provinceId in self.defaultsTree["sea_starts"].values:
+            provinceId = int(provinceId)
+            if self.idsToProvinces[provinceId]:
+                self.idsToProvinces[provinceId].isSea = True
+        for provinceId in self.defaultsTree["lakes"].values:
+            provinceId = int(provinceId)
+            if self.idsToProvinces[provinceId]:
+                self.idsToProvinces[provinceId].isLake = True
+        self.defaultsTree["sea_starts"].values = []
+        self.defaultsTree["lakes"].values = []
 
     def populateProvinceHistoryFiles(self, path):
         print("Parsing History Files...")
@@ -115,17 +152,20 @@ class MapInfoManager():
                             case "religion":
                                 province.religion = lineVal
                             case "hre":
-                                province.hre = True if "yes" else False
+                                province.hre = True if lineVal == "yes" else False
                             case "base_tax":
-                                province.tax = lineVal
+                                if lineVal.isdigit():
+                                    province.tax = int(lineVal)
                             case "base_production":
-                                province.production = lineVal
+                                if lineVal.isdigit():
+                                    province.production = int(lineVal)
                             case "base_manpower":
-                                province.manpower = lineVal
-                            case "trade_good":
+                                if lineVal.isdigit():
+                                    province.manpower = int(lineVal)
+                            case "trade_goods":
                                 province.tradeGood = lineVal
                             case "discovered_by":
-                                province.discovered.append(lineVal)
+                                province.discovered[lineVal] = True
                             case "capital":
                                 province.capital = lineVal
                             case _:
@@ -167,6 +207,9 @@ class MapInfoManager():
                         if provinceId < len(self.idsToProvinces) and self.idsToProvinces[provinceId] != None:
                             self.idsToProvinces[provinceId].terrain = category.name
                     category["terrain_override"].values = []
+                if "color" in category:
+                    colorString = category["color"].values
+                    self.terrainsToColours[category.name] = (int(colorString[0]), int(colorString[1]), int(colorString[2]))
             
     def populateContinentData(self, path):
         print("Parsing Continents...")
@@ -250,14 +293,12 @@ class MapInfoManager():
     def populatePixels(self):
         print("Populating Pixels... This may take a while")
         sys.stdout.flush()
-        threads = []
-        for i in range(0, THREADS_TO_USE):
-            threads.append(ImageParserThread(i, self))
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
-        
+        for y in range(0, len(self.provinceMapArray)):
+            for x in range(0, len(self.provinceMapArray[y])):
+                self.getProvinceAtIndex(x, y).pixels.append((x, y))
+        for province in self.idsToProvinces:
+            if province:
+                province.pixels = numpy.array(province.pixels)
 
     def populateReligionData(self, path):
         print("Poulating religion->colour mappings...")
@@ -305,9 +346,11 @@ class MapInfoManager():
         climateEntryToProvinces["impassable"] = []
 
         for climate in DEFAULT_CLIMATES:
-            climateEntryToProvinces[climate] = []
+            if climate != "":
+                climateEntryToProvinces[climate] = []
         for weather in DEFAULT_WEATHERS:
-            climateEntryToProvinces[weather] = []
+            if weather != "":
+                climateEntryToProvinces[weather] = []
         for province in self.provinces:
             if province.area != "":
                 if province.area in areasToProvinces:
@@ -329,33 +372,54 @@ class MapInfoManager():
                 climateEntryToProvinces["impassable"].append(province.id)
             if province.tradeNode != "" and not province.tradeNode.isspace():
                 self.tradeNodeTree.getAndCreateIfNotExists(province.tradeNode).getAndCreateIfNotExists("members").appendValueOverwriteDict(str(province.id))
+            if province.isSea:
+                self.defaultsTree["sea_starts"].values.append(str(province.id))
+            if province.isLake:
+                self.defaultsTree["lakes"].values.append(str(province.id))
+
         
         print("Saving History Files...")
         sys.stdout.flush()
         for province in updatedProvinces:
-            f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
-            if not self.provinceIsWater(province):
-                writeFieldIfExists(f, "capital", province.capital)
-                writeFieldIfExists(f, "owner", province.owner)
-                writeFieldIfExists(f, "controller", province.controller)
-                for core in province.cores:
-                    f.write("add_core = {}\n".format(core))
-                writeFieldIfExists(f, "culture", province.culture)
-                writeFieldIfExists(f, "religion", province.religion)
-                f.write("hre = {}\n".format("yes" if province.hre else "no"))
-                f.write("base_tax = {}\n".format(province.tax))
-                f.write("base_production = {}\n".format(province.production))
-                f.write("base_manpower = {}\n".format(province.manpower))
-                writeFieldIfExists(f, "trade_good", province.tradeGood)
+            saveFileSafely("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), (lambda : self.saveProvinceHistory(province)))
 
-            for discoverer in province.discovered:
-                f.write("discovered_by = {}\n".format(discoverer))
-            f.write(province.extraText)
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME), (lambda : self.saveProvinceDefinitions()))
+        saveFileSafely("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE), (lambda : self.saveLocalization(LOCALIZATION_NAME_FILE, "Name", "PROV")))
+        saveFileSafely("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_ADJECTIVE_FILE), (lambda : self.saveLocalization(LOCALIZATION_ADJECTIVE_FILE, "Adjective", "ADJ")))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, AREAS_FILE_NAME), (lambda : self.saveAreaFile(areasToProvinces)))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), (lambda : self.saveDataTree("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), "Terrain", self.terrainTree)))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), lambda : self.saveContinentsFile(continentsToProvinces))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME), (lambda : self.saveClimateFile(climateEntryToProvinces)))
+        saveFileSafely("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), (lambda : self.saveDataTree("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), "Trade Node", self.tradeNodeTree)))
+        saveFileSafely("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME), (lambda : self.saveDataTree("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME), "Defaults", self.defaultsTree)))
+        print("Saving Success")
+        sys.stdout.flush()
 
-            for historyUpdate in province.provinceUpdates:
-                f.write("{} = {{{}}}".format(historyUpdate.date.strftime("%Y.%m.%d"), historyUpdate.text))
-            f.close()
+    def saveProvinceHistory(self, province):
+        f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
+        if not self.provinceIsWater(province):
+            writeFieldIfExists(f, "capital", province.capital)
+            writeFieldIfExists(f, "owner", province.owner)
+            writeFieldIfExists(f, "controller", province.controller)
+            for core in province.cores:
+                f.write("add_core = {}\n".format(core))
+            writeFieldIfExists(f, "culture", province.culture)
+            writeFieldIfExists(f, "religion", province.religion)
+            f.write("hre = {}\n".format("yes" if province.hre else "no"))
+            f.write("base_tax = {}\n".format(province.tax))
+            f.write("base_production = {}\n".format(province.production))
+            f.write("base_manpower = {}\n".format(province.manpower))
+            writeFieldIfExists(f, "trade_goods", province.tradeGood)
 
+        for discoverer in (techGroup for techGroup in province.discovered.keys() if province.discovered[techGroup]):
+            f.write("discovered_by = {}\n".format(discoverer))
+        f.write(province.extraText)
+
+        for historyUpdate in province.provinceUpdates:
+            f.write("{} = {{{}}}".format(historyUpdate.date.strftime("%Y.%m.%d"), historyUpdate.text))
+        f.close()
+    
+    def saveProvinceDefinitions(self):
         print("Saving Province Definitions...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, PROVINCE_DEFINITION_FILE_NAME), 'w')
@@ -364,22 +428,16 @@ class MapInfoManager():
             if province != None:
                 f.write("{};{};{};{};{};x\n".format(province.id, province.color[0], province.color[1], province.color[2], province.name))
 
-        print("Saving Name Localizations...")
+    def saveLocalization(self, fileName, localizationType, localizationPrefix):
+        print("Saving {} Localizations...".format(localizationType))
         sys.stdout.flush()
-        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE), 'w')
+        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, fileName), 'w')
         f.write("l_english:\n")
         for province in self.idsToProvinces:
             if province != None:
-                f.write(" PROV{}:0 \"{}\"\n".format(province.id, province.localizationName))
+                f.write(" {}{}:0 \"{}\"\n".format(localizationPrefix, province.id, province.localizationName))
 
-        print("Saving Adjective Localizations...")
-        sys.stdout.flush()
-        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_ADJECTIVE_FILE), 'w')
-        f.write("l_english:\n")
-        for province in self.idsToProvinces:
-            if province != None:
-                f.write(" ADJ{}:0 \"{}\"\n".format(province.id, province.localizationAdjective))
-        
+    def saveAreaFile(self, areasToProvinces):
         print("Saving Area File...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, AREAS_FILE_NAME), 'w')
@@ -394,10 +452,12 @@ class MapInfoManager():
             f.write("\n}\n\n")
         f.close()
 
-        print("Saving Terrain File...")
+    def saveDataTree(self, path, name, tree):
+        print("Saving {} File...".format(name))
         sys.stdout.flush()
-        writeToFileFromRootNode("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, TERRAIN_FILE_NAME), self.terrainTree)
+        writeToFileFromRootNode(path, tree)
 
+    def saveContinentsFile(self, continentsToProvinces):
         print("Saving Continent File...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), 'w')
@@ -413,6 +473,7 @@ class MapInfoManager():
             f.write("\n}\n\n")
         f.close()
 
+    def saveClimateFile(self, climateEntryToProvinces):
         print("Saving Climate/Weather File...")
         sys.stdout.flush()
         f = open("{}/{}/{}".format(self.path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME), 'w')
@@ -429,19 +490,16 @@ class MapInfoManager():
         f.write("equator_y_on_province_image = 656") # I have no clue what this does, but its always at the end of the climate.txt file so...
         f.close()
 
-        print("Saving Trade Node Data...")
-        sys.stdout.flush()
-        writeToFileFromRootNode("{}/{}/{}/{}".format(self.path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE), self.tradeNodeTree)
-
-        print("Saving Success")
-        sys.stdout.flush()
-    
     def provinceIsWater(self, province):
-        terrainName = province.terrain
-        if terrainName in self.terrainTree["categories"]:
-            if "is_water" in self.terrainTree["categories"][terrainName]:
-                return self.terrainTree["categories"][terrainName]["is_water"].values == "yes"
-        return False
+        return province.isSea or province.isLake
+
+def saveFileSafely(filePath, saveFunc):
+    originalFileContents = open(filePath, 'r', encoding="utf-8-sig", errors="surrogateescape").read()
+    try:
+        saveFunc()
+    except:
+        open(filePath, 'r').write(originalFileContents)
+        print("Something went wrong when saving to {}. The original file contents have been kept, and the rest of the files will be saved.")
 
 def writeFieldIfExists(file, text, field):
     if field != "":

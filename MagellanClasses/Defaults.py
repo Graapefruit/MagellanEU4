@@ -37,8 +37,8 @@ DEFAULT_TERRAINS = ["ocean", "inland_ocean", "glacier", "farmlands", "forest", "
     "impassable_mountains", "grasslands", "jungle", "marsh", "desert", "coastal_desert", "coastline", 
     "drylands", "highlands", "savannah", "steppe"]
 
-DEFAULT_CLIMATES = ["arctic", "tropical", "arid"]
-DEFAULT_WEATHERS = ["mild_winter", "normal_winter", "severe_winter", "mild_monsoon", "normal_monsoon", "severe_monsoon"]
+DEFAULT_CLIMATES = ["", "arctic", "tropical", "arid"]
+DEFAULT_WEATHERS = ["", "mild_winter", "normal_winter", "severe_winter", "mild_monsoon", "normal_monsoon", "severe_monsoon"]
 
 DEFAULT_CONTINENTS = ["europe", "asia", "africa", "north_america", "south_america", "oceania"]
 

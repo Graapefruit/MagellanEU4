@@ -1,5 +1,4 @@
-import sys
-from MagellanClasses.Defaults import DEFAULT_CONTINENTS, DEFAULT_TECH_GROUPS
+from MagellanClasses.Defaults import DEFAULT_CONTINENTS
 from MagellanClasses.MapInfoManager import MapInfoManager
 from MagellanClasses.DisplayManager import DisplayManager
 from MagellanClasses.Constants import *
@@ -7,106 +6,124 @@ from PIL import Image
 from os.path import exists
 from os import listdir
 from random import randint
+import sys
 
 from MagellanClasses.EU4DataFileParser import *
 
 from Utils.MapMode import MapMode
 
-FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry"]
+FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry", "insult your rivals", "turn off your edicts"]
+MAP_MODE_NAMES = {"province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continent", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable", "isSea", "isLake"}
+DEVELOPMENT_EXPECTED_RANGE = 39
 
 class MagellanEU4():
 	def __init__(self):
+		self.currentMapMode = None
 		self.currentProvince = None
-		self.selectedProvinces = set()
+		self.modifiedProvinces = set()
 		self.view = DisplayManager()
 		self.view.onMenuFileOpen = self.onNewModOpen
 		self.view.onMenuFileSave = self.onSave
-		self.view.mapDisplay.mapClickCallback = self.onPixelClicked
+		self.view.mapDisplay.onLeftClick = self.selectProvince
+		self.view.mapDisplay.onRightClick = self.colourProvince
 		self.view.onNewMapMode = self.changeMapMode
+		self.view.onFieldUpdate = self.updateCurrentProvince
 		self.mapModes = dict()
 		self.model = None
                 
-	def onPixelClicked(self, x, y):
-		self.updateProvinceInfoModel()
+	def selectProvince(self, x, y):
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
 		self.view.updateProvinceInfo(self.currentProvince)
-		self.selectedProvinces.add(self.currentProvince)
+		self.modifiedProvinces.add(self.currentProvince)
 
-	def updateProvinceInfoModel(self):
-		if not self.currentProvince:
-			pass # No province selected; ignore
-		elif not self.view.taxText.get().isdigit() or not self.view.productionText.get().isdigit() or not self.view.manpowerText.get().isdigit():
-			print("ERROR: At least one of tax, production, or manpower is not an integer. Please fix this before selecting another province")
-			sys.stdout.flush()
+	def colourProvince(self, x, y):
+		if self.currentProvince:
+			fieldName = self.currentMapMode.name
+			if fieldName != "province":
+				province = self.model.getProvinceAtIndex(x, y)
+				fieldValue = self.currentProvince.getFieldFromString(fieldName)
+				self.updateProvince(province, fieldName, fieldValue)
+
+	def updateCurrentProvince(self, fieldName, newFieldValue, sanityCheck):
+		if sanityCheck(newFieldValue):
+			self.updateProvince(self.currentProvince, fieldName, newFieldValue)
 		else:
-			self.currentProvince.capital = self.view.capitalField.get()
-			self.currentProvince.localizationName = self.view.provinceLocalizationName.get()
-			self.currentProvince.localizationAdjective = self.view.provinceLocalizationAdjective.get()
-			self.currentProvince.cores = list(map(lambda n: n.strip(), self.view.coresField.get().split(','))) if len(self.view.coresField.get().strip()) > 0 else []
-			self.currentProvince.owner = self.view.tagField.get()
-			self.currentProvince.controller = self.view.controllerField.get()
-			self.currentProvince.culture = self.view.cultureField.get()
-			self.currentProvince.religion = self.view.religionField.get()
-			self.currentProvince.hre = self.view.hreState.get() == 1
-			self.currentProvince.impassable = self.view.impassableState.get() == 1
-			self.currentProvince.tax = int(self.view.taxText.get())
-			self.currentProvince.production = int(self.view.productionText.get())
-			self.currentProvince.manpower = int(self.view.manpowerText.get())
-			self.currentProvince.tradeGood = self.view.tradeGoodField.get()
-			self.currentProvince.area = self.view.areaField.get()
-			self.currentProvince.continent = self.view.continentField.get()
-			self.currentProvince.terrain = self.view.terrainField.get()
-			self.currentProvince.climate = self.view.climateField.get()
-			self.currentProvince.weather = self.view.weatherField.get()
-			self.currentProvince.tradeNode = self.view.tradeNodeField.get()
-			self.currentProvince.discovered = []
-			for techGroup in self.view.techGroupToIntVar:
-				if self.view.techGroupToIntVar[techGroup].get() == 1:
-					self.currentProvince.discovered.append(techGroup)
+			print("Error: field {} has malformed input {}! Ignoring...".format(fieldName, newFieldValue))
+			sys.stdout.flush()
+
+	def updateProvince(self, province, fieldName, newFieldValue):
+		if province:
+			if  province.getFieldFromString(fieldName) != newFieldValue:
+				province.setFieldFromString(fieldName, newFieldValue)
+				if fieldName in self.mapModes:
+					mapMode = self.mapModes[fieldName]
+					if mapMode.image:
+						mapMode.updateProvince(province)
+						mapMode.generateImage()
+					if self.currentMapMode == mapMode:
+						self.view.updateMapMode(self.currentMapMode)
+					self.modifiedProvinces.add(province)
 
 	def onNewModOpen(self, path):
 		self.model = MapInfoManager(path)
 		self.mapModes = dict()
-		self.mapModes["province"] = MapMode("province", self.model, None)
+		colorMappings = {"religion": self.model.religionsToColours, 
+			"discovery": {True: (255, 255, 255), False: (96, 96, 96)}, 
+			"tradeNode": self.populateTradeNodeMappings(),
+			"tax": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"production": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"manpower": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"development": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE),
+			"hre": {True: (0, 255, 0), False: (255, 0, 0)},
+			"climate": {"": (102, 127, 68), "temperate": (102, 127, 68), "arctic": (255, 255, 255), "tropical": (102, 178, 48), "arid": (216, 214, 66)},
+			"weather": {"": (0, 0, 0), "no_winter": (0, 0, 0), "mild_winter": (85, 85, 85), "normal_winter": (170, 170, 170), "severe_winter": (255, 255, 255), "mild_monsoon": (0, 0, 85), "normal_monsoon": (0, 0, 170), "severe_monsoon": (0, 0, 255)},
+			"impassable": {True: (0, 0, 0), False: (96, 96, 96)},
+			"terrain": self.model.terrainsToColours,
+			"isSea": {True: (0, 255, 255), False: (64, 64, 64)},
+			"isLake": {True: (0, 255, 255), False: (64, 64, 64)}}
+
+		for mapModeName in MAP_MODE_NAMES:
+			colorMapping = None if mapModeName not in colorMappings else colorMappings[mapModeName]
+			self.mapModes[mapModeName] = MapMode(mapModeName, self.model, colorMapping)
+		for mapModeName in self.model.techGroups:
+			self.mapModes[mapModeName] = MapMode(mapModeName, self.model, colorMappings["discovery"])
 		self.mapModes["province"].image = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
-		self.mapModes["religion"] = MapMode("religion", self.model, self.model.religionsToColours)
-		self.mapModes["culture"] = MapMode("culture", self.model, None)
-		self.mapModes["tax"] = MapMode("tax", self.model, None)
-		self.mapModes["production"] = MapMode("production", self.model, None)
-		self.mapModes["manpower"] = MapMode("manpower", self.model, None)
-		self.mapModes["development"] = MapMode("development", self.model, None)
-		self.mapModes["tradeGood"] = MapMode("tradeGood", self.model, None)
-		self.mapModes["area"] = MapMode("area", self.model, None)
-		self.mapModes["continent"] = MapMode("continent", self.model, None)
-		self.mapModes["hre"] = MapMode("hre", self.model, None)
-		self.mapModes["owner"] = MapMode("owner", self.model, None)
-		self.mapModes["controller"] = MapMode("controller", self.model, None)
-		self.mapModes["terrain"] = MapMode("terrain", self.model, None)
-		self.mapModes["climate"] = MapMode("climate", self.model, None)
-		self.mapModes["weather"] = MapMode("weather", self.model, None)
-		self.mapModes["tradeNode"] = MapMode("tradeNode", self.model, None)
-		self.mapModes["impassable"] = MapMode("impassable", self.model, None)
-		self.view.updateMapMode(self.mapModes["province"])
-		self.view.createNewDiscoveryCheckboxes(self.getNewTechGroupsFromFile("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE)))
+		self.changeMapMode("province")
+		self.view.createNewDiscoveryCheckboxes(self.model.techGroups)
 		# Combobox Updates
 		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
 		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
 		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
-		#self.view.cultureField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, CULTURES_FOLDER), CULTURES_FILE, CULTURES_GROUPING_PATTERN, DEFAULT_CULTURES)
-		#self.view.tradeGoodField["values"] = self.getNewComboBoxEntriesFromFolder("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER), TRADE_GOODS_FILE, TRADE_GOODS_GROUPING_PATTERN, DEFAULT_TRADE_GOODS)
+		print("Mod Successfully Loaded")
+
+	def getDevelopmentMappings(self, max):
+		devToColours = dict()
+		yellowMin = max//2
+		for i in range(1, yellowMin+1):
+			devToColours[i] = (255, (255 // yellowMin) * i, 0)
+		for i in range(yellowMin+1, max+1):
+			devToColours[i] = ((255 // yellowMin) * (yellowMin - i), 255, 0)
+		return devToColours
+
+	def populateTradeNodeMappings(self):
+		tradeNodeMappings = dict()
+		for tradeNode in self.model.tradeNodeTree.getChildren():
+			if "color" in tradeNode.values:
+				rgb = tuple(map((lambda n : int(n)), tradeNode["color"]))
+				tradeNodeMappings[tradeNode.name] = rgb
+		return tradeNodeMappings
 
 	def onSave(self):
-		self.updateProvinceInfoModel()
-		self.model.save(self.selectedProvinces)
-		self.selectedProvinces = set()
+		self.model.save(self.modifiedProvinces)
+		self.modifiedProvinces = set()
 
 	def changeMapMode(self, mapModeString):
-		mapMode = self.mapModes[mapModeString]
-		if mapMode.image == None:
+		self.currentMapMode = self.mapModes[mapModeString]
+		if self.currentMapMode.image == None:
 			print("Generating the {} MapMode for the first time. This will take time...".format(mapModeString))
-			mapMode.generateImage()
-		self.view.updateMapMode(mapMode)
+			self.currentMapMode.initializeMapMode()
+		self.view.updateMapMode(self.currentMapMode)
 
 	def getNewComboBoxEntriesFromFile(self, filePath, regexPattern, default):
 		newEntries = []
@@ -117,16 +134,6 @@ class MagellanEU4():
 		else:
 			newEntries = default[:]
 		return newEntries
-
-	def getNewTechGroupsFromFile(self, filePath):
-		techGroups = []
-		if exists(filePath):
-			rootNode = parseEU4File(filePath)
-			for techGroupNode in rootNode["groups"].getChildren():
-				techGroups.append(techGroupNode.name)
-		else:
-			techGroups = DEFAULT_TECH_GROUPS[:]
-		return techGroups
 
 	def getNewComboBoxEntriesFromFolder(self, folderPath, baseFileName, regexPattern, default):
 		newEntries = default[:]
