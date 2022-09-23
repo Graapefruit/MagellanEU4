@@ -33,6 +33,8 @@ class MapMode():
 
     def getProvinceColour(self, province):
         fieldValue = province.getFieldFromString(self.name)
+        if isinstance(fieldValue, str):
+            fieldValue = fieldValue.lower()
         if not (fieldValue in self.colorMapping):
             self.colorMapping[fieldValue] = np.array([randint(0, 255), randint(0, 255), randint(0, 255)])
         fieldColor = self.colorMapping[fieldValue]

@@ -122,6 +122,7 @@ class DisplayManager():
         self.provinceFooterHeader = tkinter.Label(self.provinceFooter, text="Discovered By:")
         self.provinceFooterHeader.pack(side=tkinter.TOP)
         self.techGroupToCheckbox = None
+        self.techGroupToIntVar = None
         self.checkBoxPanels = None
         self.createNewDiscoveryCheckboxes(DEFAULT_TECH_GROUPS)
 
@@ -134,6 +135,7 @@ class DisplayManager():
         if self.checkBoxPanels:
             for panel in self.checkBoxPanels:
                 panel.destroy()
+
         self.techGroupToCheckbox = dict()
         self.techGroupToIntVar = dict()
         self.checkBoxPanels = []
@@ -146,6 +148,7 @@ class DisplayManager():
                 currentPanel.pack(side=tkinter.TOP)
                 self.checkBoxPanels.append(currentPanel)
             techGroupVar = tkinter.IntVar()
+            techGroupVar.trace_add("write", (lambda name, index, mode : self.onFieldUpdate(techGroup, techGroupVar.get(), (lambda n : True))))
             currentCheckbox = tkinter.Checkbutton(currentPanel, variable=techGroupVar, text=techGroup)
             currentCheckbox.pack(side=tkinter.LEFT)
             self.techGroupToCheckbox[techGroup] = currentCheckbox
@@ -269,11 +272,6 @@ class DisplayManager():
         self.religionField.set(province.religion)
         self.cultureField.set(province.culture)
         self.taxText.delete('0', tkinter.END)
-        self.productionText.delete('0', tkinter.END)
-        self.manpowerText.delete('0', tkinter.END)
-        self.ownerField.delete('0', tkinter.END)
-        self.controllerField.delete('0', tkinter.END)
-        self.coresField.delete('0', tkinter.END)
         self.areaField.delete('0', tkinter.END)
         self.taxText.insert(tkinter.END, str(province.tax))
         self.productionText.insert(tkinter.END, str(province.production))
@@ -284,11 +282,13 @@ class DisplayManager():
         self.isLakeBox.select() if province.isLake else self.isLakeBox.deselect()
         self.isSeaBox.select() if province.isSea else self.isSeaBox.deselect()
         self.terrainField.set(province.terrain)
+        self.controllerField.delete('0', tkinter.END)
         self.controllerField.insert(tkinter.END, province.controller)
         self.climateField.set(province.climate)
         self.weatherField.set(province.weather)
         self.areaField.insert(tkinter.END, province.area)
         self.continentField.set(province.continent)
+        self.ownerField.delete('0', tkinter.END)
         self.ownerField.insert(tkinter.END, province.owner)
         self.tradeNodeField.set(province.tradeNode)
         coresText = ""

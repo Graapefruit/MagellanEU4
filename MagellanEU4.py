@@ -80,7 +80,10 @@ class MagellanEU4():
 			"impassable": {True: (0, 0, 0), False: (96, 96, 96)},
 			"terrain": self.model.terrainsToColours,
 			"isSea": {True: (0, 255, 255), False: (64, 64, 64)},
-			"isLake": {True: (0, 255, 255), False: (64, 64, 64)}}
+			"isLake": {True: (0, 255, 255), False: (64, 64, 64)},
+			"tradeGood": self.model.tradeGoodsToColours,
+			"owner": self.model.tagsToColours,
+			"controller": self.model.tagsToColours}
 
 		for mapModeName in MAP_MODE_NAMES:
 			colorMapping = None if mapModeName not in colorMappings else colorMappings[mapModeName]
@@ -95,6 +98,7 @@ class MagellanEU4():
 		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
 		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
+		self.view.tradeGoodField["values"] = list(self.model.tradeGoodsToColours.keys())
 		print("Mod Successfully Loaded")
 
 	def getDevelopmentMappings(self, max):

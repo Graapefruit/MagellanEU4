@@ -27,6 +27,8 @@ CULTURES_FILE = "00_cultures.txt"
 TRADE_GOODS_FILE = "00_tradegoods.txt"
 TRADE_NODES_FILE = "00_tradenodes.txt"
 DEFAULTS_FILE_NAME = "default.map"
+COUNTRIES_FOLDER = "countries"
+TAGS_FOLDER = "country_tags"
 
 PROVINCE_CHARACTERS_PER_LINE = 85
 

@@ -1,3 +1,4 @@
+from logging import root
 import sys
 import csv
 from Utils.Province import Province
@@ -24,7 +25,9 @@ class MapInfoManager():
         self.techGroups = []
         self.colorsToProvinces = dict()
         self.religionsToColours = DEFAULT_RELIGIONS.copy()
+        self.tradeGoodsToColours = dict()
         self.terrainsToColours = dict()
+        self.tagsToColours = dict()
         self.populateDefaults("{}/{}/{}".format(path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME))
         self.idsToProvinces = [None] * self.maxProvinces # Must grab the right maxProvinces from the Defaults file first
         self.populateTechGroups("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE))
@@ -41,8 +44,10 @@ class MapInfoManager():
         self.populateReligionData("{}/{}/{}".format(path, COMMON_FOLDER, RELIGIONS_FOLDER))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
-        self.populatePixels()
+        self.populateTradeGoodData("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER))
+        self.populateTagData("{}/{}".format(path, COMMON_FOLDER), "{}/{}/{}".format(path, COMMON_FOLDER, TAGS_FOLDER))
         self.provinceMapLocation = "{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)
+        self.populatePixels()
         print("Finished Loading the Map Info")
         sys.stdout.flush()
 
@@ -282,9 +287,9 @@ class MapInfoManager():
                 province.pixels = numpy.array(province.pixels)
 
     def populateReligionData(self, path):
-        print("Poulating religion->colour mappings...")
-        sys.stdout.flush()
         if exists(path):
+            print("Poulating Religion -> Colour mappings...")
+            sys.stdout.flush()
             # If the base file exists, we overwrite base game values. Otherwise, we include them
             if exists(RELIGIONS_FILE):
                 self.religionsToColours = dict()
@@ -296,10 +301,42 @@ class MapInfoManager():
                     for religionGroupData in religionGroup.getChildren():
                         if type(religionGroupData.values) == dict and religionGroupData.name != "religious_schools":
                             religionName = religionGroupData.name
-                            sys.stdout.flush()
                             religionColour = religionGroupData["color"]
                             religionColour = (int(religionColour[0]), int(religionColour[1]), int(religionColour[2]))
                             self.religionsToColours[religionName] = religionColour
+        else:
+            print("NOTE: Could not find religions folder path. The religions mapmode will have default colours.")
+
+    def populateTradeGoodData(self, path):
+        if exists(path):
+            print("Poulating Trade Good -> Colour mappings...")
+            sys.stdout.flush()
+            for fileName in listdir(path):
+                filePath = "{}/{}".format(path, fileName)
+                rootNode = parseEU4File(filePath)
+                for tradeGood in rootNode.getChildren():
+                    tradeGoodColour = tradeGood["color"]
+                    self.tradeGoodsToColours[tradeGood.name] = (round(float(tradeGoodColour[0]) * 255), round(float(tradeGoodColour[1]) * 255), round(float(tradeGoodColour[2]) * 255))
+        else:
+            print("NOTE: Could not find tradegoods folder path. The tradegoods mapmode will have random colours.")
+
+    # TODO: EU4 File Parser cannot properly read tags who's corresponding country files have spaces in them.
+    def populateTagData(self, commonPath, tagsPath):
+        if exists(commonPath) and exists(tagsPath):
+            print("Poulating Tag -> Colour mappings...")
+            sys.stdout.flush()
+            for tagFile in listdir(tagsPath):
+                filePath = "{}/{}".format(tagsPath, tagFile)
+                rootNode = parseEU4File(filePath)
+                for tag in rootNode.getChildren():
+                    countryFilePath = "{}/{}".format(commonPath, tag.values.replace('\"', ''))
+                    if exists(countryFilePath):
+                        tagData = parseEU4File(countryFilePath)
+                        colorList = tagData["color"].values
+                        color = (int(colorList[0]), int(colorList[1]), int(colorList[2]))
+                        self.tagsToColours[tag.name.lower()] = color
+        else:
+            print("NOTE: Could not find either {} or {} folder path. The owner and controller mapmode will have random colours.".format(commonPath, tagsPath))
 
     # --- Utility --- #
 
@@ -380,10 +417,10 @@ class MapInfoManager():
         f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
         if not self.provinceIsWater(province):
             writeFieldIfExists(f, "capital", province.capital)
-            writeFieldIfExists(f, "owner", province.owner)
-            writeFieldIfExists(f, "controller", province.controller)
+            writeFieldIfExists(f, "owner", province.owner.upper())
+            writeFieldIfExists(f, "controller", province.controller.upper())
             for core in province.cores:
-                f.write("add_core = {}\n".format(core))
+                f.write("add_core = {}\n".format(core.upper()))
             writeFieldIfExists(f, "culture", province.culture)
             writeFieldIfExists(f, "religion", province.religion)
             f.write("hre = {}\n".format("yes" if province.hre else "no"))
