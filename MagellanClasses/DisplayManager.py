@@ -28,6 +28,7 @@ class DisplayManager():
         self.onMenuFileSave = doNothing
         self.onNewMapMode = doNothing
         self.onFieldUpdate = doNothing
+        self.onGeneratePositions = doNothing
         
         self.stringVars = []
         self.traceMethods = []
@@ -70,7 +71,19 @@ class DisplayManager():
         self.mapModeMenu.add_command(label="Is Lake", command=(lambda : self.onNewMapMode("isLake")))
         self.mapModeMenu.add_separator()
         menubar.add_cascade(label="Map Modes", menu=self.mapModeMenu)
+
+        self.otherToolsMenu = tkinter.Menu(menubar, tearoff=0)
+        self.otherToolsMenu.add_command(label="Generate Positions", command=(lambda : self.generatePositions()))
+        self.otherToolsMenu.add_command(label="Propagate Owner Data", command=(lambda : tkinter.messagebox.showinfo("Soon!", "This current feature is a WIP. Stay tuned!")))
+        self.otherToolsMenu.add_command(label="Modify Adjacencies", command=(lambda : tkinter.messagmessageboxe.showinfo("Soon!", "This current feature is a WIP. Stay tuned!")))
+        self.otherToolsMenu.add_command(label="Modify Trade Node Flow", command=(lambda : tkinter.messagebox.showinfo("Soon!", "This current feature is a WIP. Stay tuned!")))
+        menubar.add_cascade(label="Other Tools", menu=self.otherToolsMenu)
         self.window.config(menu=menubar)
+
+    def generatePositions(self):
+        result = tkinter.messagebox.askyesno("Generate Positions", "This tool will modify your positions.txt file (if it exists) to add entries for all provinces, setting the average pixel as the position for everything. It will not overwrite existing entries")
+        if result:
+            self.onGeneratePositions()
 
     def createProvinceInfoPanel(self):
         self.provinceInfoPanel = tkinter.PanedWindow(self.rootPanel, bd=4, relief=RAISED, orient=VERTICAL, width=300)
@@ -186,8 +199,8 @@ class DisplayManager():
         self.provinceBodyRight = tkinter.PanedWindow(self.provinceBody, orient=VERTICAL)
         self.provinceBodyRight.pack(side=tkinter.LEFT)
 
-        ownerSv, ownerTrace, self.ownerLabel, self.ownerField = self.createNewEntry("Owner", self.provinceBodyRight, noSanityCheck)
-        controllerSv, controllerTrace, self.controllerLabel, self.controllerField = self.createNewEntry("Controller", self.provinceBodyRight, noSanityCheck)
+        ownerSv, ownerTrace, self.ownerLabel, self.ownerField = self.createNewAutocompletecombobox("Owner", self.provinceBodyRight, [], noSanityCheck)
+        controllerSv, controllerTrace, self.controllerLabel, self.controllerField = self.createNewAutocompletecombobox("Controller", self.provinceBodyRight, [], noSanityCheck)
         coresSv, coreTrace, self.coresLabel, self.coresField = self.createNewEntry("Cores", self.provinceBodyRight, noSanityCheck)
         terrainSv, terrainTrace, self.terrainLabel, self.terrainField = self.createNewAutocompletecombobox("Terrain", self.provinceBodyRight, DEFAULT_TERRAINS, noSanityCheck)
         climateSv, climateTrace, self.climateLabel, self.climateField = self.createNewAutocompletecombobox("Climate", self.provinceBodyRight, DEFAULT_CLIMATES, noSanityCheck)
@@ -250,10 +263,12 @@ class DisplayManager():
     # --- Private Methods --- #
 
     def onClose(self):
-        response = tkinter.messagebox.askyesno('Exit', 'Save your data before you exit?')
+        response = tkinter.messagebox.askyesnocancel('Exit', 'Save your data before you exit?')
         if response:
             self.onMenuFileSave()
-        self.window.destroy()
+            self.window.destroy()
+        elif response == False:
+            self.window.destroy()
 
     # --- Public Methods --- #
 
@@ -282,14 +297,12 @@ class DisplayManager():
         self.isLakeBox.select() if province.isLake else self.isLakeBox.deselect()
         self.isSeaBox.select() if province.isSea else self.isSeaBox.deselect()
         self.terrainField.set(province.terrain)
-        self.controllerField.delete('0', tkinter.END)
-        self.controllerField.insert(tkinter.END, province.controller)
+        self.controllerField.set(province.controller)
         self.climateField.set(province.climate)
         self.weatherField.set(province.weather)
         self.areaField.insert(tkinter.END, province.area)
         self.continentField.set(province.continent)
-        self.ownerField.delete('0', tkinter.END)
-        self.ownerField.insert(tkinter.END, province.owner)
+        self.ownerField.set(province.owner)
         self.tradeNodeField.set(province.tradeNode)
         coresText = ""
         for i in range(0, len(province.cores)):

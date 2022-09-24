@@ -1,6 +1,7 @@
 from logging import root
 import sys
 import csv
+from turtle import position
 from Utils.Province import Province
 from Utils.ProvinceUpdate import ProvinceUpdate
 from Utils.RGB import RGB
@@ -352,10 +353,41 @@ class MapInfoManager():
 
     # --- Public --- #
 
+    def generatePositions(self):
+        print("Generating Positions...")
+        sys.stdout.flush()
+        root = EU4DataNode("__ROOT__")
+        path = "{}/{}/{}".format(self.path, MAP_FOLDER_NAME, POSITIONS_FILE_NAME)
+        idsToSkip = set()
+        if exists(path):
+            root = parseEU4File(path)
+            for province in root.getChildren():
+                idsToSkip.add(int(province.name))
+        for province in self.idsToProvinces:
+            if province != None and province.id not in idsToSkip and len(province.pixels) > 0:
+                avaeragePos = numpy.average(province.pixels, axis=0)
+                x = "{:.3f}".format(round(avaeragePos[0], 4))
+                y = "{:.3f}".format(round(avaeragePos[1], 4))
+                newNode = EU4DataNode(str(province.id))
+                positionNode = EU4DataNode("position")
+                positionNode.values = [x, y, x, y, x, y, x, y, x, y, x, y, x, y]
+                newNode.values["position"] = positionNode
+
+                rotationNode = EU4DataNode("rotation")
+                rotationNode.values = ["0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000"]
+                newNode.values["rotation"] = rotationNode
+
+                heightNode = EU4DataNode("height")
+                heightNode.values = ["0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000"]
+                newNode.values["height"] = heightNode
+                root.values[str(province.id)] = newNode
+        writeToFileFromRootNode(path, root)
+        print("Done.")
+        sys.stdout.flush()
+
     def getProvinceAtIndex(self, x, y):
         province = self.colorsToProvinces.get((self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]))
         return province
-    #def generateReligionMap(self):
 
     def save(self, updatedProvinces):
         areasToProvinces = dict()

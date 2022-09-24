@@ -28,6 +28,7 @@ class MagellanEU4():
 		self.view.mapDisplay.onRightClick = self.colourProvince
 		self.view.onNewMapMode = self.changeMapMode
 		self.view.onFieldUpdate = self.updateCurrentProvince
+		self.view.onGeneratePositions = (lambda : self.model.generatePositions())
 		self.mapModes = dict()
 		self.model = None
                 
@@ -65,7 +66,11 @@ class MagellanEU4():
 					self.modifiedProvinces.add(province)
 
 	def onNewModOpen(self, path):
+		if not exists(path):
+			print("ERROR: \"{}\" is not a valid directory!".format(path))
+			return
 		self.model = MapInfoManager(path)
+		self.view.window.title(path)
 		self.mapModes = dict()
 		colorMappings = {"religion": self.model.religionsToColours, 
 			"discovery": {True: (255, 255, 255), False: (96, 96, 96)}, 
@@ -99,6 +104,8 @@ class MagellanEU4():
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
 		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
 		self.view.tradeGoodField["values"] = list(self.model.tradeGoodsToColours.keys())
+		self.view.ownerField["values"] = list(self.model.tagsToColours.keys())
+		self.view.controllerField["values"] = list(self.model.tagsToColours.keys())
 		print("Mod Successfully Loaded")
 
 	def getDevelopmentMappings(self, max):
