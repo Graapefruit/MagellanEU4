@@ -57,7 +57,8 @@ class DisplayManager():
         for mapModeDisplayName in MAP_MODE_DISPLAY_TO_NAME.keys():
             displayName = "{} ({})".format(mapModeDisplayName, mapModeToHotkey[MAP_MODE_DISPLAY_TO_NAME[mapModeDisplayName]])
             self.mapModeMenu.add_command(label=displayName, command=(lambda d=mapModeDisplayName : self.onNewMapMode(MAP_MODE_DISPLAY_TO_NAME[d])))
-        self.window.bind('<KeyPress>', (lambda e : self.onNewMapMode(MAP_MODE_HOTKEYS[e.char.upper()])))
+        # TODO: fire the below when not selecting a field
+        # self.window.bind('<KeyPress>', (lambda e : self.onNewMapMode(MAP_MODE_HOTKEYS[e.char.upper()])))
         self.mapModeMenu.add_separator()
         menubar.add_cascade(label="Map Modes", menu=self.mapModeMenu)
 
@@ -276,6 +277,8 @@ class DisplayManager():
         self.religionField.set(province.religion)
         self.cultureField.set(province.culture)
         self.taxText.delete('0', tkinter.END)
+        self.productionText.delete('0', tkinter.END)
+        self.manpowerText.delete('0', tkinter.END)
         self.areaField.delete('0', tkinter.END)
         self.taxText.insert(tkinter.END, str(province.tax))
         self.productionText.insert(tkinter.END, str(province.production))
@@ -293,6 +296,7 @@ class DisplayManager():
         self.continentField.set(province.continent)
         self.ownerField.set(province.owner)
         self.tradeNodeField.set(province.tradeNode)
+        self.coresField.delete('0', tkinter.END)
         coresText = ""
         for i in range(0, len(province.cores)):
             coresText += province.cores[i]

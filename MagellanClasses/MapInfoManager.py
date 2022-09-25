@@ -265,9 +265,9 @@ class MapInfoManager():
             sys.stdout.flush()
 
     def populateTradeNodes(self, path):
-        print("Parsing Trade Nodes...")
-        sys.stdout.flush()
         if exists(path):
+            print("Parsing Trade Nodes...")
+            sys.stdout.flush()
             rootNode = parseEU4File(path)
             self.tradeNodeTree = rootNode
             for tradeNode in rootNode.getChildren():
@@ -276,6 +276,9 @@ class MapInfoManager():
                         if provinceId.isdigit() and int(provinceId) < len(self.idsToProvinces) and self.idsToProvinces[int(provinceId)] != None:
                             self.idsToProvinces[int(provinceId)].tradeNode = tradeNode.name
                     tradeNode["members"].values = []
+        else:
+            print("NOTE: No trade node file found!")
+            sys.stdout.flush()
 
     def populatePixels(self):
         print("Populating Pixels... This may take a while")
@@ -544,12 +547,17 @@ class MapInfoManager():
         return province.isSea or province.isLake
 
 def saveFileSafely(filePath, saveFunc):
-    originalFileContents = open(filePath, 'r', encoding="utf-8-sig", errors="surrogateescape").read()
+    originalFileContents = None
+    if exists(filePath):
+        originalFileContents = open(filePath, 'r', encoding="utf-8-sig", errors="surrogateescape").read()
     try:
         saveFunc()
     except:
-        open(filePath, 'r').write(originalFileContents)
-        print("Something went wrong when saving to {}. The original file contents have been kept, and the rest of the files will be saved.")
+        if exists(filePath):
+            open(filePath, 'r').write(originalFileContents)
+            print("Something went wrong when saving to {}. The original file contents have been kept, and the rest of the files will be saved.")
+        else:
+            print("Something went wrong when saving to {}. The file did not exist before, so this step will have to be skipped")
 
 def writeFieldIfExists(file, text, field):
     if field != "":
