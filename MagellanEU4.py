@@ -12,8 +12,7 @@ from MagellanClasses.EU4DataFileParser import *
 
 from Utils.MapMode import MapMode
 
-FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry", "insult your rivals", "turn off your edicts"]
-MAP_MODE_NAMES = {"province", "religion", "culture", "tax", "production", "manpower", "development", "tradeGood", "area", "continent", "hre", "owner", "controller", "terrain", "climate", "weather", "tradeNode", "impassable", "isSea", "isLake"}
+FAREWELLS = ["drink water", "clean your room", "sleep on time", "stretch", "embargo your rivals", "improve with outraged countries", "do your laundry", "insult your rivals", "turn off your edicts", "floss your teeth"]
 DEVELOPMENT_EXPECTED_RANGE = 39
 
 class MagellanEU4():
@@ -90,7 +89,7 @@ class MagellanEU4():
 			"owner": self.model.tagsToColours,
 			"controller": self.model.tagsToColours}
 
-		for mapModeName in MAP_MODE_NAMES:
+		for mapModeName in MAP_MODE_DISPLAY_TO_NAME.values():
 			colorMapping = None if mapModeName not in colorMappings else colorMappings[mapModeName]
 			self.mapModes[mapModeName] = MapMode(mapModeName, self.model, colorMapping)
 		for mapModeName in self.model.techGroups:

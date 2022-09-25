@@ -3,6 +3,8 @@ import tkinter
 from unicodedata import name
 from ttkwidgets.autocomplete import AutocompleteCombobox
 from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
+
+from MagellanClasses.Constants import MAP_MODE_DISPLAY_TO_NAME, MAP_MODE_HOTKEYS
 from .ScrollableImage import ScrollableImage
 from .Defaults import *
 from PIL import ImageTk
@@ -49,26 +51,13 @@ class DisplayManager():
         menubar.add_cascade(label="File", menu=fileMenu)
 
         self.mapModeMenu = tkinter.Menu(menubar, tearoff=0)
-        self.mapModeMenu.add_command(label="Provinces", command=(lambda : self.onNewMapMode("province")))
-        self.mapModeMenu.add_command(label="Religions", command=(lambda : self.onNewMapMode("religion")))
-        self.mapModeMenu.add_command(label="Cultures", command=(lambda : self.onNewMapMode("culture")))
-        self.mapModeMenu.add_command(label="Tax", command=(lambda : self.onNewMapMode("tax")))
-        self.mapModeMenu.add_command(label="Production", command=(lambda : self.onNewMapMode("production")))
-        self.mapModeMenu.add_command(label="Manpower", command=(lambda : self.onNewMapMode("manpower")))
-        self.mapModeMenu.add_command(label="Total Development", command=(lambda : self.onNewMapMode("development")))
-        self.mapModeMenu.add_command(label="Trade Goods", command=(lambda : self.onNewMapMode("tradeGood")))
-        self.mapModeMenu.add_command(label="Areas", command=(lambda : self.onNewMapMode("area")))
-        self.mapModeMenu.add_command(label="Continents", command=(lambda : self.onNewMapMode("continent")))
-        self.mapModeMenu.add_command(label="HRE", command=(lambda : self.onNewMapMode("hre")))
-        self.mapModeMenu.add_command(label="Owners", command=(lambda : self.onNewMapMode("owner")))
-        self.mapModeMenu.add_command(label="Controllers", command=(lambda : self.onNewMapMode("controller")))
-        self.mapModeMenu.add_command(label="Terrains", command=(lambda : self.onNewMapMode("terrain")))
-        self.mapModeMenu.add_command(label="Climates", command=(lambda : self.onNewMapMode("climate")))
-        self.mapModeMenu.add_command(label="Weathers", command=(lambda : self.onNewMapMode("weather")))
-        self.mapModeMenu.add_command(label="Trade Nodes", command=(lambda : self.onNewMapMode("tradeNode")))
-        self.mapModeMenu.add_command(label="Impassables", command=(lambda : self.onNewMapMode("impassable")))
-        self.mapModeMenu.add_command(label="Is Sea", command=(lambda : self.onNewMapMode("isSea")))
-        self.mapModeMenu.add_command(label="Is Lake", command=(lambda : self.onNewMapMode("isLake")))
+        mapModeToHotkey = dict()
+        for hotkey in MAP_MODE_HOTKEYS:
+            mapModeToHotkey[MAP_MODE_HOTKEYS[hotkey]] = hotkey
+        for mapModeDisplayName in MAP_MODE_DISPLAY_TO_NAME.keys():
+            displayName = "{} ({})".format(mapModeDisplayName, mapModeToHotkey[MAP_MODE_DISPLAY_TO_NAME[mapModeDisplayName]])
+            self.mapModeMenu.add_command(label=displayName, command=(lambda d=mapModeDisplayName : self.onNewMapMode(MAP_MODE_DISPLAY_TO_NAME[d])))
+        self.window.bind('<KeyPress>', (lambda e : self.onNewMapMode(MAP_MODE_HOTKEYS[e.char.upper()])))
         self.mapModeMenu.add_separator()
         menubar.add_cascade(label="Map Modes", menu=self.mapModeMenu)
 

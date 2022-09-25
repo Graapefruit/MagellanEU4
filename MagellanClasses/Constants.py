@@ -29,6 +29,18 @@ TRADE_NODES_FILE = "00_tradenodes.txt"
 DEFAULTS_FILE_NAME = "default.map"
 COUNTRIES_FOLDER = "countries"
 TAGS_FOLDER = "country_tags"
+MAP_MODE_DISPLAY_TO_NAME = {"Provinces": "province", "Religions": "religion", "Cultures": "culture", 
+    "Tax": "tax", "Production": "production", "Manpower": "manpower", 
+    "Development": "development", "Trade Goods": "tradeGood", "Areas": "area", 
+    "Continents": "continent", "HRE": "hre", "Owners": "owner", 
+    "Controllers": "controller", "Terrains": "terrain", "Climates": "climate", 
+    "Weathers": "weather", "Trade Nodes": "tradeNode", "Impassables": "impassable", 
+    "Seas": "isSea", "Lakes": "isLake"}
+MAP_MODE_HOTKEYS = {'P': "province", 'R': "religion", 'U': "culture", 'X': "tax",
+    'F': "production", 'M': "manpower", 'D': "development", 'G': "tradeGood",
+    'A': "area", 'C': "continent", 'H': "hre", 'O': "owner", 'B': "controller",
+    'T': "terrain", 'E': "climate", 'W': "weather", 'N': "tradeNode", 'I': "impassable",
+    'S': "isSea", 'L': "isLake"}
 
 PROVINCE_CHARACTERS_PER_LINE = 85
 
