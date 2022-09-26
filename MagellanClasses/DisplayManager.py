@@ -31,6 +31,7 @@ class DisplayManager():
         self.onNewMapMode = doNothing
         self.onFieldUpdate = doNothing
         self.onGeneratePositions = doNothing
+        self.onPropagateOwnerData = doNothing
         
         self.stringVars = []
         self.traceMethods = []
@@ -64,7 +65,7 @@ class DisplayManager():
 
         self.otherToolsMenu = tkinter.Menu(menubar, tearoff=0)
         self.otherToolsMenu.add_command(label="Generate Positions", command=(lambda : self.generatePositions()))
-        self.otherToolsMenu.add_command(label="Propagate Owner Data", command=(lambda : tkinter.messagebox.showinfo("Soon!", "This current feature is a WIP. Stay tuned!")))
+        self.otherToolsMenu.add_command(label="Propagate Owner Data", command=(lambda : self.propagateOwnerData()))
         self.otherToolsMenu.add_command(label="Modify Adjacencies", command=(lambda : tkinter.messagmessageboxe.showinfo("Soon!", "This current feature is a WIP. Stay tuned!")))
         self.otherToolsMenu.add_command(label="Modify Trade Node Flow", command=(lambda : tkinter.messagebox.showinfo("Soon!", "This current feature is a WIP. Stay tuned!")))
         menubar.add_cascade(label="Other Tools", menu=self.otherToolsMenu)
@@ -74,6 +75,11 @@ class DisplayManager():
         result = tkinter.messagebox.askyesno("Generate Positions", "This tool will modify your positions.txt file (if it exists) to add entries for all provinces, setting the average pixel as the position for everything. It will not overwrite existing entries")
         if result:
             self.onGeneratePositions()
+
+    def propagateOwnerData(self):
+        result = tkinter.messagebox.askyesno("Propagate Owner Data", "This tool will iterate through every province. If it has a designated owner, it will set the controller to that owner if not already set, and add a core for the owner if no provinces have no current cores.")
+        if result:
+            self.onPropagateOwnerData()
 
     def createProvinceInfoPanel(self):
         self.provinceInfoPanel = tkinter.PanedWindow(self.rootPanel, bd=4, relief=RAISED, orient=VERTICAL, width=300)

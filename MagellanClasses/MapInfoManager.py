@@ -388,6 +388,16 @@ class MapInfoManager():
         print("Done.")
         sys.stdout.flush()
 
+    def propagateOwnerData(self):
+        print("Propagating Owner Data...")
+        sys.stdout.flush()
+        for province in self.idsToProvinces:
+            if province != None and province.owner != "":
+                if province.controller == "":
+                    province.controller = province.owner
+                if len(province.cores) == 0:
+                    province.cores.append(province.owner)
+
     def getProvinceAtIndex(self, x, y):
         province = self.colorsToProvinces.get((self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]))
         return province
