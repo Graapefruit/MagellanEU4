@@ -3,7 +3,7 @@ from random import randint
 import numpy as np
 
 EMPTY_COLOUR = (255, 255, 255)
-PROVINCE_COLOUR_ALPHA = 0.1 # 0 = no influence; 1 = all influence
+PROVINCE_COLOUR_ALPHA = 0.2 # 0 = no influence; 1 = all influence
 
 class MapMode():
     def __init__(self, name, model, colorMapping):

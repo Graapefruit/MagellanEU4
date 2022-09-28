@@ -10,6 +10,7 @@ class EU4DataFileReaderState(Enum):
     FIRST_STRING = 1
     POST_EQUALS = 2
     SECOND_STRING = 3
+    IN_QUOTATIONS = 4
     
 class EU4DataNode():
     def __init__(self, name):
@@ -113,6 +114,9 @@ def parseEU4File(filePath):
                     elif char == '{':
                         currentState = EU4DataFileReaderState.FIRST_STRING
                     # Current node is Case 1
+                    elif char == "\"":
+                        currentState = EU4DataFileReaderState.IN_QUOTATIONS
+                        currentString += char
                     else:
                         currentState = EU4DataFileReaderState.SECOND_STRING
                         currentString += char
@@ -125,6 +129,14 @@ def parseEU4File(filePath):
                         currentState = EU4DataFileReaderState.FIRST_STRING
                     else:
                         currentString += char
+
+                case EU4DataFileReaderState.IN_QUOTATIONS:
+                    currentString += char
+                    if char == "\"":
+                        dataPath[-1].values = currentString
+                        currentString = ''
+                        dataPath.pop()
+                        currentState = EU4DataFileReaderState.FIRST_STRING
     return baseNode
 
 def mostCompletePreviousString(pastStrings):
@@ -148,6 +160,7 @@ def readDataFile(path):
 
 # Test
 if __name__ == "__main__":
-    fileName = "E:/EU4Copy/common/tradenodes/00_tradenodes.txt"
+    fileName = "E:/EU4Copy/common/country_tags/00_countries.txt"
     headNode = parseEU4File(fileName)
-    writeToFileFromRootNode("C:/Users/User/Desktop/tradeNodeOutput.txt", headNode)
+    print(headNode.values)
+    writeToFileFromRootNode("C:/Users/User/Desktop/FileParserOutput.txt", headNode)

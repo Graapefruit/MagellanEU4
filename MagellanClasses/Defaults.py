@@ -45,3 +45,5 @@ DEFAULT_CONTINENTS = ["europe", "asia", "africa", "north_america", "south_americ
 DEFAULT_TECH_GROUPS = ["western", "eastern", "ottoman", "muslim", "indian", "east_african", "central_african", 
     "chinese", "nomad_group", "sub_saharan", "north_american", "mesoamerican", "south_american", "andean", 
     "aboriginal_tech", "polynesian_tech", "high_american"]
+
+DEFAULT_GOVERNMENTS = ["monarchy", "republic", "theocracy", "tribal", "native"]

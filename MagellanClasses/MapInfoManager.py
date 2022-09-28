@@ -295,7 +295,7 @@ class MapInfoManager():
             print("Poulating Religion -> Colour mappings...")
             sys.stdout.flush()
             # If the base file exists, we overwrite base game values. Otherwise, we include them
-            if exists(RELIGIONS_FILE):
+            if exists("{}/{}".format(path, RELIGIONS_FILE)):
                 self.religionsToColours = dict()
             for fileName in listdir(path):
                 filePath = "{}/{}".format(path, fileName)
@@ -460,7 +460,7 @@ class MapInfoManager():
 
     def saveProvinceHistory(self, province):
         f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
-        if not self.provinceIsWater(province):
+        if isWalkableLand(province):
             writeFieldIfExists(f, "capital", province.capital)
             writeFieldIfExists(f, "owner", province.owner.upper())
             writeFieldIfExists(f, "controller", province.controller.upper())
@@ -553,8 +553,8 @@ class MapInfoManager():
         f.write("equator_y_on_province_image = 656") # I have no clue what this does, but its always at the end of the climate.txt file so...
         f.close()
 
-    def provinceIsWater(self, province):
-        return province.isSea or province.isLake
+def isWalkableLand(province):
+    return not (province.isSea or province.isLake or province.impassable)
 
 def saveFileSafely(filePath, saveFunc):
     originalFileContents = None

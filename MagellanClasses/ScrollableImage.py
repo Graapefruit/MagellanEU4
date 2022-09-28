@@ -1,5 +1,4 @@
 import tkinter
-import sys
 
 SCROLL_WHEEL_WIDTH = 16
 
