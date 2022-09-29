@@ -9,7 +9,7 @@ Unfortunately for you non-programmers, there isn't a single executable (.exe) fi
 
 - Magellan uses a programming language called 'Python', which must be installed.
 - This can be downloaded at https://www.python.org/downloads/. It is highly recommended to download the latest release
-- Magellan also uses a few libraries not included in the base python installation. To download them run the following commands in your terminal: `pip install tk`, `pip install ttkwidgets`, `pip install PIL`, `pip install numpy`. If `pip` doesn't work, try `pip3`
+- Magellan also uses a few libraries not included in the base python installation. To download them run the following commands in your terminal: `pip install tk`, `pip install ttkwidgets`, `pip install pillow`, `pip install numpy`. If `pip` doesn't work, try `pip3`
 
 2. Download Git and Navigate through the Command Line
 
