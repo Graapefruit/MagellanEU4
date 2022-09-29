@@ -32,7 +32,7 @@ class TagInfoPanel():
         self.leftPanel = tk.PanedWindow(self.panel, orient=tk.VERTICAL)
         self.leftPanel.pack(side=tk.LEFT)
         self.governmentTypeSv, self.governmentTypeTrace, self.governmentTypeLabel, self.governmentTypeField = createNewAutocompletecombobox("Government Type", self.leftPanel, DEFAULT_GOVERNMENTS, lambdaTrue, self.onFieldUpdate)
-        self.governmentRankSv, self.governmentRankTrace, self.governmentRankLabel, self.governmentRankField = createNewAutocompletecombobox("Government Rank", self.leftPanel, [1, 2, 3], lambdaTrue, self.onFieldUpdate)
+        self.governmentRankSv, self.governmentRankTrace, self.governmentRankLabel, self.governmentRankField = createNewAutocompletecombobox("Government Rank", self.leftPanel, ["1", "2", "3"], lambdaTrue, self.onFieldUpdate)
         self.techGroupSv, self.techGroupTrace, self.techGroupLabel, self.techGroupField = createNewAutocompletecombobox("Technology Group", self.leftPanel, DEFAULT_TECH_GROUPS, lambdaTrue, self.onFieldUpdate)
         self.governmentReforms = AutoComboCollection(self.leftPanel, "Government Reforms", ["asd", "fsf"], (lambda i : True), (lambda i : True))
         self.religionSv, self.religionTrace, self.religionLabel, self.religionField = createNewAutocompletecombobox("Religion", self.leftPanel, list(DEFAULT_RELIGIONS.keys()), lambdaTrue, self.onFieldUpdate)
