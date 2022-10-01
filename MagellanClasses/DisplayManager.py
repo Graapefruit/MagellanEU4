@@ -1,3 +1,4 @@
+from inspect import trace
 import tkinter
 from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
 
@@ -18,7 +19,7 @@ def noSanityCheck(fieldValue):
     return True
 
 def tagSanityCheck(tag):
-    return len(tag)==3
+    return len(tag)==3 or len(tag)==0
 
 def coreSanityCheck(tags):
     for core in tags.split(','):
@@ -159,6 +160,7 @@ class DisplayManager():
 
         self.techGroupToCheckbox = dict()
         self.techGroupToIntVar = dict()
+        self.techGroupToTrace = dict()
         self.checkBoxPanels = []
         currentPanel = None
         rowIndex = 0
@@ -169,11 +171,13 @@ class DisplayManager():
                 currentPanel.pack(side=tkinter.TOP)
                 self.checkBoxPanels.append(currentPanel)
             techGroupVar = tkinter.IntVar()
-            techGroupVar.trace_add("write", (lambda name, index, mode : self.onFieldUpdate(techGroup, techGroupVar.get(), (lambda n : True))))
+            traceMethod = (lambda name, index, mode, techGroup=techGroup, techGroupVar=techGroupVar : self.onFieldUpdate.callback(techGroup, techGroupVar.get(), noSanityCheck))
+            techGroupVar.trace_add("write", traceMethod)
             currentCheckbox = tkinter.Checkbutton(currentPanel, variable=techGroupVar, text=techGroup)
             currentCheckbox.pack(side=tkinter.LEFT)
             self.techGroupToCheckbox[techGroup] = currentCheckbox
             self.techGroupToIntVar[techGroup] = techGroupVar
+            self.techGroupToTrace[techGroup] = traceMethod
             rowIndex += 1
             if rowIndex == 3:
                 rowIndex = 0
@@ -288,10 +292,14 @@ class DisplayManager():
     def disableTraceMethods(self):
         for i in range(0, len(self.stringVars)):
             self.stringVars[i].trace_remove('write', self.stringVars[i].trace_info()[0][1])
+        for techGroup in self.currentTechGroups:
+            self.techGroupToIntVar[techGroup].trace_remove('write', self.techGroupToIntVar[techGroup].trace_info()[0][1])
 
     def enableTraceMethods(self):
         for i in range(0, len(self.stringVars)):
             self.stringVars[i].trace_add("write", self.traceMethods[i])
+        for techGroup in self.currentTechGroups:
+            self.techGroupToIntVar[techGroup].trace_add("write", self.techGroupToTrace[techGroup])
 
     def startMainLoop(self):
         self.window.mainloop()
