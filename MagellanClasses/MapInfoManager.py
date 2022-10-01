@@ -565,12 +565,12 @@ def saveFileSafely(filePath, saveFunc):
         originalFileContents = open(filePath, 'r', encoding="utf-8-sig", errors="surrogateescape").read()
     try:
         saveFunc()
-    except:
+    except Exception as e:
         if exists(filePath):
             open(filePath, 'w').write(originalFileContents)
-            print("Something went wrong when saving to {}. The original file contents have been kept, and the rest of the files will be saved.")
+            print("Something went wrong when saving to {}. The original file contents have been kept, and the rest of the files will be saved.\nError:\n{}".format(filePath, e))
         else:
-            print("Something went wrong when saving to {}. The file did not exist before, so this step will have to be skipped")
+            print("Something went wrong when saving to {}. The file did not exist before, so this step will have to be skipped.\nError:\n{}".format(filePath, e))
 
 def writeFieldIfExists(file, text, field):
     if field != "":
