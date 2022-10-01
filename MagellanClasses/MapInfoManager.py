@@ -567,7 +567,7 @@ def saveFileSafely(filePath, saveFunc):
         saveFunc()
     except:
         if exists(filePath):
-            open(filePath, 'r').write(originalFileContents)
+            open(filePath, 'w').write(originalFileContents)
             print("Something went wrong when saving to {}. The original file contents have been kept, and the rest of the files will be saved.")
         else:
             print("Something went wrong when saving to {}. The file did not exist before, so this step will have to be skipped")
