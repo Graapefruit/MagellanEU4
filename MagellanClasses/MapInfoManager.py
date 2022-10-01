@@ -462,7 +462,7 @@ class MapInfoManager():
     def saveProvinceHistory(self, province):
         # None Previously
         if province.historyFile == "":
-            province.historyFile = "{} - {}".format(province.id, province.name)
+            province.historyFile = "{} - {}.txt".format(province.id, province.name)
         f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
         if isWalkableLand(province):
             writeFieldIfExists(f, "capital", province.capital)
