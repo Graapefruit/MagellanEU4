@@ -1,3 +1,4 @@
+from genericpath import isfile
 from logging import root
 import sys
 import csv
@@ -561,7 +562,7 @@ def isWalkableLand(province):
 
 def saveFileSafely(filePath, saveFunc):
     originalFileContents = None
-    if exists(filePath):
+    if exists(filePath) and isfile(filePath):
         originalFileContents = open(filePath, 'r', encoding="utf-8-sig", errors="surrogateescape").read()
     try:
         saveFunc()
