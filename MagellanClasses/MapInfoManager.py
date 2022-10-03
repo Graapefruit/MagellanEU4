@@ -498,7 +498,7 @@ class MapInfoManager():
     def saveLocalization(self, fileName, localizationType, localizationPrefix):
         print("Saving {} Localizations...".format(localizationType))
         sys.stdout.flush()
-        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, fileName), 'w')
+        f = open("{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, fileName), 'w', encoding="utf-8-sig")
         f.write("l_english:\n")
         for province in self.idsToProvinces:
             if province != None:
