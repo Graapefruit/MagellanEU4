@@ -10,7 +10,9 @@ class EU4DataFileReaderState(Enum):
     FIRST_STRING = 1
     POST_EQUALS = 2
     SECOND_STRING = 3
-    IN_QUOTATIONS = 4
+    FIRST_STRING_QUOTATIONS = 4
+    SECOND_STRING_QUOTATIONS = 5
+    COMMENT_IGNORE = 6
     
 class EU4DataNode():
     def __init__(self, name):
@@ -74,7 +76,7 @@ def parseEU4File(filePath):
         pastStrings = []
         currentString = ''
         currentState = EU4DataFileReaderState.FIRST_STRING
-        for char in readDataFile(filePath):
+        for char in open(filePath, 'r', encoding="utf-8-sig", errors="ignore").read():
             match currentState:
                 case EU4DataFileReaderState.FIRST_STRING:
                     # Spaces are separators between words
@@ -104,8 +106,21 @@ def parseEU4File(filePath):
                             pastStrings = []
                             currentString = ''
                         dataPath.pop()
+                    elif char == "#":
+                        if len(currentString) > 0:
+                            pastStrings.append(currentString)
+                            currentString = ''
+                        currentState = EU4DataFileReaderState.COMMENT_IGNORE
+                    elif char == "\"":
+                        currentState = EU4DataFileReaderState.FIRST_STRING_QUOTATIONS
+                        currentString += char
                     else:
                         currentString += char
+
+                case EU4DataFileReaderState.FIRST_STRING_QUOTATIONS:
+                    currentString += char
+                    if char == "\"":
+                        currentState = EU4DataFileReaderState.FIRST_STRING
 
                 case EU4DataFileReaderState.POST_EQUALS:
                     if char.isspace():
@@ -115,7 +130,7 @@ def parseEU4File(filePath):
                         currentState = EU4DataFileReaderState.FIRST_STRING
                     # Current node is Case 1
                     elif char == "\"":
-                        currentState = EU4DataFileReaderState.IN_QUOTATIONS
+                        currentState = EU4DataFileReaderState.SECOND_STRING_QUOTATIONS
                         currentString += char
                     else:
                         currentState = EU4DataFileReaderState.SECOND_STRING
@@ -127,15 +142,24 @@ def parseEU4File(filePath):
                         currentString = ''
                         dataPath.pop()
                         currentState = EU4DataFileReaderState.FIRST_STRING
+                    elif char == '#':
+                        dataPath[-1].values = currentString
+                        currentString = ''
+                        dataPath.pop()
+                        currentState = EU4DataFileReaderState.COMMENT_IGNORE
                     else:
                         currentString += char
 
-                case EU4DataFileReaderState.IN_QUOTATIONS:
+                case EU4DataFileReaderState.SECOND_STRING_QUOTATIONS:
                     currentString += char
                     if char == "\"":
                         dataPath[-1].values = currentString
                         currentString = ''
                         dataPath.pop()
+                        currentState = EU4DataFileReaderState.FIRST_STRING
+
+                case EU4DataFileReaderState.COMMENT_IGNORE:
+                    if char == "\n":
                         currentState = EU4DataFileReaderState.FIRST_STRING
     return baseNode
 
@@ -151,16 +175,8 @@ def parseEU4Folder(path):
         data.update(parseEU4File("{}/{}".format(path, fileName)))
     return data
 
-def readDataFile(path):
-    f = open(path, 'r', encoding="utf-8-sig", errors="ignore")
-    r = ""
-    for line in f.readlines():
-        r += line.split('#')[0].strip() + ' '
-    return r
-
 # Test
 if __name__ == "__main__":
-    fileName = "E:/EU4Copy/common/country_tags/00_countries.txt"
+    fileName = "E:/EU4Copy/common/countries/Aachen.txt"
     headNode = parseEU4File(fileName)
-    print(headNode.values)
     writeToFileFromRootNode("C:/Users/User/Desktop/FileParserOutput.txt", headNode)
