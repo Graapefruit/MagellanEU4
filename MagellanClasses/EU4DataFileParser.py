@@ -68,6 +68,7 @@ def writeToFileFromRootNode(filePath, rootNode):
     for value in rootNode.getChildren():
         f.write(value.toString() + '\n')
 
+# TODO: duplicate values do not work
 def parseEU4File(filePath):
     baseNode = None
     if exists(filePath):

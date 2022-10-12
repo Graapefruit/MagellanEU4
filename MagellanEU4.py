@@ -36,6 +36,10 @@ class MagellanEU4():
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
 		self.view.updateProvinceInfo(self.currentProvince)
 		self.modifiedProvinces.add(self.currentProvince)
+		if self.currentProvince.owner.lower() in self.model.tagNameDict:
+			self.view.tagInfoPanel.setTag(self.model.tagNameDict[self.currentProvince.owner.lower()], self.model.path)
+		else:
+			self.view.tagInfoPanel.removeTag()
 
 	def colourProvince(self, x, y):
 		if self.currentProvince:

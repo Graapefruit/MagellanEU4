@@ -2,7 +2,7 @@ from genericpath import isfile
 from logging import root
 import sys
 import csv
-from turtle import position
+from Utils.Country import Country
 from Utils.Province import Province
 from Utils.ProvinceUpdate import ProvinceUpdate
 from Utils.RGB import RGB
@@ -30,6 +30,7 @@ class MapInfoManager():
         self.tradeGoodsToColours = dict()
         self.terrainsToColours = dict()
         self.tagsToColours = dict()
+        self.tagNameDict = dict()
         self.populateDefaults("{}/{}/{}".format(path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME))
         self.idsToProvinces = [None] * self.maxProvinces # Must grab the right maxProvinces from the Defaults file first
         self.populateTechGroups("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE))
@@ -47,7 +48,7 @@ class MapInfoManager():
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         self.populateTradeGoodData("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER))
-        self.populateTagData("{}/{}".format(path, COMMON_FOLDER), "{}/{}/{}".format(path, COMMON_FOLDER, TAGS_FOLDER))
+        self.populateTags("{}/{}/{}".format(path, COMMON_FOLDER, TAGS_FOLDER))
         self.provinceMapLocation = "{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME)
         self.populatePixels()
         print("Finished Loading the Map Info")
@@ -155,7 +156,7 @@ class MapInfoManager():
                             case "discovered_by":
                                 province.discovered[lineVal] = True
                             case "capital":
-                                province.capital = lineVal
+                                province.capital = splitLine[1].strip()
                             case _:
                                 province.extraText += line.strip() + '\n'
 
@@ -325,23 +326,70 @@ class MapInfoManager():
         else:
             print("NOTE: Could not find tradegoods folder path. The tradegoods mapmode will have random colours.")
 
-    # TODO: EU4 File Parser cannot properly read tags who's corresponding country files have spaces in them.
-    def populateTagData(self, commonPath, tagsPath):
-        if exists(commonPath) and exists(tagsPath):
-            print("Poulating Tag -> Colour mappings...")
+    def populateTags(self, tagsPath):
+        if exists(tagsPath):
+            print("Poulating Tags...")
             sys.stdout.flush()
             for tagFile in listdir(tagsPath):
                 filePath = "{}/{}".format(tagsPath, tagFile)
                 rootNode = parseEU4File(filePath)
                 for tag in rootNode.getChildren():
-                    countryFilePath = "{}/{}".format(commonPath, tag.values.replace('\"', ''))
+                    tagName = tag.name.lower()
+                    self.tagNameDict[tagName] = Country(tagName)
+                    # country file
+                    countryInternalName = tag.values.replace('\"', '')
+                    countryFilePath = "{}/{}/{}".format(self.path, COMMON_FOLDER, countryInternalName)
                     if exists(countryFilePath):
                         tagData = parseEU4File(countryFilePath)
                         colorList = tagData["color"].values
                         color = (int(colorList[0]), int(colorList[1]), int(colorList[2]))
-                        self.tagsToColours[tag.name.lower()] = color
+                        self.tagsToColours[tagName] = color
+                        self.tagNameDict[tagName].populateFromCountryFileDataTree(tagData)
+                    else:
+                        print("Tag {} defined, but no corresponding country file found. Skipping...".format(countryInternalName))
+                # history file
+                historyFilesPath = "{}/{}".format(self.path, COUNTRIES_HISTORY_PATH)
+                if exists(historyFilesPath):
+                    for historyFile in listdir(historyFilesPath):
+                        tag = historyFile.split('-')[0].strip().lower()
+                        if tag in self.tagNameDict:
+                            tagData = parseEU4File("{}/{}".format(historyFilesPath, historyFile))
+                            self.tagNameDict[tag].populateFromHistoryFileDataTree(tagData)
+                        else:
+                            print("Warning: found history file with no existing tag: \"{}\". Will be skipped".format(historyFile))
+                else:
+                    print("Could not find the history file path for countries. Skipping...")
+                # localization
+                countryLocalizationPath = "{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, COUNTRIES_LOCALIZATION_FILE)
+                if exists(countryLocalizationPath):
+                    for match in re.findall(COUNTRY_LOCALIZATION_PATTERN, open(countryLocalizationPath, 'r').read()):
+                        tag = match[0].strip().lower()
+                        if tag in self.tagNameDict:
+                            country = self.tagNameDict[tag]
+                            localizationString = match[2]
+                            print(localizationString)
+                            if match[1] == "_ADJ":
+                                country.adj = localizationString
+                            else:
+                                country.name = localizationString
+                        else:
+                            print("Warning: line found in localization with no corresponding tag: {}".format(match[0]))
+                else:
+                    print("Could not find the localization file for the countries. Skipping...")
+                # colours
+                countryColoursPath = "{}/{}".format(self.path, COUNTRY_COLORS_FOLDER)
+                if exists(countryColoursPath):
+                    for countryColourFile in listdir(countryColoursPath):
+                        for countryColour in parseEU4File(countryColourFile).getChildren():
+                            tag = countryColour.name.strip().lower()
+                            if tag in self.tagNameDict:
+                                self.tagNameDict[tag].populateFromCountryColorsDataTree(countryColour)
+                            else:
+                                print("Entry {} exists in {}, but no corresponding tag exists!".format(tag, countryColourFile))
+                else:
+                    print("Could not find the path for country colours. Skipping...")
         else:
-            print("NOTE: Could not find either {} or {} folder path. The owner and controller mapmode will have random colours.".format(commonPath, tagsPath))
+            print("NOTE: Could not find {}. Tags will not be loaded.".format(tagsPath))
 
     # --- Utility --- #
 
@@ -354,6 +402,10 @@ class MapInfoManager():
             if len(commentPartitions) > 1:
                 fileText += "\n"
         return fileText
+
+    def getProvinceAtIndex(self, x, y):
+        province = self.colorsToProvinces.get((self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]))
+        return province
 
     # --- Public --- #
 
@@ -398,10 +450,6 @@ class MapInfoManager():
                     province.controller = province.owner
                 if len(province.cores) == 0:
                     province.cores.append(province.owner)
-
-    def getProvinceAtIndex(self, x, y):
-        province = self.colorsToProvinces.get((self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]))
-        return province
 
     def save(self, updatedProvinces):
         areasToProvinces = dict()
@@ -483,7 +531,7 @@ class MapInfoManager():
         f.write(province.extraText)
 
         for historyUpdate in province.provinceUpdates:
-            f.write("{} = {{{}}}".format(historyUpdate.date.strftime("%Y.%m.%d"), historyUpdate.text))
+            f.write("{} = {{{}}}".format(historyUpdate.date.strftime("%Y.%-m.%-d"), historyUpdate.text))
         f.close()
     
     def saveProvinceDefinitions(self):
@@ -563,12 +611,12 @@ def isWalkableLand(province):
 def saveFileSafely(filePath, saveFunc):
     originalFileContents = None
     if exists(filePath) and isfile(filePath):
-        originalFileContents = open(filePath, 'r', encoding="utf-8-sig", errors="surrogateescape").read()
+        originalFileContents = open(filePath, 'r', encoding="utf-8", errors="surrogateescape").read()
     try:
         saveFunc()
     except Exception as e:
         if exists(filePath):
-            open(filePath, 'w').write(originalFileContents)
+            open(filePath, 'w', encoding="utf-8", errors="surrogateescape").write(originalFileContents)
             print("Something went wrong when saving to {}. The original file contents have been kept, and the rest of the files will be saved.\nError:\n{}".format(filePath, e))
         else:
             print("Something went wrong when saving to {}. The file did not exist before, so this step will have to be skipped.\nError:\n{}".format(filePath, e))
