@@ -8,7 +8,7 @@ from os import listdir
 from random import randint
 import sys
 
-from MagellanClasses.EU4DataFileParser import *
+from FileParser.EU4DataFileParser import *
 
 from Utils.MapMode import MapMode
 
