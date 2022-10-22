@@ -470,7 +470,7 @@ class MapInfoManager():
                 else:
                     areasToProvinces[province.area] = [province.id]
             if province.terrain != "":
-                self.terrainTree["categories"].getAndCreateIfNotExists(province.terrain).getAndCreateIfNotExists("terrain_override").appendValueOverwriteDict(str(province.id))
+                self.terrainTree["categories"].getAndCreateIfNotExists(province.terrain).getAndCreateIfNotExists("terrain_override").addValue(str(province.id))
             if province.continent != "":
                 if province.continent in continentsToProvinces:
                     continentsToProvinces[province.continent].append(province.id)
@@ -483,7 +483,7 @@ class MapInfoManager():
             if province.impassable:
                 climateEntryToProvinces["impassable"].append(province.id)
             if province.tradeNode != "" and not province.tradeNode.isspace():
-                self.tradeNodeTree.getAndCreateIfNotExists(province.tradeNode).getAndCreateIfNotExists("members").appendValueOverwriteDict(str(province.id))
+                self.tradeNodeTree.getAndCreateIfNotExists(province.tradeNode).getAndCreateIfNotExists("members").addValue(str(province.id))
             if province.isSea:
                 self.defaultsTree["sea_starts"].values.append(str(province.id))
             if province.isLake:
