@@ -103,8 +103,8 @@ class MagellanEU4():
 		self.changeMapMode("province")
 		self.view.createNewDiscoveryCheckboxes(self.model.techGroups)
 		# Combobox Updates
-		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].values.keys())
-		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.values.keys())
+		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].value.keys())
+		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.value.keys())
 		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
 		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
 		self.view.tradeGoodField["values"] = list(self.model.tradeGoodsToColours.keys())
@@ -124,7 +124,7 @@ class MagellanEU4():
 	def populateTradeNodeMappings(self):
 		tradeNodeMappings = dict()
 		for tradeNode in self.model.tradeNodeTree.getChildren():
-			if "color" in tradeNode.values:
+			if "color" in tradeNode.value:
 				rgb = tuple(map((lambda n : int(n)), tradeNode["color"]))
 				tradeNodeMappings[tradeNode.name] = rgb
 		return tradeNodeMappings

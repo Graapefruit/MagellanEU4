@@ -2,6 +2,7 @@ from genericpath import isfile
 from logging import root
 import sys
 import csv
+from FileParser.EU4DataNode import EU4DataNodeType
 from Utils.Country import Country
 from Utils.Province import Province
 from Utils.ProvinceUpdate import ProvinceUpdate
@@ -13,7 +14,7 @@ from os import listdir
 from os.path import exists
 import re
 import numpy
-from MagellanClasses.EU4DataFileParser import *
+from FileParser.EU4DataFileParser import *
 
 class MapInfoManager():
     def __init__(self, path):
@@ -60,7 +61,7 @@ class MapInfoManager():
         print("Loading Defaults...")
         sys.stdout.flush()
         self.defaultsTree = parseEU4File(path)
-        self.maxProvinces = int(self.defaultsTree["max_provinces"].values)
+        self.maxProvinces = int(self.defaultsTree.getChildValue("max_provinces"))
 
     def populateTechGroups(self, path):
         if exists(path):
@@ -95,16 +96,16 @@ class MapInfoManager():
             self.idsToProvinces[int(provinceInfo[0])] = province
 
     def populateSeasAndLakes(self):
-        for provinceId in self.defaultsTree["sea_starts"].values:
+        for provinceId in self.defaultsTree.getChildValue("sea_starts"):
             provinceId = int(provinceId)
             if self.idsToProvinces[provinceId]:
                 self.idsToProvinces[provinceId].isSea = True
-        for provinceId in self.defaultsTree["lakes"].values:
+        for provinceId in self.defaultsTree.getChildValue("lakes"):
             provinceId = int(provinceId)
             if self.idsToProvinces[provinceId]:
                 self.idsToProvinces[provinceId].isLake = True
-        self.defaultsTree["sea_starts"].values = []
-        self.defaultsTree["lakes"].values = []
+        self.defaultsTree["sea_starts"].wipe()
+        self.defaultsTree["lakes"].wipe()
 
     def populateProvinceHistoryFiles(self, path):
         print("Parsing History Files...")
@@ -191,13 +192,13 @@ class MapInfoManager():
             self.terrainTree = rootNode
             for category in rootNode["categories"].getChildren():
                 if "terrain_override" in category:
-                    for provinceIdString in category["terrain_override"].values:
+                    for provinceIdString in category.getChildValue("terrain_override"):
                         provinceId = int(provinceIdString)
                         if provinceId < len(self.idsToProvinces) and self.idsToProvinces[provinceId] != None:
                             self.idsToProvinces[provinceId].terrain = category.name
-                    category["terrain_override"].values = []
+                    category["terrain_override"].wipe()
                 if "color" in category:
-                    colorString = category["color"].values
+                    colorString = category.getChildValue("color")
                     self.terrainsToColours[category.name] = (int(colorString[0]), int(colorString[1]), int(colorString[2]))
             
     def populateContinentData(self, path):
@@ -274,10 +275,10 @@ class MapInfoManager():
             self.tradeNodeTree = rootNode
             for tradeNode in rootNode.getChildren():
                 if "members" in tradeNode:
-                    for provinceId in tradeNode["members"].values:
+                    for provinceId in tradeNode.getChildValue("members"):
                         if provinceId.isdigit() and int(provinceId) < len(self.idsToProvinces) and self.idsToProvinces[int(provinceId)] != None:
                             self.idsToProvinces[int(provinceId)].tradeNode = tradeNode.name
-                    tradeNode["members"].values = []
+                    tradeNode["members"].wipe()
         else:
             print("NOTE: No trade node file found!")
             sys.stdout.flush()
@@ -305,7 +306,7 @@ class MapInfoManager():
                 for religionGroup in rootNode.getChildren():
                     # Parse through every field in a religious group. Religions are every child that is a data node and isn't a muslim religious school
                     for religionGroupData in religionGroup.getChildren():
-                        if type(religionGroupData.values) == dict and religionGroupData.name != "religious_schools":
+                        if religionGroupData.type == EU4DataNodeType.PARENT_NODE and religionGroupData.name != "religious_schools":
                             religionName = religionGroupData.name
                             religionColour = religionGroupData["color"]
                             religionColour = (int(religionColour[0]), int(religionColour[1]), int(religionColour[2]))
@@ -337,11 +338,11 @@ class MapInfoManager():
                     tagName = tag.name.lower()
                     self.tagNameDict[tagName] = Country(tagName)
                     # country file
-                    countryInternalName = tag.values.replace('\"', '')
+                    countryInternalName = tag.value
                     countryFilePath = "{}/{}/{}".format(self.path, COMMON_FOLDER, countryInternalName)
                     if exists(countryFilePath):
                         tagData = parseEU4File(countryFilePath)
-                        colorList = tagData["color"].values
+                        colorList = tagData.getChildValue("color")
                         color = (int(colorList[0]), int(colorList[1]), int(colorList[2]))
                         self.tagsToColours[tagName] = color
                         self.tagNameDict[tagName].populateFromCountryFileDataTree(tagData)
@@ -426,17 +427,17 @@ class MapInfoManager():
                 y = "{:.3f}".format(round(avaeragePos[1], 4))
                 newNode = EU4DataNode(str(province.id))
                 positionNode = EU4DataNode("position")
-                positionNode.values = [x, y, x, y, x, y, x, y, x, y, x, y, x, y]
-                newNode.values["position"] = positionNode
+                positionNode.addListValue(x, y, x, y, x, y, x, y, x, y, x, y, x, y)
+                newNode.addChildNode(positionNode)
 
                 rotationNode = EU4DataNode("rotation")
-                rotationNode.values = ["0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000"]
-                newNode.values["rotation"] = rotationNode
+                rotationNode.addListValue("0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000")
+                newNode.addChildNode(rotationNode)
 
                 heightNode = EU4DataNode("height")
-                heightNode.values = ["0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000"]
-                newNode.values["height"] = heightNode
-                root.values[str(province.id)] = newNode
+                heightNode.addListValue("0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000")
+                newNode.addChildNode(heightNode)
+                root.addChildNode(newNode)
         writeToFileFromRootNode(path, root)
         print("Done.")
         sys.stdout.flush()
@@ -470,7 +471,7 @@ class MapInfoManager():
                 else:
                     areasToProvinces[province.area] = [province.id]
             if province.terrain != "":
-                self.terrainTree["categories"].getAndCreateIfNotExists(province.terrain).getAndCreateIfNotExists("terrain_override").addValue(str(province.id))
+                self.terrainTree["categories"].getAndCreateIfNotExists(province.terrain).getAndCreateIfNotExists("terrain_override").addStringValue(str(province.id))
             if province.continent != "":
                 if province.continent in continentsToProvinces:
                     continentsToProvinces[province.continent].append(province.id)
@@ -483,11 +484,11 @@ class MapInfoManager():
             if province.impassable:
                 climateEntryToProvinces["impassable"].append(province.id)
             if province.tradeNode != "" and not province.tradeNode.isspace():
-                self.tradeNodeTree.getAndCreateIfNotExists(province.tradeNode).getAndCreateIfNotExists("members").addValue(str(province.id))
+                self.tradeNodeTree.getAndCreateIfNotExists(province.tradeNode).getAndCreateIfNotExists("members").addStringValue(str(province.id))
             if province.isSea:
-                self.defaultsTree["sea_starts"].values.append(str(province.id))
+                self.defaultsTree["sea_starts"].addStringValue(str(province.id))
             if province.isLake:
-                self.defaultsTree["lakes"].values.append(str(province.id))
+                self.defaultsTree["lakes"].addStringValue(str(province.id))
 
         
         print("Saving History Files...")

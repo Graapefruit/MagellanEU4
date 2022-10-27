@@ -58,7 +58,7 @@ class Country:
         self.color3 = writeColorIfExist(dataTree, "color3")
 
 def writeIfExist(dataNode, fieldName):
-    return (dataNode[fieldName].values if fieldName in dataNode.values else "")
+    return (dataNode.getChildValue(fieldName) if fieldName in dataNode.value else "")
 
 def writeColorIfExist(dataNode, fieldName):
-    return ((dataNode[fieldName].values[0], dataNode[fieldName].values[1], dataNode[fieldName].values[2]) if fieldName in dataNode.values else None)
+    return ((dataNode.getChildValue(fieldName)[0], dataNode.getChildValue(fieldName)[1], dataNode.getChildValue(fieldName)[2]) if fieldName in dataNode.value else None)

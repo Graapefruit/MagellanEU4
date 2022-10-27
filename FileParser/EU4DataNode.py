@@ -3,8 +3,10 @@ from enum import Enum
 class EU4DataNodeType(Enum):
     SINGLE_ENTRY = 1    # <key> = <value>
     LIST_ENTRY = 2      # <key> = { <value> <value> ... <value> }
-    PARENT_NODE = 4     # <key> = { <key>, <key>, ..., <key> }
     DUPLICATE_ENTRY = 3  # <key> = <value> ... <key> = <value>
+    PARENT_NODE = 4     # <key> = { <key>, <key>, ..., <key> }
+
+ERROR_STRING = "Error with EU4DataNode.{}: name: {}, type: {}, current value: {}, param: {}"
     
 class EU4DataNode():
     def __init__(self, name):
@@ -22,7 +24,20 @@ class EU4DataNode():
         elif self.type == EU4DataNodeType.LIST_ENTRY:
             self.value.append(value)
         else:
-            print("Error with EU4DataNode.addStringValue: type {}, value {}, param {}".format(self.type, self.value, value))
+            print(ERROR_STRING.format("addStringValue", self.name, self.type, self.value, value))
+
+    def addListValue(self, value):
+        if self.type == None:
+            self.type = EU4DataNodeType.LIST_ENTRY
+            self.value = value
+        elif self.type == EU4DataNodeType.SINGLE_ENTRY:
+            self.type = EU4DataNodeType.LIST_ENTRY
+            self.value = [self.value]
+            self.value += value
+        elif self.type == EU4DataNodeType.LIST_ENTRY:
+            self.value += value
+        else:
+            print(ERROR_STRING.format("addListValuee", self.name, self.type, self.value, value))
 
     def addChildNode(self, value):
         if self.type == None:
@@ -39,7 +54,7 @@ class EU4DataNode():
             else:
                 self.value[value.name] = value
         else:
-            print("Error with EU4DataNode.addChildNode: type {}, value {}, param {}".format(self.type, self.value, value))
+            print(ERROR_STRING.format("addChildNode", self.name, self.type, self.value, value))
 
     def toString(self):
         return self._toStringHelper(0)
@@ -48,7 +63,14 @@ class EU4DataNode():
         if self.type == EU4DataNodeType.PARENT_NODE:
             return self.value.values()
         else:
-            print("ERROR: getChildren called with unknown type: {}".format(self.type))
+            print("ERROR: getChildren called with unsupported type: {}".format(self.type))
+
+    def getChildValue(self, childName):
+        return self.value[childName].value
+
+    def wipe(self):
+        self.type = None
+        self.value = None
 
     def getAndCreateIfNotExists(self, name):
         if self.type == None:
@@ -60,17 +82,17 @@ class EU4DataNode():
         elif self.type == EU4DataNodeType.DUPLICATE_ENTRY:
             pass # We don't use this function for this case
         else:
-            print("ERROR: getAndCreateIfNotExists called with unknown type: {}".format(self.type))
+            print("ERROR: getAndCreateIfNotExists called with unsupported type: {}".format(self.type))
         return self.value[name]
 
     def __getitem__(self, name):
         return self.value[name]
 
     def __setitem__(self, name, value):
-        self.values[name] = value
+        self.value[name] = value
 
     def __contains__(self, value):
-        return value in self.values
+        return value in self.value
 
     def _toStringHelper(self, depth):
         s = ""

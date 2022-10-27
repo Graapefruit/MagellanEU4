@@ -1,6 +1,6 @@
 from enum import Enum
 from os.path import exists
-from EU4DataNode import EU4DataNode
+from FileParser.EU4DataNode import EU4DataNode
 
 # Three Cases:
 # 1. key = value
@@ -53,6 +53,7 @@ def parseDataFileTokens(tokens):
                     currentState = EU4DataFileState.POST_EQUALS 
                 elif token == '}':
                     dataNodeTree[-1].addStringValue(pastString)
+                    dataNodeTree.pop(-1)
                     currentState = EU4DataFileState.STARTING_STATE
                 elif token == '{':
                     raiseParserException(token, currentState, dataNodeTree)
@@ -129,10 +130,3 @@ def tokenizeEU4DataFile(path):
     if len(currentString) > 0:
         tokens.append(currentString)
     return tokens
-
-# Test
-if __name__ == "__main__":
-    fileName = "E:\\EU4Copy\\common\\tradenodes\\00_tradenodes.txt"
-    headNode = parseEU4File(fileName)
-    print(headNode["african_great_lakes"].name)
-    writeToFileFromRootNode("C:/Users/User/Desktop/FileParserOutput.txt", headNode)
