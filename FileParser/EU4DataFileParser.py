@@ -46,6 +46,7 @@ def parseEU4File(path):
                     dataNodeTree.append(newNode)
                     currentState = EU4DataFileState.POST_EQUALS 
                 elif token == '}':
+                    dataNodeTree[-1].makeIntoEmptyList()
                     dataNodeTree[-1].addStringValue(pastString)
                     dataNodeTree.pop(-1)
                     currentState = EU4DataFileState.STARTING_STATE

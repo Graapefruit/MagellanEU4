@@ -26,6 +26,10 @@ class EU4DataNode():
         else:
             print(ERROR_STRING.format("addStringValue", self.name, self.type, self.value, value))
 
+    def makeIntoEmptyList(self):
+        self.type = EU4DataNodeType.LIST_ENTRY
+        self.value = []
+
     def addListValue(self, value):
         if self.type == None:
             self.type = EU4DataNodeType.LIST_ENTRY
