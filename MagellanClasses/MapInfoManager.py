@@ -32,6 +32,7 @@ class MapInfoManager():
         self.terrainsToColours = dict()
         self.tagsToColours = dict()
         self.tagNameDict = dict()
+        self.rnwProvinces = set()
         self.populateDefaults("{}/{}/{}".format(path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME))
         self.idsToProvinces = [None] * self.maxProvinces # Must grab the right maxProvinces from the Defaults file first
         self.populateTechGroups("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE))
@@ -76,24 +77,28 @@ class MapInfoManager():
         sys.stdout.flush()
         provincesInfo = open(path, 'r', errors="replace")
         reader = csv.reader(provincesInfo, delimiter=';')
-        baseDiscovered = dict()
-        for techGroup in self.techGroups:
-            baseDiscovered[techGroup] = False
         for provinceInfo in reader:
             if not provinceInfo[0].isdigit():
                 continue
             rgb = (int(provinceInfo[1]), int(provinceInfo[2]), int(provinceInfo[3]))
-            # Skip RNW Provinces (some even share the same colors; yuck wtf)
             if (provinceInfo[4] == RNW_PROVINCE_KEY):
-                continue
-            if (rgb in self.colorsToProvinces):
-                print("ERROR: Two provinces share the same colour! IDs: {} {}".format(self.colorsToProvinces[rgb].id, provinceInfo[0]))
-                quit()
-            province = Province(int(provinceInfo[0]), provinceInfo[4], rgb)
-            province.discovered = baseDiscovered.copy()
-            self.provinces.append(province)
-            self.colorsToProvinces[rgb] = province
-            self.idsToProvinces[int(provinceInfo[0])] = province
+                self.rnwProvinces.add(int(provinceInfo[0]))
+            else:
+                if (rgb in self.colorsToProvinces):
+                    print("ERROR: Two provinces share the same colour! IDs: {} {}".format(self.colorsToProvinces[rgb].id, provinceInfo[0]))
+                    quit()
+                self.createNewProvince(int(provinceInfo[0]), provinceInfo[4], rgb)
+
+    def createNewProvince(self, id, name, rgb):
+        province = Province(id, name, rgb)
+        baseDiscovered = dict()
+        for techGroup in self.techGroups:
+            baseDiscovered[techGroup] = False
+        province.discovered = baseDiscovered.copy()
+        self.provinces.append(province)
+        self.colorsToProvinces[rgb] = province
+        self.idsToProvinces[id] = province
+        return province
 
     def populateSeasAndLakes(self):
         for provinceId in self.defaultsTree.getChildValue("sea_starts"):
@@ -284,11 +289,25 @@ class MapInfoManager():
             sys.stdout.flush()
 
     def populatePixels(self):
+        newProvinceIndex = 1
         print("Populating Pixels... This may take a while")
         sys.stdout.flush()
         for y in range(0, len(self.provinceMapArray)):
             for x in range(0, len(self.provinceMapArray[y])):
-                self.getProvinceAtIndex(x, y).pixels.append((x, y))
+                province = self.getProvinceAtIndex(x, y)
+                # Create new Province
+                if province == None:
+                    while newProvinceIndex < self.maxProvinces:
+                        if newProvinceIndex not in self.rnwProvinces and self.idsToProvinces[newProvinceIndex] == None:
+                            province = self.createNewProvince(newProvinceIndex, "newProvince{}".format(newProvinceIndex), self.getColourAtIndex(x, y))
+                            province.historyFile = "{} - {}.txt".format(province.id, province.name)
+                            break
+                        newProvinceIndex += 1
+                    if newProvinceIndex == self.maxProvinces:
+                        sys.exit("ERROR: Needed to create a new province for color {}, but hit the max province ID {}. Please increase your max province count!".format())
+                province.pixels.append((x, y))
+                    
+
         for province in self.idsToProvinces:
             if province:
                 province.pixels = numpy.array(province.pixels)
@@ -404,9 +423,11 @@ class MapInfoManager():
                 fileText += "\n"
         return fileText
 
+    def getColourAtIndex(self, x, y):
+        return (self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]) 
+
     def getProvinceAtIndex(self, x, y):
-        province = self.colorsToProvinces.get((self.provinceMapArray[y][x][0], self.provinceMapArray[y][x][1], self.provinceMapArray[y][x][2]))
-        return province
+        return self.colorsToProvinces.get(self.getColourAtIndex(x, y))
 
     # --- Public --- #
 

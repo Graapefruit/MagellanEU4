@@ -25,12 +25,6 @@ def writeToFileFromRootNode(filePath, rootNode):
 
 def parseEU4File(path):
     tokens = tokenizeEU4DataFile(path)
-    return parseDataFileTokens(tokens)
-
-def parseEU4Folder(path):
-    pass
-        
-def parseDataFileTokens(tokens):
     pastString = ""
     currentState = EU4DataFileState.STARTING_STATE
     dataNodeTree = [EU4DataNode("__ROOT__")]
@@ -40,7 +34,7 @@ def parseDataFileTokens(tokens):
                 if token == '}':
                     dataNodeTree.pop(-1)
                 elif token in ['=', '{']:
-                    raiseParserException(token, currentState, dataNodeTree)
+                    raiseParserException(path, token, currentState, dataNodeTree)
                 else:
                     pastString = token
                     currentState = EU4DataFileState.POST_FIRST_STRING
@@ -56,7 +50,7 @@ def parseDataFileTokens(tokens):
                     dataNodeTree.pop(-1)
                     currentState = EU4DataFileState.STARTING_STATE
                 elif token == '{':
-                    raiseParserException(token, currentState, dataNodeTree)
+                    raiseParserException(path, token, currentState, dataNodeTree)
                 else:
                     dataNodeTree[-1].addStringValue(pastString)
                     dataNodeTree[-1].addStringValue(token)
@@ -66,27 +60,30 @@ def parseDataFileTokens(tokens):
                     dataNodeTree.pop(-1)
                     currentState = EU4DataFileState.STARTING_STATE
                 elif token in ['=', '{']:
-                    raiseParserException(token, currentState, dataNodeTree)
+                    raiseParserException(path, token, currentState, dataNodeTree)
                 else:
                     dataNodeTree[-1].addStringValue(token)
             case EU4DataFileState.POST_EQUALS:
                 if token == '{':
                     currentState = EU4DataFileState.STARTING_STATE
                 elif token in ['=', '}']:
-                    raiseParserException(token, currentState, dataNodeTree)
+                    raiseParserException(path, token, currentState, dataNodeTree)
                 else:
                     dataNodeTree[-1].addStringValue(token)
                     dataNodeTree.pop(-1)
                     currentState = EU4DataFileState.STARTING_STATE
     return dataNodeTree.pop(0)
 
-def raiseParserException(token, currentState, dataNodeTree):
+def parseEU4Folder(path):
+    pass
+
+def raiseParserException(path, token, currentState, dataNodeTree):
     dataNodeTreePath = ""
     for i in range(0, len(dataNodeTree)):
         dataNodeTreePath += dataNodeTree[i].name
         if i != (len(dataNodeTree)-1):
             dataNodeTreePath += " --> "
-    raise RuntimeError("Unexpected Token {} while in state {}! Current tree location: {}".format(token, currentState, dataNodeTreePath))
+    raise RuntimeError("Error while parsing file {}: Unexpected Token '{}' while in state {}! Current tree location: {}".format(path, token, currentState, dataNodeTreePath))
 
 def tokenizeEU4DataFile(path):
     tokens = []
