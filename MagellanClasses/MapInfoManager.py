@@ -466,12 +466,16 @@ class MapInfoManager():
     def propagateOwnerData(self):
         print("Propagating Owner Data...")
         sys.stdout.flush()
+        modifiedProvinces = set()
         for province in self.idsToProvinces:
             if province != None and province.owner != "":
                 if province.controller == "":
                     province.controller = province.owner
+                    modifiedProvinces.add(province)
                 if len(province.cores) == 0:
                     province.cores.append(province.owner)
+                    modifiedProvinces.add(province)
+        return modifiedProvinces
 
     def save(self, updatedProvinces):
         areasToProvinces = dict()
@@ -533,7 +537,7 @@ class MapInfoManager():
         # None Previously
         if province.historyFile == "":
             province.historyFile = "{} - {}.txt".format(province.id, province.name)
-        f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w')
+        f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w', encoding="utf-8-sig")
         if isWalkableLand(province):
             writeFieldIfExists(f, "capital", province.capital)
             writeFieldIfExists(f, "owner", province.owner.upper())

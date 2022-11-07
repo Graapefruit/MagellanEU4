@@ -54,7 +54,7 @@ class TagInfoPanel():
         self.tagLabel.config(text=tag.tag)
         imagePath = "{}/{}/{}/{}".format(path, GFX_FOLDER, FLAGS_FOLDER, tag.tag + ".tga")
         if not exists(imagePath):
-            imagePath = Image.open("{}/Utils/NO_TAG.png".format(os.getcwd().replace('\\', '/')))
+            imagePath = "{}/Utils/NO_TAG.png".format(os.getcwd().replace('\\', '/'))
         self.tagFlagPhotoImage = ImageTk.PhotoImage(Image.open(imagePath))
         self.imageLabel.config(image=self.tagFlagPhotoImage)
         self.techGroupField.set(tag.techGroup)
