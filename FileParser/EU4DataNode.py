@@ -102,16 +102,16 @@ class EU4DataNode():
 
     def _toStringHelper(self, depth):
         s = ""
-        beginningString = "\t" * depth + self.name + " = "
+        beginningString = "\t" * depth + writeString(self.name) + " = "
         match self.type:
             case None:
                 pass
             case EU4DataNodeType.SINGLE_ENTRY:
-                s += beginningString + self.value + '\n'
+                s += beginningString + writeString(self.value) + '\n'
             case EU4DataNodeType.LIST_ENTRY:
                 s += beginningString + "{\n" + "\t" * (depth+1)
                 for value in self.value:
-                    s += value + ' '
+                    s += writeString(value) + ' '
                 s += "\n" + "\t" * depth + "}\n"
             case EU4DataNodeType.PARENT_NODE:
                 s += beginningString + "{\n"
@@ -124,3 +124,10 @@ class EU4DataNode():
             case _:
                 print("WARNING: Values field of {}, {}, is of unrecognized type {}!".format(self.name, self.value, self.type))
         return s
+
+def writeString(string):
+    if "\"" not in string:
+        for c in [' ', '#']:
+            if c in string:
+                return "\"{}\"".format(string)
+    return string
