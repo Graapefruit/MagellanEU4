@@ -5,7 +5,6 @@ import csv
 from FileParser.EU4DataNode import EU4DataNodeType
 from Utils.Country import Country
 from Utils.Province import Province
-from Utils.ProvinceUpdate import ProvinceUpdate
 from Utils.RGB import RGB
 from MagellanClasses.Constants import *
 from .Defaults import *
@@ -121,50 +120,46 @@ class MapInfoManager():
             if fileId.isdigit() and self.idsToProvinces[int(fileId)] != None:
                 province = self.idsToProvinces[int(fileId)]
                 province.historyFile = fileName
-                provinceHistoryText = self.getFileTextWithoutComments("{}/{}".format(path, fileName))
-                provinceHistoryUpdates = re.findall(PROVINCE_DATE_UPDATE_GROUPING_PATTERN, provinceHistoryText)
-                for match in provinceHistoryUpdates:
-                    year, month, day = match[0].strip().split('.')
-                    text = match[1]
-                    province.provinceUpdates.append(ProvinceUpdate(int(year), int(month), int(day), text))
-                HistoryUpdatesToRemove = re.findall(PROVINCE_DATE_UPDATE_PATTERN, provinceHistoryText)
-                for match in HistoryUpdatesToRemove:
-                    provinceHistoryText = provinceHistoryText.replace(match, '')
-                for line in provinceHistoryText.split('\n'):
-                    splitLine = line.split("=")
-                    if len(splitLine) == 2:
-                        lineKey = splitLine[0].lower().strip()
-                        lineVal = splitLine[1].lower().strip().replace("\"", "")
-                        match lineKey:
-                            case "add_core":
-                                province.cores.append(lineVal)
-                            case "owner":
-                                province.owner = lineVal
-                            case "controller":
-                                province.controller = lineVal
-                            case "culture":
-                                province.culture = lineVal
-                            case "religion":
-                                province.religion = lineVal
-                            case "hre":
-                                province.hre = True if lineVal == "yes" else False
-                            case "base_tax":
-                                if lineVal.isdigit():
-                                    province.tax = int(lineVal)
-                            case "base_production":
-                                if lineVal.isdigit():
-                                    province.production = int(lineVal)
-                            case "base_manpower":
-                                if lineVal.isdigit():
-                                    province.manpower = int(lineVal)
-                            case "trade_goods":
-                                province.tradeGood = lineVal
-                            case "discovered_by":
-                                province.discovered[lineVal] = True
-                            case "capital":
-                                province.capital = splitLine[1].strip()
-                            case _:
-                                province.extraText += line.strip() + '\n'
+                provinceTree = parseEU4File("{}/{}".format(path, fileName))
+                if provinceTree.type == EU4DataNodeType.PARENT_NODE:
+                    for field in provinceTree.getChildren():
+                        lineKey = field.name.lower().strip().replace("\"", "")
+                        if PROVINCE_DATE_UPDATE_PATTERN.match(lineKey):
+                            province.provinceUpdates.append(field)
+                        elif field.type == EU4DataNodeType.SINGLE_ENTRY:
+                            lineVal = field.value.lower().strip().replace("\"", "")
+                            match lineKey:
+                                case "add_core":
+                                    province.cores.append(lineVal)
+                                case "owner":
+                                    province.owner = lineVal
+                                case "controller":
+                                    province.controller = lineVal
+                                case "culture":
+                                    province.culture = lineVal
+                                case "religion":
+                                    province.religion = lineVal
+                                case "hre":
+                                    province.hre = True if lineVal.lower() == "yes" else False
+                                case "base_tax":
+                                    if lineVal.isdigit():
+                                        province.tax = int(lineVal)
+                                case "base_production":
+                                    if lineVal.isdigit():
+                                        province.production = int(lineVal)
+                                case "base_manpower":
+                                    if lineVal.isdigit():
+                                        province.manpower = int(lineVal)
+                                case "trade_goods":
+                                    province.tradeGood = lineVal
+                                case "discovered_by":
+                                    province.discovered[lineVal] = True
+                                case "capital":
+                                    province.capital = field.value.strip().replace("\"", "")
+                                case _:
+                                    province.extraText += field.toString()
+                        else:
+                            province.extraText += field.toString()
 
     def populateAreaData(self, path):
         print("Populating Areas...")
@@ -489,6 +484,9 @@ class MapInfoManager():
         for weather in DEFAULT_WEATHERS:
             if weather != "":
                 climateEntryToProvinces[weather] = []
+        for tradeNode in self.tradeNodeTree.getChildren():
+            if "members" in tradeNode:
+                tradeNode["members"].value = dict()
         for province in self.provinces:
             if province.area != "":
                 if province.area in areasToProvinces:
@@ -537,9 +535,9 @@ class MapInfoManager():
         # None Previously
         if province.historyFile == "":
             province.historyFile = "{} - {}.txt".format(province.id, province.name)
-        f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w', encoding="utf-8-sig")
+        f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w', encoding="ANSI")
         if isWalkableLand(province):
-            writeFieldIfExists(f, "capital", province.capital)
+            writeFieldIfExists(f, "capital", "\"{}\"".format(province.capital))
             writeFieldIfExists(f, "owner", province.owner.upper())
             writeFieldIfExists(f, "controller", province.controller.upper())
             for core in province.cores:
@@ -557,7 +555,7 @@ class MapInfoManager():
         f.write(province.extraText)
 
         for historyUpdate in province.provinceUpdates:
-            f.write("{} = {{{}}}".format(historyUpdate.date.strftime("%Y.%-m.%-d"), historyUpdate.text))
+            f.write(historyUpdate.toString())
         f.close()
     
     def saveProvinceDefinitions(self):

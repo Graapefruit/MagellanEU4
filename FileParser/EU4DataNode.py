@@ -1,4 +1,5 @@
 from enum import Enum
+import sys
 
 class EU4DataNodeType(Enum):
     SINGLE_ENTRY = 1    # <key> = <value>
@@ -67,7 +68,8 @@ class EU4DataNode():
         if self.type == EU4DataNodeType.PARENT_NODE:
             return self.value.values()
         else:
-            print("ERROR: getChildren called with unsupported type: {}".format(self.type))
+            print("ERROR: getChildren called on \"{}\" with unsupported type: {}".format(self.name, self.type))
+            sys.stdout.flush()
 
     def getChildValue(self, childName):
         return self.value[childName].value
