@@ -29,6 +29,7 @@ class MagellanEU4():
 		self.view.onFieldUpdate.callback = self.updateCurrentProvince
 		self.view.onGeneratePositions = (lambda : self.model.generatePositions())
 		self.view.onPropagateOwnerData = (lambda : (self.modifiedProvinces.update(self.model.propagateOwnerData())))
+		self.view.onClearProvinceHistoryUpdates = (lambda : (self.modifiedProvinces.update(self.model.clearAllProvinceHistoryUpdates())))
 		self.mapModes = dict()
 		self.model = None
                 

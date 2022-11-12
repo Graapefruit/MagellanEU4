@@ -470,6 +470,20 @@ class MapInfoManager():
                 if len(province.cores) == 0:
                     province.cores.append(province.owner)
                     modifiedProvinces.add(province)
+        print("Done.")
+        sys.stdout.flush()
+        return modifiedProvinces
+
+    def clearAllProvinceHistoryUpdates(self):
+        print("Clearing all Province History Updates...")
+        sys.stdout.flush()
+        modifiedProvinces = set()
+        for province in self.idsToProvinces:
+            if province != None and len(province.provinceUpdates) > 0:
+                province.provinceUpdates = []
+                modifiedProvinces.add(province)
+        print("Done.")
+        sys.stdout.flush()
         return modifiedProvinces
 
     def save(self, updatedProvinces):
