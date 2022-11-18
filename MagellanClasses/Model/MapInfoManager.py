@@ -7,7 +7,7 @@ from Utils.Country import Country
 from Utils.Province import Province
 from Utils.RGB import RGB
 from MagellanClasses.Constants import *
-from .Defaults import *
+from MagellanClasses.Defaults import *
 from PIL import Image
 from os import listdir
 from os.path import exists

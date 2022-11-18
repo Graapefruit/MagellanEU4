@@ -6,7 +6,7 @@ from tokenize import String
 from PIL import Image, ImageTk
 from ttkwidgets.autocomplete import AutocompleteCombobox
 
-from MagellanClasses.AutoComboCollection import AutoComboCollection
+from MagellanClasses.View.AutoComboCollection import AutoComboCollection
 from MagellanClasses.Constants import FLAGS_FOLDER, GFX_FOLDER
 from MagellanClasses.Defaults import DEFAULT_CULTURES, DEFAULT_GOVERNMENTS, DEFAULT_RELIGIONS, DEFAULT_TECH_GROUPS
 from Utils.Country import Country

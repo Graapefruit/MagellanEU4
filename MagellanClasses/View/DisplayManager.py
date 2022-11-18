@@ -3,10 +3,10 @@ import tkinter
 from tkinter import HORIZONTAL, RAISED, VERTICAL, filedialog
 
 from MagellanClasses.Constants import MAP_MODE_DISPLAY_TO_NAME, MAP_MODE_HOTKEYS
-from MagellanClasses.TagInfoPanel import TagInfoPanel
+from MagellanClasses.View.TagInfoPanel import TagInfoPanel
 from Utils.TkinterUtils import *
 from .ScrollableImage import ScrollableImage
-from .Defaults import *
+from MagellanClasses.Defaults import *
 from PIL import ImageTk
 
 def doNothing(*argv):
