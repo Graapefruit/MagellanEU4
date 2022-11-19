@@ -38,7 +38,7 @@ class Controller():
 		if self.currentProvince.owner.lower() in self.model.tagNameDict:
 			self.view.tagInfoPanel.setTag(self.model.tagNameDict[self.currentProvince.owner.lower()], self.model.path)
 		else:
-			self.view.tagInfoPanel.removeTag()
+			self.view.tagInfoPanel.clearTag()
 
 	def colourProvince(self, x, y):
 		if self.currentProvince:

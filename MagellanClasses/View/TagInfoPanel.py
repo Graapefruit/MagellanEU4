@@ -74,8 +74,20 @@ class TagInfoPanel():
         self.adjField.delete('0', tk.END)
         self.adjField.insert(tk.END, tag.adj)
 
-    def removeTag(self):
-        pass
+    def clearTag(self):
+        self.tagLabel.config(text="TAG")
+        self.tagFlagPhotoImage = ImageTk.PhotoImage(Image.open("{}/Utils/NO_TAG.png".format(os.getcwd().replace('\\', '/'))))
+        self.imageLabel.config(image=self.tagFlagPhotoImage)
+        self.techGroupField.set("")
+        self.governmentTypeField.set("")
+        self.governmentRankField.set("")
+        self.religionField.set("")
+        self.primaryCultureField.set("")
+        self.capitalField.delete('0', tk.END)
+        self.fixedCapitalField.delete('0', tk.END)
+        self.mercantilismField.delete('0', tk.END)
+        self.nameField.delete('0', tk.END)
+        self.adjField.delete('0', tk.END)
 
     # Label for Tag
     # Image, label for path, and button to change
