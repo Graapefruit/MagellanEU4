@@ -24,7 +24,7 @@ class Controller():
 		self.view.mapDisplay.onLeftClick = self.selectProvince
 		self.view.mapDisplay.onRightClick = self.colourProvince
 		self.view.onNewMapMode = self.changeMapMode
-		self.view.onFieldUpdate.callback = self.updateCurrentProvince
+		self.view.provinceInfoPanel.onFieldUpdate.callback = self.updateCurrentProvince
 		self.view.onGeneratePositions = (lambda : self.model.generatePositions())
 		self.view.onPropagateOwnerData = (lambda : (self.modifiedProvinces.update(self.model.propagateOwnerData())))
 		self.view.onClearProvinceHistoryUpdates = (lambda : (self.modifiedProvinces.update(self.model.clearAllProvinceHistoryUpdates())))
@@ -33,7 +33,7 @@ class Controller():
                 
 	def selectProvince(self, x, y):
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
-		self.view.updateProvinceInfo(self.currentProvince)
+		self.view.provinceInfoPanel.updateProvinceInfo(self.currentProvince)
 		self.modifiedProvinces.add(self.currentProvince)
 		if self.currentProvince.owner.lower() in self.model.tagNameDict:
 			self.view.tagInfoPanel.setTag(self.model.tagNameDict[self.currentProvince.owner.lower()], self.model.path)
@@ -75,9 +75,10 @@ class Controller():
 		self.model = MapInfoManager(path)
 		self.view.window.title(path)
 		self.mapModes = dict()
+		tradeNodes = self.populateTradeNodeMappings()
 		colorMappings = {"religion": self.model.religionsToColours, 
 			"discovery": {True: (255, 255, 255), False: (96, 96, 96)}, 
-			"tradeNode": self.populateTradeNodeMappings(),
+			"tradeNode": tradeNodes,
 			"tax": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
 			"production": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
 			"manpower": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
@@ -100,15 +101,15 @@ class Controller():
 			self.mapModes[mapModeName] = MapMode(mapModeName, self.model, colorMappings["discovery"])
 		self.mapModes["province"].image = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
 		self.changeMapMode("province")
-		self.view.createNewDiscoveryCheckboxes(self.model.techGroups)
+		self.view.updateAvailableMapModes(self.model.techGroups)
 		# Combobox Updates
-		self.view.terrainField["values"] = list(self.model.terrainTree["categories"].value.keys())
-		self.view.tradeNodeField["values"] = list(self.model.tradeNodeTree.value.keys())
-		self.view.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
-		self.view.religionField["values"] = list(self.model.religionsToColours.keys())
-		self.view.tradeGoodField["values"] = list(self.model.tradeGoodsToColours.keys())
-		self.view.ownerField["values"] = list(self.model.tagsToColours.keys())
-		self.view.controllerField["values"] = list(self.model.tagsToColours.keys())
+		self.view.provinceInfoPanel.terrainField["values"] = list(self.model.terrainTree["categories"].value.keys())
+		self.view.provinceInfoPanel.tradeNodeField["values"] = list(tradeNodes.keys())
+		self.view.provinceInfoPanel.continentField["values"] = self.getNewComboBoxEntriesFromFile("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME), CONTINENT_FILE_GROUPING_PATTERN, DEFAULT_CONTINENTS)
+		self.view.provinceInfoPanel.religionField["values"] = list(self.model.religionsToColours.keys())
+		self.view.provinceInfoPanel.tradeGoodField["values"] = list(self.model.tradeGoodsToColours.keys())
+		self.view.provinceInfoPanel.ownerField["values"] = list(self.model.tagsToColours.keys())
+		self.view.provinceInfoPanel.controllerField["values"] = list(self.model.tagsToColours.keys())
 		print("Mod Successfully Loaded")
 
 	def getDevelopmentMappings(self, max):
@@ -122,10 +123,12 @@ class Controller():
 
 	def populateTradeNodeMappings(self):
 		tradeNodeMappings = dict()
-		for tradeNode in self.model.tradeNodeTree.getChildren():
-			if "color" in tradeNode.value:
-				rgb = tuple(map((lambda n : int(n)), tradeNode["color"]))
-				tradeNodeMappings[tradeNode.name] = rgb
+		tradeNodes = self.model.tradeNodeTree.getChildren()
+		if tradeNodes != None:
+			for tradeNode in tradeNodes:
+				if "color" in tradeNode.value:
+					rgb = tuple(map((lambda n : int(n)), tradeNode["color"]))
+					tradeNodeMappings[tradeNode.name] = rgb
 		return tradeNodeMappings
 
 	def onSave(self):

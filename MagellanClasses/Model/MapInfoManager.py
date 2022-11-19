@@ -269,16 +269,20 @@ class MapInfoManager():
 
     def populateTradeNodes(self, path):
         if exists(path):
-            print("Parsing Trade Nodes...")
-            sys.stdout.flush()
-            rootNode = parseEU4File(path)
-            self.tradeNodeTree = rootNode
-            for tradeNode in rootNode.getChildren():
-                if "members" in tradeNode:
-                    for provinceId in tradeNode.getChildValue("members"):
-                        if provinceId.isdigit() and int(provinceId) < len(self.idsToProvinces) and self.idsToProvinces[int(provinceId)] != None:
-                            self.idsToProvinces[int(provinceId)].tradeNode = tradeNode.name
-                    tradeNode["members"].wipe()
+            tradeNodeTree = parseEU4File(path)
+            if self.tradeNodeTree.getChildren() != None:
+                print("Parsing Trade Nodes...")
+                sys.stdout.flush()
+                self.tradeNodeTree = tradeNodeTree
+                for tradeNode in self.tradeNodeTree.getChildren():
+                    if "members" in tradeNode:
+                        for provinceId in tradeNode.getChildValue("members"):
+                            if provinceId.isdigit() and int(provinceId) < len(self.idsToProvinces) and self.idsToProvinces[int(provinceId)] != None:
+                                self.idsToProvinces[int(provinceId)].tradeNode = tradeNode.name
+                        tradeNode["members"].wipe()
+            else:
+                print("NOTE: Empty trade node file found!")
+                sys.stdout.flush()
         else:
             print("NOTE: No trade node file found!")
             sys.stdout.flush()

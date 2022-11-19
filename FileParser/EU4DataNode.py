@@ -70,6 +70,7 @@ class EU4DataNode():
         else:
             print("ERROR: getChildren called on \"{}\" with unsupported type: {}".format(self.name, self.type))
             sys.stdout.flush()
+            return []
 
     def getChildValue(self, childName):
         return self.value[childName].value
