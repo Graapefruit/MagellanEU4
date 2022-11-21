@@ -110,6 +110,7 @@ class Controller():
 		self.view.provinceInfoPanel.tradeGoodField["values"] = list(self.model.tradeGoodsToColours.keys())
 		self.view.provinceInfoPanel.ownerField["values"] = list(self.model.tagsToColours.keys())
 		self.view.provinceInfoPanel.controllerField["values"] = list(self.model.tagsToColours.keys())
+		self.view.provinceInfoPanel.cultureField["values"] = self.model.cultures
 		print("Mod Successfully Loaded")
 
 	def getDevelopmentMappings(self, max):

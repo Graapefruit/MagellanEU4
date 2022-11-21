@@ -32,6 +32,7 @@ class MapInfoManager():
         self.tagsToColours = dict()
         self.tagNameDict = dict()
         self.rnwProvinces = set()
+        self.cultures = []
         self.populateDefaults("{}/{}/{}".format(path, MAP_FOLDER_NAME, DEFAULTS_FILE_NAME))
         self.idsToProvinces = [None] * self.maxProvinces # Must grab the right maxProvinces from the Defaults file first
         self.populateTechGroups("{}/{}/{}".format(path, COMMON_FOLDER, TECHNOLOGY_FILE))
@@ -46,6 +47,7 @@ class MapInfoManager():
         self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
         self.populateTradeNodes("{}/{}/{}/{}".format(path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE))
         self.populateReligionData("{}/{}/{}".format(path, COMMON_FOLDER, RELIGIONS_FOLDER))
+        self.populateCultureData("{}/{}/{}".format(path, COMMON_FOLDER, CULTURES_FOLDER))
         self.provinceMapImage = Image.open("{}/{}/{}".format(path, MAP_FOLDER_NAME, PROVINCE_FILE_NAME))
         self.provinceMapArray = numpy.array(self.provinceMapImage)
         self.populateTradeGoodData("{}/{}/{}".format(path, COMMON_FOLDER, TRADE_GOODS_FOLDER))
@@ -331,6 +333,21 @@ class MapInfoManager():
                             self.religionsToColours[religionName] = religionColour
         else:
             print("NOTE: Could not find religions folder path. The religions mapmode will have default colours.")
+
+    def populateCultureData(self, path):
+        if exists(path):
+            print("Populating Cultures...")
+            sys.stdout.flush()
+            for fileName in listdir(path):
+                filePath = "{}/{}".format(path, fileName)
+                rootNode = parseEU4File(filePath)
+                for cultureGroup in rootNode.getChildren():
+                    for culture in cultureGroup.getChildren():
+                        if culture.name not in ["graphical_culture", "second_graphical_culture", "male_names", "female_names", "dynasty_names"]:
+                            self.cultures.append(culture.name)
+                            print(culture.name)
+        else:
+            print("NOTE: Could not find cultures folder path. They will not be auto-populated.")
 
     def populateTradeGoodData(self, path):
         if exists(path):
