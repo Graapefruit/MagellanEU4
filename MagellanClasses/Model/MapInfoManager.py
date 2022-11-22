@@ -67,11 +67,14 @@ class MapInfoManager():
 
     def populateTechGroups(self, path):
         if exists(path):
+            print("Parsing Tech Groups... ")
+            sys.stdout.flush()
             rootNode = parseEU4File(path)
             for techGroupNode in rootNode["groups"].getChildren():
                 self.techGroups.append(techGroupNode.name)
-            else:
-                self.techGroups = DEFAULT_TECH_GROUPS[:]
+        else:
+            self.techGroups = DEFAULT_TECH_GROUPS[:]
+            print("{} could not be found. Will use base game tech groups instead")
 
     def populateFromDefinitionFile(self, path):
         print("Parsing Definition File... ")
@@ -345,7 +348,6 @@ class MapInfoManager():
                     for culture in cultureGroup.getChildren():
                         if culture.name not in ["graphical_culture", "second_graphical_culture", "male_names", "female_names", "dynasty_names"]:
                             self.cultures.append(culture.name)
-                            print(culture.name)
         else:
             print("NOTE: Could not find cultures folder path. They will not be auto-populated.")
 
