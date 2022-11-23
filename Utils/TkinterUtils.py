@@ -1,5 +1,30 @@
 import tkinter as tk
 from ttkwidgets.autocomplete import AutocompleteCombobox
+from abc import ABC, abstractmethod
+
+class MagellanField(ABC):
+    @abstractmethod
+    def setField(self, newValue):
+        pass
+    def enableTrace(self):
+        self.stringVar.trace_remove('write', self.stringVar.trace_info()[0][1])
+    def disableTrace(self):
+        self.stringVar.trace_add("write", self.traceMethod)
+
+class MagellanEntryField(MagellanField):
+    def __init__(self, fieldString, parentPanel, sanityCheck, callbackReference):
+        self.mapModeString = getMapModeString(fieldString)
+        self.panel = tk.PanedWindow(parentPanel)
+        self.panel.pack(side=tk.LEFT)
+        self.stringVar, self.traceMethod, self.label = createStringVarAndLabel(fieldString, self.panel, sanityCheck, callbackReference)
+        self.entry = tk.Entry(self.panel, textvariable=self.stringVar, width=12, justify="center")
+        self.entry.pack(side=tk.TOP)
+
+    def setField(self, province):
+        self.enableTrace()
+        self.entry.delete('0', tk.END)
+        self.entry.insert(tk.END, province.getFieldFromString(self.mapModeString))
+        self.disableTrace()
 
 def createNewEntry(fieldString, panel, sanityCheck, callbackReference):
     stringVar, traceMethod, label = createStringVarAndLabel(fieldString, panel, sanityCheck, callbackReference)

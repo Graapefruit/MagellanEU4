@@ -23,6 +23,7 @@ class ProvinceInfoPanel:
         self.rootPanel = root
         self.stringVars = []
         self.traceMethods = []
+        self.magellanFields = []
         self.onFieldUpdate = CallbackWrapper(doNothing)
         self.panel = tk.PanedWindow(self.rootPanel, bd=4, relief=tk.RAISED, orient=tk.VERTICAL, width=300)
         self.panel.pack(fill=tk.Y)
@@ -42,10 +43,6 @@ class ProvinceInfoPanel:
         self.provinceIdSv.set("No Province Selected")
         self.provinceNameSv = tk.StringVar()
         self.provinceNameSv.set("No Province Selected")
-        self.provinceLocalizationNameSv = tk.StringVar()
-        self.provinceLocalizationNameSv.set("No Province Selected")
-        self.provinceLocalizationAdjectiveSv = tk.StringVar()
-        self.provinceLocalizationAdjectiveSv.set("No Province Selected")
         self.provinceColorSv = tk.StringVar()
         self.provinceColorSv.set("Red: -- Green: -- Blue: --")
         self.provinceIdLabel = tk.Label(self.provinceHeader, textvariable=self.provinceIdSv)
@@ -54,10 +51,8 @@ class ProvinceInfoPanel:
         self.provinceNameLabel.pack(side=tk.TOP)
         self.provinceLocalizationPanel = tk.PanedWindow(self.provinceHeader)
         self.provinceLocalizationPanel.pack(side=tk.TOP)
-        self.provinceLocalizationName = tk.Entry(self.provinceLocalizationPanel, width=14, justify="center", textvariable=self.provinceLocalizationNameSv)
-        self.provinceLocalizationName.pack(side=tk.LEFT)
-        self.provinceLocalizationAdjective = tk.Entry(self.provinceLocalizationPanel, width=14, justify="center", textvariable=self.provinceLocalizationAdjectiveSv)
-        self.provinceLocalizationAdjective.pack(side=tk.LEFT)
+        self.magellanFields.append(MagellanEntryField("Localization Name", self.provinceLocalizationPanel, noSanityCheck, self.onFieldUpdate))
+        self.magellanFields.append(MagellanEntryField("Localization Adjective", self.provinceLocalizationPanel, noSanityCheck, self.onFieldUpdate))
         self.provinceColorLabel = tk.Label(self.provinceHeader, textvariable=self.provinceColorSv)
         self.provinceColorLabel.pack(side=tk.TOP)
 
@@ -154,11 +149,11 @@ class ProvinceInfoPanel:
         self.traceMethods += [ownerTrace, controllerTrace, coreTrace, terrainTrace, climateTrace, weatherTrace, tradeNodeTrace, impassableTrace, isSeaTrace]
 
     def updateProvinceInfo(self, province):
+        for magellanField in self.magellanFields:
+            magellanField.setField(province)
         self.disableTraceMethods()
         self.provinceIdSv.set("Id: {}".format(province.id))
         self.provinceNameSv.set("{}".format(province.name))
-        self.provinceLocalizationNameSv.set(province.localizationName)
-        self.provinceLocalizationAdjectiveSv.set(province.localizationAdjective)
         self.provinceColorSv.set("Red: {} Green: {} Blue: {}".format(province.color[0], province.color[1], province.color[2]))
         self.capitalField.delete('0', tk.END)
         self.capitalField.insert(tk.END, province.capital)
