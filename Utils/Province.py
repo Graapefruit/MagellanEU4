@@ -39,6 +39,8 @@ class Province:
 
 	def getFieldFromString(self, field):
 		match field:
+			case "name":
+				return self.name
 			case "localizationName":
 				return self.localizationName
 			case "localizationAdjective":
@@ -94,6 +96,8 @@ class Province:
 
 	def setFieldFromString(self, field, value):
 		match field:
+			case "name":
+				self.name = value
 			case "localizationName":
 				self.localizationName = value
 			case "localizationAdjective":

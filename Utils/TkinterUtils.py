@@ -12,12 +12,12 @@ class MagellanField(ABC):
         self.stringVar.trace_add("write", self.traceMethod)
 
 class MagellanEntryField(MagellanField):
-    def __init__(self, fieldString, parentPanel, sanityCheck, callbackReference):
+    def __init__(self, fieldString, parentPanel, sanityCheck, callbackReference, packSide=tk.TOP):
         self.mapModeString = getMapModeString(fieldString)
         self.panel = tk.PanedWindow(parentPanel)
-        self.panel.pack(side=tk.LEFT)
+        self.panel.pack(side=packSide)
         self.stringVar, self.traceMethod, self.label = createStringVarAndLabel(fieldString, self.panel, sanityCheck, callbackReference)
-        self.entry = tk.Entry(self.panel, textvariable=self.stringVar, width=12, justify="center")
+        self.entry = tk.Entry(self.panel, textvariable=self.stringVar, width=16, justify="center")
         self.entry.pack(side=tk.TOP)
 
     def setField(self, province):
