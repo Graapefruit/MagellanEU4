@@ -18,7 +18,7 @@ class Controller():
 		self.currentMapMode = None
 		self.currentProvince = None
 		self.modifiedProvinces = set()
-		self.view = DisplayManager()
+		self.view = DisplayManager(1350, 1200)
 		self.view.onMenuFileOpen = self.onNewModOpen
 		self.view.onMenuFileSave = self.onSave
 		self.view.mapDisplay.onLeftClick = self.selectProvince
@@ -28,6 +28,7 @@ class Controller():
 		self.view.onGeneratePositions = (lambda : self.model.generatePositions())
 		self.view.onPropagateOwnerData = (lambda : (self.modifiedProvinces.update(self.model.propagateOwnerData())))
 		self.view.onClearProvinceHistoryUpdates = (lambda : (self.modifiedProvinces.update(self.model.clearAllProvinceHistoryUpdates())))
+		self.view.onUpdateProvinceHistoryFileNames = (lambda : self.model.updateProvinceHistoryFileNames())
 		self.mapModes = dict()
 		self.model = None
                 
@@ -71,6 +72,7 @@ class Controller():
 	def onNewModOpen(self, path):
 		if not exists(path):
 			print("ERROR: \"{}\" is not a valid directory!".format(path))
+			sys.stdout.flush()
 			return
 		self.model = MapInfoManager(path)
 		self.view.window.title(path)
@@ -112,6 +114,7 @@ class Controller():
 		self.view.provinceInfoPanel.controllerField["values"] = list(self.model.tagsToColours.keys())
 		self.view.provinceInfoPanel.cultureField["values"] = self.model.cultures
 		print("Mod Successfully Loaded")
+		sys.stdout.flush()
 
 	def getDevelopmentMappings(self, max):
 		devToColours = dict()

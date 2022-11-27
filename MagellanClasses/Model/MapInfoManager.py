@@ -9,7 +9,7 @@ from Utils.RGB import RGB
 from MagellanClasses.Constants import *
 from MagellanClasses.Defaults import *
 from PIL import Image
-from os import listdir
+from os import listdir, remove
 from os.path import exists
 import re
 import numpy
@@ -508,6 +508,21 @@ class MapInfoManager():
         print("Done.")
         sys.stdout.flush()
         return modifiedProvinces
+
+    def updateProvinceHistoryFileNames(self):
+        print("Updaing Province History File names")
+        sys.stdout.flush()
+        for province in self.provinces:
+            newFileName = "{} - {}.txt".format(province.id, province.name)
+            newFilePath = "{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, newFileName)
+            if not exists(newFilePath):
+                oldFilePath = "{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile)
+                fileContents = open(oldFilePath, 'r').read()
+                open(newFilePath, "w+").write(fileContents)
+                remove(oldFilePath)
+                province.historyFile = newFileName
+        print("Done")
+        sys.stdout.flush()
 
     def save(self, updatedProvinces):
         areasToProvinces = dict()

@@ -7,6 +7,7 @@ from MagellanClasses.View.ProvinceInfoPanel import ProvinceInfoPanel
 from MagellanClasses.View.TagInfoPanel import TagInfoPanel
 from .ScrollableImage import ScrollableImage
 from PIL import ImageTk
+from sys import argv
 
 def doNothing(*argv):
     pass
@@ -15,9 +16,14 @@ def printCallback(*argv):
     print("hi")
 
 class DisplayManager():
-    def __init__(self):
+    def __init__(self, x=1350, y=986):
+        x = 1350
+        y = 986
+        if len(argv) >= 3:
+            x = int(argv[1])
+            y = int(argv[2])
         self.window = tkinter.Tk()
-        self.window.geometry("1350x776")
+        self.window.geometry("{}x{}".format(x, y))
         self.window.title("Magellan EU4")
         self.window.protocol('WM_DELETE_WINDOW', self.onClose)
 
@@ -28,12 +34,13 @@ class DisplayManager():
         self.onGeneratePositions = doNothing
         self.onPropagateOwnerData = doNothing
         self.onClearProvinceHistoryUpdates = doNothing
+        self.onUpdateProvinceHistoryFileNames = doNothing
 
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.pack(fill=tkinter.BOTH)
         self.createMenubar()
         self.provinceInfoPanel = ProvinceInfoPanel(self.rootPanel)
-        self.createScrollableImage()
+        self.createScrollableImage(x, y)
         self.tagInfoPanel = TagInfoPanel(self.rootPanel)
 
         self.mapModes = []
@@ -62,14 +69,16 @@ class DisplayManager():
         self.otherToolsMenu = tkinter.Menu(menubar, tearoff=0)
         self.otherToolsMenu.add_command(label="Generate Positions", command=(lambda : self.generatePositions()))
         self.otherToolsMenu.add_command(label="Propagate Owner Data", command=(lambda : self.propagateOwnerData()))
-        self.otherToolsMenu.add_command(label="Clear Province History Updates", command=(lambda : self.propagateOwnerData()))
-        self.otherToolsMenu.add_command(label="Modify Adjacencies", command=(lambda : tkinter.messagmessageboxe.showinfo("Soon!", "This current feature is a WIP. Stay tuned!")))
-        self.otherToolsMenu.add_command(label="Modify Trade Node Flow", command=(lambda : tkinter.messagebox.showinfo("Soon!", "This current feature is a WIP. Stay tuned!")))
+        self.otherToolsMenu.add_command(label="Clear Province History Date-Updates", command=(lambda : self.clearProvinceHistoryUpdates()))
+        self.createToolMenuCommand(self.otherToolsMenu, "Update Province History File Names", "This tool will iterate through all provinces, and rename their corresponding province history file to match the \"<id> - <name>\" convention.\nNote that this might cause issues for non-total conversion mods.", (lambda : self.onUpdateProvinceHistoryFileNames()))
         menubar.add_cascade(label="Other Tools", menu=self.otherToolsMenu)
         self.window.config(menu=menubar)
 
-    def createScrollableImage(self):
-        self.mapDisplay = ScrollableImage(self.rootPanel, width=750, height=1024)
+    def createToolMenuCommand(self, menu, name, text, function):
+        menu.add_command(label=name, command=(lambda : (function() if tkinter.messagebox.askyesno(name, text) else None)))
+
+    def createScrollableImage(self, x, y):
+        self.mapDisplay = ScrollableImage(self.rootPanel, width=x-400, height=y)
         self.mapDisplay.pack()
         self.rootPanel.add(self.mapDisplay)
 
@@ -83,7 +92,7 @@ class DisplayManager():
         if result:
             self.onPropagateOwnerData()
 
-    def propagateOwnerData(self):
+    def clearProvinceHistoryUpdates(self):
         result = tkinter.messagebox.askyesno("Propagate Owner Data", "This tool will iterate through every province and remove EVERY province history update (ex 1444.12.22 = {{...}}).")
         if result:
             self.onClearProvinceHistoryUpdates()
