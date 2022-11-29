@@ -44,7 +44,7 @@ class MapInfoManager():
         self.populateContinentData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CONTINENTS_FILE_NAME))
         self.populateClimateData("{}/{}/{}".format(path, MAP_FOLDER_NAME, CLIMATE_FILE_NAME))
         self.populateNameData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
-        self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_NAME_FILE))
+        self.populateAdjectiveData("{}/{}/{}".format(path, LOCALIZATION_FOLDER_NAME, LOCALIZATION_ADJECTIVE_FILE))
         self.populateTradeNodes("{}/{}/{}/{}".format(path, COMMON_FOLDER, TRADE_NODE_FOLDER, TRADE_NODES_FILE))
         self.populateReligionData("{}/{}/{}".format(path, COMMON_FOLDER, RELIGIONS_FOLDER))
         self.populateCultureData("{}/{}/{}".format(path, COMMON_FOLDER, CULTURES_FOLDER))
@@ -626,7 +626,8 @@ class MapInfoManager():
         f.write("l_english:\n")
         for province in self.idsToProvinces:
             if province != None:
-                f.write(" {}{}:0 \"{}\"\n".format(localizationPrefix, province.id, province.localizationName))
+                field = (province.localizationName if localizationType == "Name" else province.localizationAdjective)
+                f.write(" _{}{}:0 \"{}\"\n".format(localizationPrefix, province.id, field))
 
     def saveAreaFile(self, areasToProvinces):
         print("Saving Area File...")

@@ -53,8 +53,8 @@ RNW_PROVINCE_KEY = "RNW"
 
 # Regex
 
-LOCALIZATION_NAME_PATTERN = re.compile(" _PROV([0-9]+):[0-9]\s*\"(.*)?\"", re.IGNORECASE)
-LOCALIZATION_ADJECTIVE_PATTERN = re.compile(" _ADJ([0-9]+):[0-9]\s*\"(.*)?\"", re.IGNORECASE)
+LOCALIZATION_NAME_PATTERN = re.compile("PROV([0-9]+):[0-9]\s*\"(.*)?\"", re.IGNORECASE)
+LOCALIZATION_ADJECTIVE_PATTERN = re.compile("ADJ([0-9]+):[0-9]\s*\"(.*)?\"", re.IGNORECASE)
 COUNTRY_LOCALIZATION_PATTERN = re.compile(" ([a-z]{0,3})(_ADJ)?:[0-9]*\s*=\s*\"([a-z]*)\"", re.IGNORECASE)
 GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{([a-z0-9_\s]*)}", re.IGNORECASE)
 AREA_GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{\s*(color\s*=\s*{\s*[0-9]{1,3}\s*[0-9]{1,3}\s*[0-9]{1,3}\s*})?([a-z0-9_\s]*)}", re.IGNORECASE)
