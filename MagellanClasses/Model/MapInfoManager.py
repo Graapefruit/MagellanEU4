@@ -284,7 +284,9 @@ class MapInfoManager():
                         for provinceId in tradeNode.getChildValue("members"):
                             if provinceId.isdigit() and int(provinceId) < len(self.idsToProvinces) and self.idsToProvinces[int(provinceId)] != None:
                                 self.idsToProvinces[int(provinceId)].tradeNode = tradeNode.name
-                        tradeNode["members"].wipe()
+                    else:
+                        tradeNode.addChildNode(EU4DataNode("members"))
+                    tradeNode["members"].makeIntoEmptyList()
             else:
                 print("NOTE: Empty trade node file found!")
                 sys.stdout.flush()
@@ -536,9 +538,6 @@ class MapInfoManager():
         for weather in DEFAULT_WEATHERS:
             if weather != "":
                 climateEntryToProvinces[weather] = []
-        for tradeNode in self.tradeNodeTree.getChildren():
-            if "members" in tradeNode:
-                tradeNode["members"].value = dict()
         for province in self.provinces:
             if province.area != "":
                 if province.area in areasToProvinces:

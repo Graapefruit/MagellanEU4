@@ -90,6 +90,7 @@ class EU4DataNode():
             pass # We don't use this function for this case
         else:
             print("ERROR: getAndCreateIfNotExists called with unsupported type: {}".format(self.type))
+            sys.stdout.flush()
         return self.value[name]
 
     def __getitem__(self, name):
