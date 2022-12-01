@@ -4,7 +4,6 @@ from tkinter import filedialog
 from MagellanClasses.Constants import MAP_MODE_DISPLAY_TO_NAME, MAP_MODE_HOTKEYS
 from MagellanClasses.Defaults import DEFAULT_TECH_GROUPS
 from MagellanClasses.View.ProvinceInfoPanel import ProvinceInfoPanel
-from MagellanClasses.View.TagInfoPanel import TagInfoPanel
 from .ScrollableImage import ScrollableImage
 from PIL import ImageTk
 from sys import argv
@@ -41,7 +40,6 @@ class DisplayManager():
         self.createMenubar()
         self.provinceInfoPanel = ProvinceInfoPanel(self.rootPanel)
         self.createScrollableImage(x, y)
-        self.tagInfoPanel = TagInfoPanel(self.rootPanel)
 
         self.mapModes = []
 
@@ -111,10 +109,7 @@ class DisplayManager():
 
     def updateMapMode(self, mapMode):
         self.mapDisplay.updateImage(ImageTk.PhotoImage(mapMode.image))
-
-    def updateProvinceSelected(self, province, tag):
-        pass
-
+        
     def updateAvailableMapModes(self, newMapModes):
         for mapMode in self.mapModes:
             self.mapModeMenu.delete(mapMode)

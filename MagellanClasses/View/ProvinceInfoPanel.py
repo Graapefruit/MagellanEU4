@@ -1,7 +1,9 @@
 import tkinter as tk
-
+from PIL import Image, ImageTk
+from MagellanClasses.Constants import NO_FLAG_PATH
 from MagellanClasses.Defaults import *
 from Utils.TkinterUtils import *
+from os.path import exists
 
 def doNothing(*argv):
     pass
@@ -24,6 +26,7 @@ class ProvinceInfoPanel:
         self.stringVars = []
         self.traceMethods = []
         self.magellanFields = []
+        self.flagImagePath = "/"
         self.onFieldUpdate = CallbackWrapper(doNothing)
         self.panel = tk.PanedWindow(self.rootPanel, bd=4, relief=tk.RAISED, orient=tk.VERTICAL, width=300)
         self.panel.pack(fill=tk.Y)
@@ -52,6 +55,9 @@ class ProvinceInfoPanel:
         self.magellanFields.append(MagellanEntryField("Localization Adjective", self.provinceLocalizationPanel, noSanityCheck, self.onFieldUpdate, packSide=tk.LEFT))
         self.provinceColorLabel = tk.Label(self.provinceHeader, textvariable=self.provinceColorSv)
         self.provinceColorLabel.pack(side=tk.TOP)
+        self.tagFlagPhotoImage = ImageTk.PhotoImage(Image.open(NO_FLAG_PATH))
+        self.imageLabel = tk.Label(self.provinceHeader, image=self.tagFlagPhotoImage)
+        self.imageLabel.pack(side=tk.TOP)
 
     def createProvinceBodyPanel(self):
         self.provinceBody = tk.PanedWindow(self.panel, orient=tk.HORIZONTAL)
@@ -149,6 +155,11 @@ class ProvinceInfoPanel:
         for magellanField in self.magellanFields:
             magellanField.setField(province)
         self.disableTraceMethods()
+        ownerFlagPath = "{}/{}.tga".format(self.flagImagePath, province.owner)
+        if not exists(ownerFlagPath):
+            ownerFlagPath = NO_FLAG_PATH
+        self.tagFlagPhotoImage = ImageTk.PhotoImage(Image.open(ownerFlagPath))
+        self.imageLabel.config(image=self.tagFlagPhotoImage)
         self.provinceIdSv.set("Id: {}".format(province.id))
         self.provinceColorSv.set("Red: {} Green: {} Blue: {}".format(province.color[0], province.color[1], province.color[2]))
         self.capitalField.delete('0', tk.END)

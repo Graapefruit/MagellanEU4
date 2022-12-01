@@ -1,4 +1,5 @@
 import re
+from os import getcwd
 
 MAP_FOLDER_NAME = "map"
 PROVINCES_HISTORY_PATH = "history/provinces"
@@ -33,6 +34,7 @@ TRADE_NODES_FILE = "00_tradenodes.txt"
 DEFAULTS_FILE_NAME = "default.map"
 TAGS_FOLDER = "country_tags"
 COUNTRIES_LOCALIZATION_FILE = "countries_l_english.yml"
+NO_FLAG_PATH = "{}/Utils/NO_TAG.png".format(getcwd())
 MAP_MODE_DISPLAY_TO_NAME = {"Provinces": "province", "Religions": "religion", "Cultures": "culture", 
     "Tax": "tax", "Production": "production", "Manpower": "manpower", 
     "Development": "development", "Trade Goods": "tradeGood", "Areas": "area", 

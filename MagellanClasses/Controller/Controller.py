@@ -6,6 +6,7 @@ from PIL import Image
 from os.path import exists
 from os import listdir
 import sys
+import re
 
 from FileParser.EU4DataFileParser import *
 
@@ -18,7 +19,13 @@ class Controller():
 		self.currentMapMode = None
 		self.currentProvince = None
 		self.modifiedProvinces = set()
-		self.view = DisplayManager(1350, 1200)
+		x = 1350
+		y = 1200
+		if len(sys.argv) >= 3:
+			x = sys.argv[1]
+			y = sys.argv[2]
+		sys.stdout.flush()
+		self.view = DisplayManager(x, y)
 		self.view.onMenuFileOpen = self.onNewModOpen
 		self.view.onMenuFileSave = self.onSave
 		self.view.mapDisplay.onLeftClick = self.selectProvince
@@ -36,10 +43,6 @@ class Controller():
 		self.currentProvince = self.model.getProvinceAtIndex(x, y)
 		self.view.provinceInfoPanel.updateProvinceInfo(self.currentProvince)
 		self.modifiedProvinces.add(self.currentProvince)
-		if self.currentProvince.owner.lower() in self.model.tagNameDict:
-			self.view.tagInfoPanel.setTag(self.model.tagNameDict[self.currentProvince.owner.lower()], self.model.path)
-		else:
-			self.view.tagInfoPanel.clearTag()
 
 	def colourProvince(self, x, y):
 		if self.currentProvince:
@@ -74,8 +77,10 @@ class Controller():
 			print("ERROR: \"{}\" is not a valid directory!".format(path))
 			sys.stdout.flush()
 			return
+		self.path = path.replace('\\', '/')
 		self.model = MapInfoManager(path)
 		self.view.window.title(path)
+		self.view.provinceInfoPanel.flagImagePath = "{}/{}/{}".format(path, GFX_FOLDER, FLAGS_FOLDER)
 		self.mapModes = dict()
 		tradeNodes = self.populateTradeNodeMappings()
 		colorMappings = {"religion": self.model.religionsToColours, 

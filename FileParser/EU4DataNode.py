@@ -64,6 +64,9 @@ class EU4DataNode():
     def toString(self):
         return self._toStringHelper(0)
 
+    def hasChild(self, childName):
+        return childName in self.value
+
     def getChildren(self):
         if self.type == EU4DataNodeType.PARENT_NODE:
             return self.value.values()

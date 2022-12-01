@@ -280,7 +280,7 @@ class MapInfoManager():
                 sys.stdout.flush()
                 self.tradeNodeTree = tradeNodeTree
                 for tradeNode in self.tradeNodeTree.getChildren():
-                    if "members" in tradeNode:
+                    if tradeNode.hasChild("members"):
                         for provinceId in tradeNode.getChildValue("members"):
                             if provinceId.isdigit() and int(provinceId) < len(self.idsToProvinces) and self.idsToProvinces[int(provinceId)] != None:
                                 self.idsToProvinces[int(provinceId)].tradeNode = tradeNode.name
@@ -626,7 +626,7 @@ class MapInfoManager():
         for province in self.idsToProvinces:
             if province != None:
                 field = (province.localizationName if localizationType == "Name" else province.localizationAdjective)
-                f.write(" _{}{}:0 \"{}\"\n".format(localizationPrefix, province.id, field))
+                f.write(" {}{}:0 \"{}\"\n".format(localizationPrefix, province.id, field))
 
     def saveAreaFile(self, areasToProvinces):
         print("Saving Area File...")
