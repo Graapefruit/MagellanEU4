@@ -74,7 +74,7 @@ class MapInfoManager():
                 self.techGroups.append(techGroupNode.name)
         else:
             self.techGroups = DEFAULT_TECH_GROUPS[:]
-            print("{} could not be found. Will use base game tech groups instead")
+            print("{} could not be found. Will use base game tech groups instead".format(path))
 
     def populateFromDefinitionFile(self, path):
         print("Parsing Definition File... ")
@@ -286,7 +286,6 @@ class MapInfoManager():
                                 self.idsToProvinces[int(provinceId)].tradeNode = tradeNode.name
                     else:
                         tradeNode.addChildNode(EU4DataNode("members"))
-                    tradeNode["members"].makeIntoEmptyList()
             else:
                 print("NOTE: Empty trade node file found!")
                 sys.stdout.flush()
@@ -532,6 +531,8 @@ class MapInfoManager():
         climateEntryToProvinces = dict()
         climateEntryToProvinces["impassable"] = []
 
+        for tradeNode in self.tradeNodeTree.getChildren():
+            tradeNode["members"].makeIntoEmptyList()
         for climate in DEFAULT_CLIMATES:
             if climate != "":
                 climateEntryToProvinces[climate] = []

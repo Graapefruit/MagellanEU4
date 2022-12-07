@@ -136,7 +136,11 @@ class Province:
 			case "controller":
 				self.controller = value
 			case "cores":
-				self.cores = list(map(lambda n: n.strip(), value.split(','))) if len(value.strip()) > 0 else []
+				self.cores = []
+				for core in value.split(','):
+					core = core.strip()
+					if len(core) != 3:
+						self.cores.append(core)
 			case "terrain":
 				self.terrain = value
 			case "climate":

@@ -16,7 +16,7 @@ def tagSanityCheck(tag):
 
 def coreSanityCheck(tags):
     for core in tags.split(','):
-        if len(core.strip()) != 3:
+        if len(core.strip()) not in [0, 3]:
             return False
     return True
 
