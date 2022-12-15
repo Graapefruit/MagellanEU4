@@ -86,7 +86,7 @@ class DisplayManager():
             self.onGeneratePositions()
 
     def propagateOwnerData(self):
-        result = tkinter.messagebox.askyesno("Propagate Owner Data", "This tool will iterate through every province. If it has a designated owner, it will set the controller to that owner if not already set, and add a core for the owner if no provinces have no current cores.")
+        result = tkinter.messagebox.askyesno("Propagate Owner Data", "This tool will iterate through every province. If it has a designated owner, it will set the controller to that owner if not already set, and add a core for the owner if no provinces have no current cores. If it has no designated owner, it will remove all cores and the controller.")
         if result:
             self.onPropagateOwnerData()
 

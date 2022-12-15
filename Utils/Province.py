@@ -139,7 +139,7 @@ class Province:
 				self.cores = []
 				for core in value.split(','):
 					core = core.strip()
-					if len(core) != 3:
+					if len(core) == 3:
 						self.cores.append(core)
 			case "terrain":
 				self.terrain = value

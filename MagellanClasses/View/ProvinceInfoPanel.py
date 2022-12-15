@@ -29,6 +29,8 @@ class ProvinceInfoPanel:
         self.flagImagePath = "/"
         self.onFieldUpdate = CallbackWrapper(doNothing)
         self.panel = tk.PanedWindow(self.rootPanel, bd=4, relief=tk.RAISED, orient=tk.VERTICAL, width=300)
+        self.scrollbar = tk.Scrollbar(self.panel)
+        self.scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
         self.panel.pack(fill=tk.Y)
         self.panel.pack_propagate(False)
         self.createProvinceBodyHeader()
@@ -38,6 +40,7 @@ class ProvinceInfoPanel:
         self.panel.add(self.provinceBody)
         self.panel.add(self.provinceFooter)
         self.rootPanel.add(self.panel)
+        self.scrollbar.config(command = self.panel)
 
     def createProvinceBodyHeader(self):
         self.provinceHeader = tk.PanedWindow(self.panel, bd=2)
