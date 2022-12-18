@@ -1,5 +1,6 @@
 from enum import Enum
 from os.path import exists
+from os import listdir
 from FileParser.EU4DataNode import EU4DataNode
 
 # Three Cases:
@@ -76,7 +77,12 @@ def parseEU4File(path):
     return dataNodeTree.pop(0)
 
 def parseEU4Folder(path):
-    pass
+    trees = []
+    if exists(path):
+        for fileName in listdir(path):
+            fileName = "{}/{}".format(path, fileName)
+            trees.append(parseEU4File(fileName))
+    return trees
 
 def raiseParserException(path, token, currentState, dataNodeTree):
     dataNodeTreePath = ""

@@ -533,6 +533,17 @@ class MapInfoManager():
         print("Done")
         sys.stdout.flush()
 
+    def createCountryFiles(self):
+        print("Creating Country Files")
+        sys.stdout.flush()
+        countryTagsFolder = "{}/{}/{}".format(self.path, COMMON_FOLDER, TAGS_FOLDER)
+        for countryTagFile in parseEU4Folder(countryTagsFolder):
+            for tagDefinition in countryTagFile.getChildren():
+                print("{} = {}".format(tagDefinition.name, tagDefinition.value))
+
+        print("Done")
+        sys.stdout.flush()
+
     def save(self, updatedProvinces):
         areasToProvinces = dict()
         continentsToProvinces = dict()
