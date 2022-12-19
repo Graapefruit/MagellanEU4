@@ -9,11 +9,12 @@ from Utils.RGB import RGB
 from MagellanClasses.Constants import *
 from MagellanClasses.Defaults import *
 from PIL import Image
-from os import listdir, remove
+from os import listdir, remove, mkdir
 from os.path import exists
 import re
 import numpy
 from FileParser.EU4DataFileParser import *
+from random import randint
 
 class MapInfoManager():
     def __init__(self, path):
@@ -386,35 +387,6 @@ class MapInfoManager():
                         self.tagNameDict[tagName].populateFromCountryFileDataTree(tagData)
                     else:
                         print("Tag {} defined, but no corresponding country file found. Skipping...".format(countryInternalName))
-                # history file
-                historyFilesPath = "{}/{}".format(self.path, COUNTRIES_HISTORY_PATH)
-                if exists(historyFilesPath):
-                    for historyFile in listdir(historyFilesPath):
-                        tag = historyFile.split('-')[0].strip().lower()
-                        if tag in self.tagNameDict:
-                            tagData = parseEU4File("{}/{}".format(historyFilesPath, historyFile))
-                            self.tagNameDict[tag].populateFromHistoryFileDataTree(tagData)
-                        else:
-                            print("Warning: found history file with no existing tag: \"{}\". Will be skipped".format(historyFile))
-                else:
-                    print("Could not find the history file path for countries. Skipping...")
-                # localization
-                countryLocalizationPath = "{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, COUNTRIES_LOCALIZATION_FILE)
-                if exists(countryLocalizationPath):
-                    for match in re.findall(COUNTRY_LOCALIZATION_PATTERN, open(countryLocalizationPath, 'r').read()):
-                        tag = match[0].strip().lower()
-                        if tag in self.tagNameDict:
-                            country = self.tagNameDict[tag]
-                            localizationString = match[2]
-                            print(localizationString)
-                            if match[1] == "_ADJ":
-                                country.adj = localizationString
-                            else:
-                                country.name = localizationString
-                        else:
-                            print("Warning: line found in localization with no corresponding tag: {}".format(match[0]))
-                else:
-                    print("Could not find the localization file for the countries. Skipping...")
                 # colours
                 countryColoursPath = "{}/{}".format(self.path, COUNTRY_COLORS_FOLDER)
                 if exists(countryColoursPath):
@@ -537,12 +509,108 @@ class MapInfoManager():
         print("Creating Country Files")
         sys.stdout.flush()
         countryTagsFolder = "{}/{}/{}".format(self.path, COMMON_FOLDER, TAGS_FOLDER)
+        commonCountryPathBase = "{}/{}/{}".format(self.path, COMMON_FOLDER, "{}")
+        historyCountryPathBase = "{}/{}/{}".format(self.path, COUNTRIES_HISTORY_PATH, "{}")
+        countryLocalizationFile = "{}/{}/{}".format(self.path, LOCALIZATION_FOLDER_NAME, COUNTRIES_LOCALIZATION_FILE)
+        definitions = []
         for countryTagFile in parseEU4Folder(countryTagsFolder):
             for tagDefinition in countryTagFile.getChildren():
-                print("{} = {}".format(tagDefinition.name, tagDefinition.value))
+                if tagDefinition.type == EU4DataNodeType.DUPLICATE_ENTRY:
+                    print("ERROR!!!: Two (or more) countries share the same tag in the same file! These are:")
+                    for duplicateTagDefinition in tagDefinition.value:
+                        print("\t{} = {}".format(duplicateTagDefinition.name, duplicateTagDefinition.value))
+                    print("Create Country Files Aborted. Please fix this issue before trying again")
+                    sys.stdout.flush()
+                    return
+                elif tagDefinition.name in ["REB", "NAT", "PIR"]:
+                    pass
+                else:
+                    definitions.append((tagDefinition.name, tagDefinition.value))
+
+        localizationEntries = dict()
+        if exists(countryLocalizationFile):
+            for match in re.findall(COUNTRY_LOCALIZATION_PATTERN, open(countryLocalizationFile, 'r').read()):
+                if match[0] not in localizationEntries:
+                    localizationEntries[match[0]] = [None, None]
+                if match[1] == "":
+                    localizationEntries[match[0]][0] = match[2]
+                elif match[1] == "_ADJ":
+                    localizationEntries[match[0]][1] = match[2]
+                
+        for definition in definitions:
+            countryTag = definition[0].upper()
+            countryName = definition[1].split('/')[-1].split('.')[0]
+            if not exists(commonCountryPathBase.format("")):
+                mkdir(commonCountryPathBase.format(""))
+            commonCountryPath = commonCountryPathBase.format(definition[1])
+            if not exists(commonCountryPath):
+                f = open(commonCountryPath, 'w')
+                f.write("########################## TODO ##########################\n")
+                f.write("## This file was automatically generated by MagellanEU4 ##\n")
+                f.write("# Be sure to fill out all the below fields as necessary! #\n")
+                f.write("########################## TODO ##########################\n")
+                f.write("graphical_culture = westerngfx\n")
+                f.write("color = {{ {} {} {} }}\n".format(randint(0, 255), randint(0, 255), randint(0, 255)))
+                f.write("revolutionary_colors = {{ {} {} {} }}\n".format(randint(0, 16), randint(0, 16), randint(0, 16)))
+                f.write("historical_idea_groups = { defensive_ideas offensive_ideas religious_ideas economic_ideas diplomatic_ideas innovativeness_ideas spy_ideas trade_ideas }\n")
+                f.write("historical_units = { western_medieval_infantry western_medieval_knights western_men_at_arms swiss_landsknechten dutch_maurician austrian_tercio austrian_grenzer austrian_hussar austrian_white_coat prussian_uhlan austrian_jaeger mixed_order_infantry open_order_cavalry napoleonic_square napoleonic_lancers }\n")
+                f.write("monarch_names = { \"Leopold #1\" = 100 }\n")
+                f.write("leader_names  = { Leman }\n")
+                f.write("ship_names = { \"Comte de Smet de Nayer\" }\n")
+                f.write("army_names = { \"Armee von $PROVINCE$\" }\n")
+                f.write("fleet_names = { \"Stadtflotte\" }\n")
+                f.close()
+
+            countryHistoryFilesByTag = set()
+            if not exists(historyCountryPathBase.format("")):
+                mkdir(historyCountryPathBase.format(""))
+            for countryHistoryFilename in listdir(historyCountryPathBase.format("")):
+                countryHistoryFilesByTag.add(countryHistoryFilename.split('-')[0].strip().upper())
+            if not countryTag in countryHistoryFilesByTag:
+                historyCountryPath = historyCountryPathBase.format("{} - {}.txt".format(countryTag, countryName))
+                f = open(historyCountryPath, 'w')
+                f.write("########################## TODO ##########################\n")
+                f.write("## This file was automatically generated by MagellanEU4 ##\n")
+                f.write("# Be sure to fill out all the below fields as necessary! #\n")
+                f.write("########################## TODO ##########################\n")
+                f.write("government = monarchy\n")
+                f.write("add_government_reform = autocracy_reform\n")
+                f.write("government_rank = 1\n")
+                f.write("mercantilism = 10\n")
+                f.write("technology_group = western\n")
+                f.write("religion = catholic\n")
+                f.write("primary_culture = flemish\n")
+                f.write("add_accepted_culture = dutch\n")
+                f.write("capital = 90\n")
+                f.write("fixed_capital = 90\n")
+                f.write("add_army_professionalism = 0.05\n")
+                f.write("1444.11.11 = {\n")
+                f.write("\tmonarch = {\n\t\tname = \"Joe\"\n\t\tdynasty = \"Brown\"\n\t\tbirth_date = 1414.1.1\n\t\tadm = 3\n\t\tdip = 3\n\t\tmil = 3\n\t}\n")
+                f.write("\tqueen = {\n\t\tname = \"Joanna\"\n\t\tdynasty = \"White\"\n\t\tfemale = yes\n\t\tbirth_date = 1414.1.1\n\tdeath_date = 1465.1.1\n\t\tadm = 3\n\t\tdip = 3\n\t\tmil = 3\n\t}\n")
+                f.write("\their = {\n\t\tname = \"Joeson\"\n\t\tdynasty = \"Brown\"\n\t\tbirth_date = 1431.1.1\n\tdeath_date = 1465.1.1\n\t\tadm = 3\n\t\tdip = 3\n\t\tmil = 3\n\t}\n")
+                f.write("}\n")
+                f.close()
+
+            if countryTag not in localizationEntries:
+                localizationEntries[countryTag] = [countryName, getAdjectiveString(countryName)]
+            else:
+                if localizationEntries[countryTag][0] == None:
+                    localizationEntries[countryTag][0] = countryName
+                if localizationEntries[countryTag][1] == None:
+                    localizationEntries[countryTag][1] = getAdjectiveString(countryName)
+
+        localizationFile = open(countryLocalizationFile, 'w', encoding="utf-8-sig")
+        localizationFile.write("l_english:\n")
+        for tag in localizationEntries.keys():
+            if localizationEntries[tag][0] != None:
+                localizationFile.write(" {}:0 \"{}\"\n".format(tag, localizationEntries[tag][0]))
+            if localizationEntries[tag][1] != None:
+                localizationFile.write(" {}_ADJ:0 \"{}\"\n".format(tag, localizationEntries[tag][1]))
+        localizationFile.close()
 
         print("Done")
         sys.stdout.flush()
+
 
     def save(self, updatedProvinces):
         areasToProvinces = dict()
@@ -720,3 +788,16 @@ def saveFileSafely(filePath, saveFunc):
 def writeFieldIfExists(file, text, field):
     if field != "":
         file.write("{} = {}\n".format(text, field))
+
+def getAdjectiveString(name):
+    suffix = ""
+    ending = name[-1]
+    if ending == 'a':
+        suffix = "n"
+    elif ending in ['e', 'i', 'o', 'u']:
+        suffix = "an"
+    elif ending == 'y':
+        suffix = "ian"
+    else:
+        suffix = "i"
+    return name + suffix

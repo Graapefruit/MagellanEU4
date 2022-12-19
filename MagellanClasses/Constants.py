@@ -47,6 +47,7 @@ MAP_MODE_HOTKEYS = {'P': "province", 'R': "religion", 'U': "culture", 'X': "tax"
     'A': "area", 'C': "continent", 'H': "hre", 'O': "owner", 'B': "controller",
     'T': "terrain", 'E': "climate", 'W': "weather", 'N': "tradeNode", 'I': "impassable",
     'S': "isSea", 'L': "isLake"}
+ADJ_ENDINGS = {"a": "n", "b": "i", "c": "i", "d": "i", "e": "an", "f": "i", "g": "i", "h": "i", "i": "an"}
 
 PROVINCE_CHARACTERS_PER_LINE = 85
 
@@ -57,7 +58,7 @@ RNW_PROVINCE_KEY = "RNW"
 
 LOCALIZATION_NAME_PATTERN = re.compile("PROV([0-9]+):[0-9]\s*\"(.*)?\"", re.IGNORECASE)
 LOCALIZATION_ADJECTIVE_PATTERN = re.compile("ADJ([0-9]+):[0-9]\s*\"(.*)?\"", re.IGNORECASE)
-COUNTRY_LOCALIZATION_PATTERN = re.compile(" ([a-z]{0,3})(_ADJ)?:[0-9]*\s*=\s*\"([a-z]*)\"", re.IGNORECASE)
+COUNTRY_LOCALIZATION_PATTERN = re.compile(" ([a-zA-Z]{0,3})(_ADJ)?:[0-9]*\s*\"(.*)?\"", re.IGNORECASE)
 GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{([a-z0-9_\s]*)}", re.IGNORECASE)
 AREA_GROUPING_PATTERN = re.compile("([a-z_]+)\s*=\s*{\s*(color\s*=\s*{\s*[0-9]{1,3}\s*[0-9]{1,3}\s*[0-9]{1,3}\s*})?([a-z0-9_\s]*)}", re.IGNORECASE)
 AREA_COLOR_GROUPING_PATTERN = re.compile("color\s*=\s*{\s*([0-9]{1,3})\s*([0-9]{1,3})\s*([0-9]{1,3})\s*}")
