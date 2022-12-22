@@ -50,9 +50,10 @@ class EU4DataNode():
             self.value = {value.name: value}
         elif self.type == EU4DataNodeType.PARENT_NODE:
             if value.name in self.value:
-                if self.value[value.name] != EU4DataNodeType.DUPLICATE_ENTRY:
+                if self.value[value.name].type != EU4DataNodeType.DUPLICATE_ENTRY:
                     oldValue = self.value[value.name]
                     self.value[value.name] = EU4DataNode(self.name)
+                    self.value[value.name].name = value.name
                     self.value[value.name].type = EU4DataNodeType.DUPLICATE_ENTRY
                     self.value[value.name].value = [oldValue]
                 self.value[value.name].value.append(value)

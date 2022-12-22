@@ -133,39 +133,47 @@ class MapInfoManager():
                         if PROVINCE_DATE_UPDATE_PATTERN.match(lineKey):
                             province.provinceUpdates.append(field)
                         elif field.type == EU4DataNodeType.SINGLE_ENTRY:
-                            lineVal = field.value.lower().strip().replace("\"", "")
-                            match lineKey:
-                                case "add_core":
-                                    province.cores.append(lineVal)
-                                case "owner":
-                                    province.owner = lineVal
-                                case "controller":
-                                    province.controller = lineVal
-                                case "culture":
-                                    province.culture = lineVal
-                                case "religion":
-                                    province.religion = lineVal
-                                case "hre":
-                                    province.hre = True if lineVal.lower() == "yes" else False
-                                case "base_tax":
-                                    if lineVal.isdigit():
-                                        province.tax = int(lineVal)
-                                case "base_production":
-                                    if lineVal.isdigit():
-                                        province.production = int(lineVal)
-                                case "base_manpower":
-                                    if lineVal.isdigit():
-                                        province.manpower = int(lineVal)
-                                case "trade_goods":
-                                    province.tradeGood = lineVal
-                                case "discovered_by":
-                                    province.discovered[lineVal] = True
-                                case "capital":
-                                    province.capital = field.value.strip().replace("\"", "")
-                                case _:
-                                    province.extraText += field.toString()
+                            self.populateProvinceFieldFromDataNode(province, field)
+                        elif field.type == EU4DataNodeType.DUPLICATE_ENTRY:
+                            for duplicateField in field.value:
+                                self.populateProvinceFieldFromDataNode(province, duplicateField)
                         else:
                             province.extraText += field.toString()
+
+    def populateProvinceFieldFromDataNode(self, province, field):
+        lineKey = field.name.lower().strip().replace("\"", "")
+        lineVal = field.value.lower().strip().replace("\"", "")
+        sys.stdout.flush()
+        match lineKey:
+            case "add_core":
+                province.cores.append(lineVal)
+            case "owner":
+                province.owner = lineVal
+            case "controller":
+                province.controller = lineVal
+            case "culture":
+                province.culture = lineVal
+            case "religion":
+                province.religion = lineVal
+            case "hre":
+                province.hre = True if lineVal.lower() == "yes" else False
+            case "base_tax":
+                if lineVal.isdigit():
+                    province.tax = int(lineVal)
+            case "base_production":
+                if lineVal.isdigit():
+                    province.production = int(lineVal)
+            case "base_manpower":
+                if lineVal.isdigit():
+                    province.manpower = int(lineVal)
+            case "trade_goods":
+                province.tradeGood = lineVal
+            case "discovered_by":
+                province.discovered[lineVal] = True
+            case "capital":
+                province.capital = field.value.strip().replace("\"", "")
+            case _:
+                province.extraText += field.value
 
     def populateAreaData(self, path):
         print("Populating Areas...")
@@ -586,8 +594,8 @@ class MapInfoManager():
                 f.write("add_army_professionalism = 0.05\n")
                 f.write("1444.11.11 = {\n")
                 f.write("\tmonarch = {\n\t\tname = \"Joe\"\n\t\tdynasty = \"Brown\"\n\t\tbirth_date = 1414.1.1\n\t\tadm = 3\n\t\tdip = 3\n\t\tmil = 3\n\t}\n")
-                f.write("\tqueen = {\n\t\tname = \"Joanna\"\n\t\tdynasty = \"White\"\n\t\tfemale = yes\n\t\tbirth_date = 1414.1.1\n\tdeath_date = 1465.1.1\n\t\tadm = 3\n\t\tdip = 3\n\t\tmil = 3\n\t}\n")
-                f.write("\their = {\n\t\tname = \"Joeson\"\n\t\tdynasty = \"Brown\"\n\t\tbirth_date = 1431.1.1\n\tdeath_date = 1465.1.1\n\t\tadm = 3\n\t\tdip = 3\n\t\tmil = 3\n\t}\n")
+                f.write("\tqueen = {\n\t\tname = \"Joanna\"\n\t\tdynasty = \"White\"\n\t\tfemale = yes\n\t\tbirth_date = 1414.1.1\n\t\tdeath_date = 1465.1.1\n\t\tadm = 3\n\t\tdip = 3\n\t\tmil = 3\n\t}\n")
+                f.write("\their = {\n\t\tname = \"Joeson\"\n\t\tdynasty = \"Brown\"\n\t\tbirth_date = 1431.1.1\n\t\tdeath_date = 1465.1.1\n\t\tadm = 3\n\t\tdip = 3\n\t\tmil = 3\n\t}\n")
                 f.write("}\n")
                 f.close()
 
