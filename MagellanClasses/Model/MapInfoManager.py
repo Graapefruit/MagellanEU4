@@ -173,7 +173,7 @@ class MapInfoManager():
             case "capital":
                 province.capital = field.value.strip().replace("\"", "")
             case _:
-                province.extraText += field.value
+                province.extraText += "{} = {}\n".format(field.name, field.value)
 
     def populateAreaData(self, path):
         print("Populating Areas...")
@@ -679,7 +679,6 @@ class MapInfoManager():
         sys.stdout.flush()
 
     def saveProvinceHistory(self, province):
-        # None Previously
         if province.historyFile == "":
             province.historyFile = "{} - {}.txt".format(province.id, province.name)
         f = open("{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile), 'w', encoding="ANSI")
