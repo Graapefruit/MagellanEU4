@@ -122,7 +122,6 @@ class MapInfoManager():
         sys.stdout.flush()
         provinceHistoryFiles = listdir(path)
         for fileName in provinceHistoryFiles:
-            print("\t" + fileName)
             fileId = fileName.split("-")[0].split()[0]
             if fileId.isdigit() and self.idsToProvinces[int(fileId)] != None:
                 province = self.idsToProvinces[int(fileId)]
