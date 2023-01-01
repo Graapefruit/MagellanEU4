@@ -102,6 +102,8 @@ class Controller():
 			"isLake": {True: (0, 255, 255), False: (64, 64, 64)},
 			"autonomy": self.getGreenToRedGradient(AUTONOMY_RANGE),
 			"separatism": self.getGreenToRedGradient(SEPARATISM_RANGE),
+			"hasFort": {True: (0, 255, 0), False: (255, 0, 0)},
+			"centerOfTradeLevel": {0: (255, 0, 0), 1: (255, 132, 0), 2: (255, 255, 0), 3: (0, 255, 0)},
 			"tradeGood": self.model.tradeGoodsToColours,
 			"owner": self.model.tagsToColours,
 			"controller": self.model.tagsToColours}

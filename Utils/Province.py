@@ -25,6 +25,8 @@ class Province:
 		self.discovered = set()
 		self.separatism = 0
 		self.autonomy = 0
+		self.cotLevel = 0
+		self.hasFort = False
 
 		self.area = ""
 		self.continent = ""
@@ -93,6 +95,10 @@ class Province:
 				return self.separatism
 			case "autonomy":
 				return self.autonomy
+			case "hasFort":
+				return self.hasFort
+			case "centerOfTradeLevel":
+				return self.cotLevel
 			case _:
 				if field in self.discovered:
 					return self.discovered[field]
@@ -165,6 +171,10 @@ class Province:
 				self.autonomy = int(value)
 			case "separatism":
 				self.separatism = int(value)
+			case "hasFort":
+				self.hasFort = (value == 1)
+			case "centerOfTradeLevel":
+				self.cotLevel = int(value)
 			case _:
 				if field in self.discovered:
 					self.discovered[field] = value

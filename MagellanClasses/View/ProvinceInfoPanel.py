@@ -4,6 +4,7 @@ from MagellanClasses.Constants import NO_FLAG_PATH
 from MagellanClasses.Defaults import *
 from Utils.TkinterUtils import *
 from os.path import exists
+import sys
 
 def doNothing(*argv):
     pass
@@ -22,6 +23,9 @@ def coreSanityCheck(tags):
 
 def integerSanityCheck(fieldValue):
     return fieldValue.isnumeric()
+
+def cotSanityCheck(fieldValue):
+    return fieldValue.strip() in ['0', '1', '2', '3']
 
 class ProvinceInfoPanel:
     def __init__(self, root):
@@ -153,11 +157,13 @@ class ProvinceInfoPanel:
         climateSv, climateTrace, self.climateLabel, self.climateField = createNewAutocompletecombobox("Climate", self.provinceBodyRight, DEFAULT_CLIMATES, noSanityCheck, self.onFieldUpdate)
         weatherSv, weatherTrace, self.weatherLabel, self.weatherField = createNewAutocompletecombobox("Weather", self.provinceBodyRight, DEFAULT_WEATHERS, noSanityCheck, self.onFieldUpdate)
         tradeNodeSv, tradeNodeTrace, self.tradeNodeLabel, self.tradeNodeField = createNewAutocompletecombobox("Trade Node", self.provinceBodyRight, [], noSanityCheck, self.onFieldUpdate)
+        cotSv, cotTrace, self.cotLabel, self.cotField = createNewAutocompletecombobox("Center Of Trade Level", self.provinceBodyRight, ['0', '1', '2', '3'], cotSanityCheck, self.onFieldUpdate)
+        hasFortIv, hasFortTrace, self.hasFortBox = createNewCheckbutton("Has Fort", self.provinceBodyRight, self.onFieldUpdate)
         impassableIv, impassableTrace, self.impassableBox = createNewCheckbutton("Impassable", self.provinceBodyRight, self.onFieldUpdate)
         isSeaIv, isSeaTrace, self.isSeaBox = createNewCheckbutton("Is Sea", self.provinceBodyRight, self.onFieldUpdate)
 
-        self.stringVars += [ownerSv, controllerSv, coresSv, terrainSv, climateSv, weatherSv, tradeNodeSv, impassableIv, isSeaIv]
-        self.traceMethods += [ownerTrace, controllerTrace, coreTrace, terrainTrace, climateTrace, weatherTrace, tradeNodeTrace, impassableTrace, isSeaTrace]
+        self.stringVars += [ownerSv, controllerSv, coresSv, terrainSv, climateSv, weatherSv, tradeNodeSv, cotSv, hasFortIv, impassableIv, isSeaIv]
+        self.traceMethods += [ownerTrace, controllerTrace, coreTrace, terrainTrace, climateTrace, weatherTrace, tradeNodeTrace, cotTrace, hasFortTrace, impassableTrace, isSeaTrace]
 
     def updateProvinceInfo(self, province):
         for magellanField in self.magellanFields:
@@ -196,6 +202,8 @@ class ProvinceInfoPanel:
         self.autonomyField.insert(tk.END, str(province.autonomy))
         self.separatismField.delete('0', tk.END)
         self.separatismField.insert(tk.END, str(province.separatism))
+        self.hasFortBox.select() if province.hasFort else self.hasFortBox.deselect()
+        self.cotField.set(province.cotLevel)
         self.ownerField.set(province.owner)
         self.tradeNodeField.set(province.tradeNode)
         self.coresField.delete('0', tk.END)

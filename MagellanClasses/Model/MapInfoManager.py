@@ -176,6 +176,10 @@ class MapInfoManager():
                 province.autonomy = int(lineVal)
             case "add_nationalism":
                 province.separatism = int(lineVal)
+            case "fort_15th":
+                province.hasFort = lineVal == "yes"
+            case "center_of_trade":
+                province.cotLevel = int(lineVal)
             case _:
                 province.extraText += "{} = {}\n".format(field.name, field.value)
 
@@ -700,6 +704,8 @@ class MapInfoManager():
             f.write("base_manpower = {}\n".format(province.manpower))
             writeFieldIfExists(f, "trade_goods", province.tradeGood)
             writeFieldIfExists(f, "add_local_autonomy", province.autonomy)
+            (f.write("fort_15th = yes\n") if province.hasFort else None)
+            writeFieldIfExists(f, "center_of_trade", province.cotLevel)
             writeFieldIfExists(f, "add_nationalism", province.separatism)
 
         for discoverer in (techGroup for techGroup in province.discovered.keys() if province.discovered[techGroup]):
