@@ -13,6 +13,8 @@ from FileParser.EU4DataFileParser import *
 from Utils.MapMode import MapMode
 
 DEVELOPMENT_EXPECTED_RANGE = 39
+SEPARATISM_RANGE = 30
+AUTONOMY_RANGE = 100
 
 class Controller():
 	def __init__(self):
@@ -87,10 +89,10 @@ class Controller():
 		colorMappings = {"religion": self.model.religionsToColours, 
 			"discovery": {True: (255, 255, 255), False: (96, 96, 96)}, 
 			"tradeNode": tradeNodes,
-			"tax": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
-			"production": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
-			"manpower": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE // 3),
-			"development": self.getDevelopmentMappings(DEVELOPMENT_EXPECTED_RANGE),
+			"tax": self.getRedToGreenGradient(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"production": self.getRedToGreenGradient(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"manpower": self.getRedToGreenGradient(DEVELOPMENT_EXPECTED_RANGE // 3),
+			"development": self.getRedToGreenGradient(DEVELOPMENT_EXPECTED_RANGE),
 			"hre": {True: (0, 255, 0), False: (255, 0, 0)},
 			"climate": {"": (102, 127, 68), "temperate": (102, 127, 68), "arctic": (255, 255, 255), "tropical": (102, 178, 48), "arid": (216, 214, 66)},
 			"weather": {"": (0, 0, 0), "no_winter": (0, 0, 0), "mild_winter": (85, 85, 85), "normal_winter": (170, 170, 170), "severe_winter": (255, 255, 255), "mild_monsoon": (0, 0, 85), "normal_monsoon": (0, 0, 170), "severe_monsoon": (0, 0, 255)},
@@ -98,6 +100,8 @@ class Controller():
 			"terrain": self.model.terrainsToColours,
 			"isSea": {True: (0, 255, 255), False: (64, 64, 64)},
 			"isLake": {True: (0, 255, 255), False: (64, 64, 64)},
+			"autonomy": self.getGreenToRedGradient(AUTONOMY_RANGE),
+			"separatism": self.getGreenToRedGradient(SEPARATISM_RANGE),
 			"tradeGood": self.model.tradeGoodsToColours,
 			"owner": self.model.tagsToColours,
 			"controller": self.model.tagsToColours}
@@ -122,13 +126,22 @@ class Controller():
 		print("Mod Successfully Loaded")
 		sys.stdout.flush()
 
-	def getDevelopmentMappings(self, max):
+	def getRedToGreenGradient(self, max):
 		devToColours = dict()
 		yellowMin = max//2
 		for i in range(1, yellowMin+1):
 			devToColours[i] = (255, (255 // yellowMin) * i, 0)
 		for i in range(yellowMin+1, max+1):
 			devToColours[i] = ((255 // yellowMin) * (yellowMin - i), 255, 0)
+		return devToColours
+
+	def getGreenToRedGradient(self, max):
+		devToColours = dict()
+		yellowMin = max//2
+		for i in range(0, yellowMin+1):
+			devToColours[i] = ((255 // yellowMin) * i, 255, 0)
+		for i in range(yellowMin+1, max+1):
+			devToColours[i] = (255, (255 // yellowMin) * (yellowMin - i), 0)
 		return devToColours
 
 	def populateTradeNodeMappings(self):

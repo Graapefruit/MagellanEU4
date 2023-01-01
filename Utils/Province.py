@@ -23,6 +23,8 @@ class Province:
 		self.tradeGood = ""
 		self.tradeNode = ""
 		self.discovered = set()
+		self.separatism = 0
+		self.autonomy = 0
 
 		self.area = ""
 		self.continent = ""
@@ -87,6 +89,10 @@ class Province:
 				return self.isSea
 			case "isLake":
 				return self.isLake
+			case "separatism":
+				return self.separatism
+			case "autonomy":
+				return self.autonomy
 			case _:
 				if field in self.discovered:
 					return self.discovered[field]
@@ -155,6 +161,10 @@ class Province:
 				self.isSea = (value == 1)
 			case "isLake":
 				self.isLake = (value == 1)
+			case "autonomy":
+				self.autonomy = int(value)
+			case "separatism":
+				self.separatism = int(value)
 			case _:
 				if field in self.discovered:
 					self.discovered[field] = value

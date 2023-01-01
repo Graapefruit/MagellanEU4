@@ -20,6 +20,9 @@ def coreSanityCheck(tags):
             return False
     return True
 
+def integerSanityCheck(fieldValue):
+    return fieldValue.isnumeric()
+
 class ProvinceInfoPanel:
     def __init__(self, root):
         self.rootPanel = root
@@ -131,11 +134,13 @@ class ProvinceInfoPanel:
         tradeGoodSv, tradeGoodTrace, self.tradeGoodLabel, self.tradeGoodField = createNewAutocompletecombobox("Trade Good", self.provinceBodyLeft, DEFAULT_TRADE_GOODS, noSanityCheck, self.onFieldUpdate)
         areaSv, areaTrace, self.areaLabel, self.areaField = createNewEntry("Area", self.provinceBodyLeft, noSanityCheck, self.onFieldUpdate)
         continentSv, continentTrace, self.continentLabel, self.continentField = createNewAutocompletecombobox("Continent", self.provinceBodyLeft, DEFAULT_CONTINENTS, noSanityCheck, self.onFieldUpdate)
+        autonomySv, autonomyTrace, self.autonomyLabel, self.autonomyField = createNewEntry("Autonomy", self.provinceBodyLeft, integerSanityCheck, self.onFieldUpdate)
+        separatismSv, separatismTrace, self.separatismLabel, self.separatismField = createNewEntry("Separatism", self.provinceBodyLeft, integerSanityCheck, self.onFieldUpdate)
         hreIv, hreTrace, self.hreBox = createNewCheckbutton("Hre", self.provinceBodyLeft, self.onFieldUpdate)
         isLakeIv, isLakeTrace, self.isLakeBox = createNewCheckbutton("Is Lake", self.provinceBodyLeft, self.onFieldUpdate)
 
-        self.stringVars += [capitalSv, religionSv, cultureSv, taxSv, productionSv, manpowerSv, tradeGoodSv, areaSv, continentSv, hreIv, isLakeIv]
-        self.traceMethods += [capitalTrace, religionTrace, cultureTrace, taxTrace, productionTrace, manpowerTrace, tradeGoodTrace, areaTrace, continentTrace, hreTrace, isLakeTrace]
+        self.stringVars += [capitalSv, religionSv, cultureSv, taxSv, productionSv, manpowerSv, tradeGoodSv, areaSv, continentSv, autonomySv, separatismSv, hreIv, isLakeIv]
+        self.traceMethods += [capitalTrace, religionTrace, cultureTrace, taxTrace, productionTrace, manpowerTrace, tradeGoodTrace, areaTrace, continentTrace, autonomyTrace, separatismTrace, hreTrace, isLakeTrace]
 
     def createRightProvinceBodyPanel(self):
         self.provinceBodyRight = tk.PanedWindow(self.provinceBody, orient=tk.VERTICAL)
@@ -187,6 +192,10 @@ class ProvinceInfoPanel:
         self.weatherField.set(province.weather)
         self.areaField.insert(tk.END, province.area)
         self.continentField.set(province.continent)
+        self.autonomyField.delete('0', tk.END)
+        self.autonomyField.insert(tk.END, str(province.autonomy))
+        self.separatismField.delete('0', tk.END)
+        self.separatismField.insert(tk.END, str(province.separatism))
         self.ownerField.set(province.owner)
         self.tradeNodeField.set(province.tradeNode)
         self.coresField.delete('0', tk.END)

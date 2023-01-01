@@ -172,6 +172,10 @@ class MapInfoManager():
                 province.discovered[lineVal] = True
             case "capital":
                 province.capital = field.value.strip().replace("\"", "")
+            case "add_local_autonomy":
+                province.autonomy = int(lineVal)
+            case "add_nationalism":
+                province.separatism = int(lineVal)
             case _:
                 province.extraText += "{} = {}\n".format(field.name, field.value)
 
@@ -695,6 +699,8 @@ class MapInfoManager():
             f.write("base_production = {}\n".format(province.production))
             f.write("base_manpower = {}\n".format(province.manpower))
             writeFieldIfExists(f, "trade_goods", province.tradeGood)
+            writeFieldIfExists(f, "add_local_autonomy", province.autonomy)
+            writeFieldIfExists(f, "add_nationalism", province.separatism)
 
         for discoverer in (techGroup for techGroup in province.discovered.keys() if province.discovered[techGroup]):
             f.write("discovered_by = {}\n".format(discoverer))
@@ -793,7 +799,7 @@ def saveFileSafely(filePath, saveFunc):
             print("Something went wrong when saving to {}. The file did not exist before, so this step will have to be skipped.\nError:\n{}".format(filePath, e))
 
 def writeFieldIfExists(file, text, field):
-    if field != "":
+    if field != "" and field != 0:
         file.write("{} = {}\n".format(text, field))
 
 def getAdjectiveString(name):

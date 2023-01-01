@@ -41,12 +41,12 @@ MAP_MODE_DISPLAY_TO_NAME = {"Provinces": "province", "Religions": "religion", "C
     "Continents": "continent", "HRE": "hre", "Owners": "owner", 
     "Controllers": "controller", "Terrains": "terrain", "Climates": "climate", 
     "Weathers": "weather", "Trade Nodes": "tradeNode", "Impassables": "impassable", 
-    "Seas": "isSea", "Lakes": "isLake"}
+    "Seas": "isSea", "Lakes": "isLake", "Autonomy": "autonomy", "Separatism": "separatism"}
 MAP_MODE_HOTKEYS = {'P': "province", 'R': "religion", 'U': "culture", 'X': "tax",
     'F': "production", 'M': "manpower", 'D': "development", 'G': "tradeGood",
     'A': "area", 'C': "continent", 'H': "hre", 'O': "owner", 'B': "controller",
     'T': "terrain", 'E': "climate", 'W': "weather", 'N': "tradeNode", 'I': "impassable",
-    'S': "isSea", 'L': "isLake"}
+    'S': "isSea", 'L': "isLake", 'Y': "autonomy", "Z": "separatism"}
 ADJ_ENDINGS = {"a": "n", "b": "i", "c": "i", "d": "i", "e": "an", "f": "i", "g": "i", "h": "i", "i": "an"}
 
 PROVINCE_CHARACTERS_PER_LINE = 85
