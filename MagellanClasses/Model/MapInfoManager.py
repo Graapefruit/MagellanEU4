@@ -122,6 +122,7 @@ class MapInfoManager():
         sys.stdout.flush()
         provinceHistoryFiles = listdir(path)
         for fileName in provinceHistoryFiles:
+            print("\t" + fileName)
             fileId = fileName.split("-")[0].split()[0]
             if fileId.isdigit() and self.idsToProvinces[int(fileId)] != None:
                 province = self.idsToProvinces[int(fileId)]
@@ -129,59 +130,57 @@ class MapInfoManager():
                 provinceTree = parseEU4File("{}/{}".format(path, fileName))
                 if provinceTree.type == EU4DataNodeType.PARENT_NODE:
                     for field in provinceTree.getChildren():
-                        lineKey = field.name.lower().strip().replace("\"", "")
-                        if PROVINCE_DATE_UPDATE_PATTERN.match(lineKey):
-                            province.provinceUpdates.append(field)
-                        elif field.type == EU4DataNodeType.SINGLE_ENTRY:
-                            self.populateProvinceFieldFromDataNode(province, field)
-                        elif field.type == EU4DataNodeType.DUPLICATE_ENTRY:
-                            for duplicateField in field.value:
-                                self.populateProvinceFieldFromDataNode(province, duplicateField)
-                        else:
-                            province.extraText += field.toString()
+                        self.populateProvinceFieldFromDataNode(province, field)
 
     def populateProvinceFieldFromDataNode(self, province, field):
         lineKey = field.name.lower().strip().replace("\"", "")
-        lineVal = field.value.lower().strip().replace("\"", "")
-        sys.stdout.flush()
-        match lineKey:
-            case "add_core":
-                province.cores.append(lineVal)
-            case "owner":
-                province.owner = lineVal
-            case "controller":
-                province.controller = lineVal
-            case "culture":
-                province.culture = lineVal
-            case "religion":
-                province.religion = lineVal
-            case "hre":
-                province.hre = True if lineVal.lower() == "yes" else False
-            case "base_tax":
-                if lineVal.isdigit():
-                    province.tax = int(lineVal)
-            case "base_production":
-                if lineVal.isdigit():
-                    province.production = int(lineVal)
-            case "base_manpower":
-                if lineVal.isdigit():
-                    province.manpower = int(lineVal)
-            case "trade_goods":
-                province.tradeGood = lineVal
-            case "discovered_by":
-                province.discovered[lineVal] = True
-            case "capital":
-                province.capital = field.value.strip().replace("\"", "")
-            case "add_local_autonomy":
-                province.autonomy = int(lineVal)
-            case "add_nationalism":
-                province.separatism = int(lineVal)
-            case "fort_15th":
-                province.hasFort = lineVal == "yes"
-            case "center_of_trade":
-                province.cotLevel = int(lineVal)
-            case _:
-                province.extraText += "{} = {}\n".format(field.name, field.value)
+        if PROVINCE_DATE_UPDATE_PATTERN.match(lineKey):
+            province.provinceUpdates.append(field)
+        elif field.type == EU4DataNodeType.SINGLE_ENTRY:
+            lineVal = field.value.lower().strip().replace("\"", "")
+            match lineKey:
+                case "add_core":
+                    province.cores.append(lineVal)
+                case "owner":
+                    province.owner = lineVal
+                case "controller":
+                    province.controller = lineVal
+                case "culture":
+                    province.culture = lineVal
+                case "religion":
+                    province.religion = lineVal
+                case "hre":
+                    province.hre = True if lineVal.lower() == "yes" else False
+                case "base_tax":
+                    if lineVal.isdigit():
+                        province.tax = int(lineVal)
+                case "base_production":
+                    if lineVal.isdigit():
+                        province.production = int(lineVal)
+                case "base_manpower":
+                    if lineVal.isdigit():
+                        province.manpower = int(lineVal)
+                case "trade_goods":
+                    province.tradeGood = lineVal
+                case "discovered_by":
+                    province.discovered[lineVal] = True
+                case "capital":
+                    province.capital = field.value.strip().replace("\"", "")
+                case "add_local_autonomy":
+                    province.autonomy = int(lineVal)
+                case "add_nationalism":
+                    province.separatism = int(lineVal)
+                case "fort_15th":
+                    province.hasFort = lineVal == "yes"
+                case "center_of_trade":
+                    province.cotLevel = int(lineVal)
+                case _:
+                    province.extraText += "{} = {}\n".format(field.name, field.value)
+        elif field.type == EU4DataNodeType.DUPLICATE_ENTRY:
+            for duplicateField in field.value:
+                self.populateProvinceFieldFromDataNode(province, duplicateField)
+        else:
+            province.extraText += field.toString()
 
     def populateAreaData(self, path):
         print("Populating Areas...")
