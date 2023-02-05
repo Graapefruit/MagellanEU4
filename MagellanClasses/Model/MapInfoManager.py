@@ -216,7 +216,6 @@ class MapInfoManager():
                         provinceId = int(provinceIdString)
                         if provinceId < len(self.idsToProvinces) and self.idsToProvinces[provinceId] != None:
                             self.idsToProvinces[provinceId].terrain = category.name
-                    category["terrain_override"].wipe()
                 if "color" in category:
                     colorString = category.getChildValue("color")
                     self.terrainsToColours[category.name] = (int(colorString[0]), int(colorString[1]), int(colorString[2]))
@@ -640,6 +639,9 @@ class MapInfoManager():
         for weather in DEFAULT_WEATHERS:
             if weather != "":
                 climateEntryToProvinces[weather] = []
+        for category in self.terrainTree["categories"].getChildren():
+            if "terrain_override" in category:
+                category["terrain_override"].wipe()
         for province in self.provinces:
             if province.area != "":
                 if province.area in areasToProvinces:

@@ -1,6 +1,7 @@
 from PIL import Image
 from random import randint
 import numpy as np
+from sys import stdout
 
 EMPTY_COLOUR = (255, 255, 255)
 PROVINCE_COLOUR_ALPHA = 0.2 # 0 = no influence; 1 = all influence
@@ -36,7 +37,10 @@ class MapMode():
         if isinstance(fieldValue, str):
             fieldValue = fieldValue.lower()
         if not (fieldValue in self.colorMapping):
-            self.colorMapping[fieldValue] = np.array([randint(0, 255), randint(0, 255), randint(0, 255)])
+            newColour = np.array([randint(0, 255), randint(0, 255), randint(0, 255)])
+            print("New field value for mapmode \"{}\": \"{}\". It's colour shall be {}".format(self.name, fieldValue, newColour))
+            stdout.flush()
+            self.colorMapping[fieldValue] = newColour
         fieldColor = self.colorMapping[fieldValue]
         red = province.color[0] * PROVINCE_COLOUR_ALPHA + fieldColor[0] * (1 - PROVINCE_COLOUR_ALPHA)
         green = province.color[1] * PROVINCE_COLOUR_ALPHA + fieldColor[1] * (1 - PROVINCE_COLOUR_ALPHA)
