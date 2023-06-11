@@ -35,6 +35,7 @@ class DisplayManager():
         self.onClearProvinceHistoryUpdates = doNothing
         self.onUpdateProvinceHistoryFileNames = doNothing
         self.onCreateCountryFiles = doNothing
+        self.onCullDuplicateProvinceFiles = doNothing
 
         self.rootPanel = tkinter.PanedWindow()
         self.rootPanel.pack(fill=tkinter.BOTH)
@@ -71,6 +72,7 @@ class DisplayManager():
         self.otherToolsMenu.add_command(label="Clear Province History Date-Updates", command=(lambda : self.clearProvinceHistoryUpdates()))
         self.createToolMenuCommand(self.otherToolsMenu, "Update Province History File Names", "This tool will iterate through all provinces, and rename their corresponding province history file to match the \"<id> - <name>\" convention.\nNote that this might cause issues for non-total conversion mods.", (lambda : self.onUpdateProvinceHistoryFileNames()))
         self.createToolMenuCommand(self.otherToolsMenu, "Create Country Files", "This tool will iterate through every tag definition you have in your mod (common/country_tags/<every_files>), and do the following for each:\nCreate the corresponding common/countries file (if none exist)\nCreate the corresponding history/countries file (if none exist)\nAdd an entry to the countries localization file (if none exist)", (lambda : self.onCreateCountryFiles()))
+        self.createToolMenuCommand(self.otherToolsMenu, "Cull Duplicate Province Files", "This tool will iterate through every province/history file in your mod, and automatically cull any duplicates.\n In the case of multiple files sharing the same id, the files with the name matching the province names will automatically be chosen over the alternative.\nIf neither file has the province's name, the user will be prompted to choose which file to delete", (lambda : self.onCullDuplicateProvinceFiles()))
         menubar.add_cascade(label="Other Tools", menu=self.otherToolsMenu)
         self.window.config(menu=menubar)
 

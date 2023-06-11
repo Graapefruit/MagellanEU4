@@ -436,6 +436,10 @@ class MapInfoManager():
     # --- Public --- #
 
     def generatePositions(self):
+        def createPositionPair(x, y):
+            xString = "{:.3f}".format(x)
+            yString = "{:.3f}".format(y)
+            return [xString, yString]
         print("Generating Positions...")
         sys.stdout.flush()
         root = EU4DataNode("__ROOT__")
@@ -448,22 +452,29 @@ class MapInfoManager():
         for province in self.idsToProvinces:
             if province != None and province.id not in idsToSkip and len(province.pixels) > 0:
                 avaeragePos = numpy.average(province.pixels, axis=0)
-                x = "{:.3f}".format(round(avaeragePos[0], 4))
-                y = "{:.3f}".format(round(avaeragePos[1], 4))
+                x = round(avaeragePos[0])
+                y = round(avaeragePos[1])
+                cityPos = createPositionPair(x, y-1)
+                unitPos = createPositionPair(x, y)
+                textPos = createPositionPair(x, y+2)
+                portPos = createPositionPair(x-1, y)
+                tradePos = createPositionPair(x+1, y)
+                battlePos = createPositionPair(x, y+1)
+                tradeWindPos = createPositionPair(x+1, y+1)
                 newNode = EU4DataNode(str(province.id))
-                positionNode = EU4DataNode("position")
-                positionNode.addListValue(x, y, x, y, x, y, x, y, x, y, x, y, x, y)
+                positionNode = EU4DataNode("positions")
+                positionNode.addListValue(cityPos + unitPos + textPos + portPos + tradePos + battlePos + tradeWindPos)
                 newNode.addChildNode(positionNode)
 
                 rotationNode = EU4DataNode("rotation")
-                rotationNode.addListValue("0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000")
+                rotationNode.addListValue(["0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000"])
                 newNode.addChildNode(rotationNode)
 
                 heightNode = EU4DataNode("height")
-                heightNode.addListValue("0.000", "0.000", "0.000", "0.000", "0.000", "0.000", "0.000")
+                heightNode.addListValue(["0.000", "0.000", "1.000", "0.000", "0.000", "0.000", "0.000"])
                 newNode.addChildNode(heightNode)
                 root.addChildNode(newNode)
-        writeToFileFromRootNode(path, root)
+        writeToFileFromRootNode(path, root, "utf-8-sig")
         print("Done.")
         sys.stdout.flush()
 
@@ -507,9 +518,9 @@ class MapInfoManager():
         print("Updaing Province History File names")
         sys.stdout.flush()
         for province in self.provinces:
-            newFileName = "{} - {}.txt".format(province.id, province.name)
-            newFilePath = "{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, newFileName)
             if not exists(newFilePath):
+                newFileName = "{} - {}.txt".format(province.id, province.name)
+                newFilePath = "{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, newFileName)
                 oldFilePath = "{}/{}/{}".format(self.path, PROVINCES_HISTORY_PATH, province.historyFile)
                 fileContents = open(oldFilePath, 'r').read()
                 open(newFilePath, "w+").write(fileContents)
@@ -624,6 +635,44 @@ class MapInfoManager():
         print("Done")
         sys.stdout.flush()
 
+    def cullDuplicateProvinceFiles(self):
+        def cullProvinceHistoryFile(id, name):
+            path = "{}/{}/{} - {}.txt".format(self.path, PROVINCES_HISTORY_PATH, id, name)
+            remove(path)
+            print("Province history file \"{}\" has been deleted", path)
+            sys.stdout.flush()
+            
+        print("Culling Duplicate Province History Files...")
+        sys.stdout.flush()
+        seenProvinceIds = dict()
+        for provinceHistoryFile in listdir("{}/{}".format(self.path, PROVINCES_HISTORY_PATH)):
+            id, name = provinceHistoryFile.split('-')
+            id = int(id.strip())
+            name = name.strip().split('.')[0]
+            if id in seenProvinceIds:
+                if seenProvinceIds[id] == self.idsToProvinces[id].name:
+                    cullProvinceHistoryFile(id, name)
+
+                elif name == self.idsToProvinces[id].name:
+                    cullProvinceHistoryFile(id, seenProvinceIds[id])
+                    seenProvinceIds[id] = name
+
+                else:
+                    fileToRemove = ""
+                    while not fileToRemove in ['1', '2']:
+                        fileToRemove = input("Enter -1- to delete {}, or -2- to delete {}: ".format(seenProvinceIds[id], name)).strip()
+                        if not fileToRemove in ['1', '2']:
+                            print("Invalid Input! Try again.")
+                            sys.stdout.flush()
+                    if fileToRemove == '1':
+                        cullProvinceHistoryFile(id, seenProvinceIds[id])
+                        seenProvinceIds[id] = name
+                    elif fileToRemove == '2':
+                        cullProvinceHistoryFile(id, name)
+            else:
+                seenProvinceIds[id] = name
+        print("Done.")
+        sys.stdout.flush()
 
     def save(self, updatedProvinces):
         areasToProvinces = dict()
@@ -753,7 +802,7 @@ class MapInfoManager():
     def saveDataTree(self, path, name, tree):
         print("Saving {} File...".format(name))
         sys.stdout.flush()
-        writeToFileFromRootNode(path, tree)
+        writeToFileFromRootNode(path, tree, None)
 
     def saveContinentsFile(self, continentsToProvinces):
         print("Saving Continent File...")

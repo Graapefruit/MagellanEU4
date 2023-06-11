@@ -19,8 +19,8 @@ class EU4DataFileTokenizerState(Enum):
     IN_QUOTATIONS = 2
     IN_COMMENT = 3
 
-def writeToFileFromRootNode(filePath, rootNode):
-    f = open(filePath, 'w')
+def writeToFileFromRootNode(filePath, rootNode, fileEncoding):
+    f = open(filePath, 'w', encoding=fileEncoding)
     for value in rootNode.getChildren():
         f.write(value.toString() + '\n')
 

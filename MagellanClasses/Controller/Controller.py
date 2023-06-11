@@ -39,6 +39,7 @@ class Controller():
 		self.view.onClearProvinceHistoryUpdates = (lambda : (self.modifiedProvinces.update(self.model.clearAllProvinceHistoryUpdates())))
 		self.view.onUpdateProvinceHistoryFileNames = (lambda : self.model.updateProvinceHistoryFileNames())
 		self.view.onCreateCountryFiles = (lambda : self.model.createCountryFiles())
+		self.view.onCullDuplicateProvinceFiles = (lambda : self.model.cullDuplicateProvinceFiles())
 		self.mapModes = dict()
 		self.model = None
                 
