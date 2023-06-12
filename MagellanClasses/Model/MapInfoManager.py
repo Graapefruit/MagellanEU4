@@ -440,6 +440,7 @@ class MapInfoManager():
             xString = "{:.3f}".format(x)
             yString = "{:.3f}".format(y)
             return [xString, yString]
+        
         print("Generating Positions...")
         sys.stdout.flush()
         root = EU4DataNode("__ROOT__")
@@ -451,16 +452,16 @@ class MapInfoManager():
                 idsToSkip.add(int(province.name))
         for province in self.idsToProvinces:
             if province != None and province.id not in idsToSkip and len(province.pixels) > 0:
-                avaeragePos = numpy.average(province.pixels, axis=0)
-                x = round(avaeragePos[0])
-                y = round(avaeragePos[1])
-                cityPos = createPositionPair(x, y-1)
+                averagePos = numpy.average(province.pixels, axis=0)
+                x = round(averagePos[0])
+                y = round(averagePos[1])
+                cityPos = createPositionPair(x, y-0.3)
                 unitPos = createPositionPair(x, y)
-                textPos = createPositionPair(x, y+2)
-                portPos = createPositionPair(x-1, y)
-                tradePos = createPositionPair(x+1, y)
-                battlePos = createPositionPair(x, y+1)
-                tradeWindPos = createPositionPair(x+1, y+1)
+                textPos = createPositionPair(x, y+0.6)
+                portPos = createPositionPair(x-0.3, y)
+                tradePos = createPositionPair(x+0.3, y)
+                battlePos = createPositionPair(x, y+0.3)
+                tradeWindPos = createPositionPair(x+0.3, y+0.3)
                 newNode = EU4DataNode(str(province.id))
                 positionNode = EU4DataNode("positions")
                 positionNode.addListValue(cityPos + unitPos + textPos + portPos + tradePos + battlePos + tradeWindPos)
